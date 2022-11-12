@@ -1,6 +1,7 @@
 path <- strsplit(commandArgs(trailingOnly = FALSE)[4], "--file=")[[1]][2]
 path <- ifelse(is.na(path), ".", dirname(path))
 source(paste(path, "_deps.r", sep = "/"))
+source(paste(path, "lib/common.r", sep = "/"))
 
 #  Load Data
 req <- POST("https://api.bls.gov/publicAPI/v2/timeseries/data/",
@@ -14,9 +15,7 @@ data <- content(req, "text") %>% fromJSON()
 df <- as_tibble(data$Results$series$data[[1]]) %>%
   mutate(year = as.integer(year)) %>%
   mutate(value_p = as.double(value) / 100) %>%
-  mutate(yearmonth = yearmonth(
-    paste0(year, "-", str_sub(period, start = -2))
-  )) %>%
+  mutate(yearmonth = yearmonth(paste0(year, "-", right(period, 2)))) %>%
   select(yearmonth, value_p)
 
 save_csv(df, "usa_unemployment")

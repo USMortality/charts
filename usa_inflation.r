@@ -1,6 +1,7 @@
 path <- strsplit(commandArgs(trailingOnly = FALSE)[4], "--file=")[[1]][2]
 path <- ifelse(is.na(path), ".", dirname(path))
 source(paste(path, "_deps.r", sep = "/"))
+source(paste(path, "lib/common.r", sep = "/"))
 
 #  Load Data
 req <- POST("https://api.bls.gov/publicAPI/v2/timeseries/data/",
@@ -13,7 +14,7 @@ data <- content(req, "text") %>% fromJSON()
 # Transform
 df <- as_tibble(data$Results$series$data[[1]]) %>%
   mutate(year = as.integer(year)) %>%
-  mutate(period = as.integer(str_sub(period, start = -2))) %>%
+  mutate(period = as.integer(right(period, 2))) %>%
   mutate(value = as.double(value)) %>%
   mutate(yearmonth = yearmonth(paste0(year, "-", period))) %>%
   mutate(value_ref = lead(value, 12)) %>%

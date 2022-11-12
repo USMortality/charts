@@ -1,7 +1,3 @@
-install.packages("pacman", repos = "http://cran.us.r-project.org")
-
-pacman::p_load(aws.s3)
-
 Sys.setenv(
   "AWS_ACCESS_KEY_ID" = "minio",
   "AWS_SECRET_ACCESS_KEY" = "m!FCcXn_uuuMgkUxMDc7",
@@ -67,4 +63,8 @@ save_chart <- function(chart, name) {
     bucket = charts_bucket
   )
   system(paste0("rm ", file_name))
+}
+
+right <- function(string, length) {
+  substring(string, nchar(string) - length + 1, nchar(string))
 }
