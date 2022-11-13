@@ -16,6 +16,8 @@ df <- df %>%
   select(date, close) %>%
   mutate(date = as.Date(date))
 
+save_csv(df, "sp500")
+
 chart <-
   ggplot(as_tsibble(df, index = date), aes(x = date, y = close)) +
   scale_y_continuous(trans = "log2") +
