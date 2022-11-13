@@ -29,7 +29,7 @@ chart <-
     x = "Month of Year",
     y = "Unemployment Rate"
   ) +
-  geom_line(color = "#5383EC", size = 1.5) +
+  geom_line(color = "#5383EC", linewidth = 1.5) +
   geom_hline(yintercept = 0) +
   twitter_theme() +
   watermark(df$yearmonth, df$value_p) +

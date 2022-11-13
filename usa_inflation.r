@@ -33,7 +33,7 @@ chart <-
     x = "Month of Year",
     y = "12M Rate of Increase"
   ) +
-  geom_line(color = "#5383EC", size = 1.5) +
+  geom_line(color = "#5383EC", linewidth = 1.5) +
   geom_hline(yintercept = 0) +
   geom_hline(aes(yintercept = 0.02), color = "#58A65C", linetype = "dashed") +
   twitter_theme() +
