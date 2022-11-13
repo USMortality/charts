@@ -22,8 +22,8 @@ ENV LC_ALL="en_US.UTF-8"
 
 RUN chown cronicle /usr/lib/R/library
 
-# ADD _deps.r .
-# RUN Rscript _deps.r
+ADD _deps.r .
+RUN Rscript _deps.r
 
 EXPOSE 3012
 CMD ["manager"]
