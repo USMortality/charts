@@ -13,9 +13,10 @@ data_bucket <- "data"
 
 watermark <- function(x, y) {
   annotate("text",
-    y = max(y),
-    x = max(x),
+    y = Inf,
+    x = structure(Inf, class = "Date"),
     label = "@USMortality",
+    vjust = 1,
     hjust = 1,
     col = "#000000",
     cex = 6,
