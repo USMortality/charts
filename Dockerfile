@@ -18,5 +18,9 @@ ENV CRONICLE_Storage__AWS__region=us-east-1
 ENV CRONICLE_Storage__AWS__credentials__secretAccessKey=${S3_SECRET}
 ENV CRONICLE_Storage__AWS__credentials__accessKeyId=minio
 
+ENV LANG="en_US.UTF-8"
+ENV LANGUAGE="en_US.UTF-8"
+ENV LC_ALL="en_US.UTF-8"
+
 EXPOSE 3012
 CMD ["manager"]
