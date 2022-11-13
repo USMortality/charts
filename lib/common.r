@@ -56,7 +56,8 @@ save_chart <- function(chart, name) {
     height = 335 * sf,
     units = "px",
     dpi = 72 * sf,
-    device = grDevices::png
+    device = grDevices::png,
+    type = c("cairo")
   )
 
   put_object(
