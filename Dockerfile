@@ -22,7 +22,8 @@ ENV LANG="en_US.UTF-8"
 ENV LANGUAGE="en_US.UTF-8"
 ENV LC_ALL="en_US.UTF-8"
 
-RUN apk add terminus-font ttf-inconsolata ttf-dejavu font-noto font-noto-cjk ttf-font-awesome font-noto-extra
+RUN apk add terminus-font ttf-inconsolata ttf-dejavu font-noto font-noto-cjk \
+  ttf-font-awesome font-noto-extra
 
 EXPOSE 3012
 CMD ["manager"]

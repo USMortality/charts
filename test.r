@@ -3,7 +3,15 @@ path <- ifelse(is.na(path), ".", dirname(path))
 source(paste(path, "_deps.r", sep = "/"))
 source(paste(path, "lib/common.r", sep = "/"))
 
-mtcars <- mtcars
-p <- ggplot(mtcars, aes(x = hp, y = mpg)) +
-  geom_point(size = 3)
-save_chart(p, "cars")
+chart <- ggplot(mtcars, aes(x = hp, y = mpg)) +
+  geom_point(size = 3) +
+  labs(
+    title = "Cars",
+    subtitle = "Source: R mtcars test data set",
+    x = "Horse Power",
+    y = "MPG"
+  ) +
+  twitter_theme() +
+  watermark(mtcars$hp, mtcars$mpg)
+
+save_chart(chart, "test")
