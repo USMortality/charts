@@ -22,7 +22,7 @@ df <- as_tibble(data$Results$series$data[[1]]) %>%
   filter(!is.na(value_ref)) %>%
   select(yearmonth, value_p)
 
-save_csv(df, "usa_inflation")
+save_csv(df, "economy/usa/inflation")
 
 # Make Chart
 chart <-
@@ -40,4 +40,4 @@ chart <-
   watermark(df$yearmonth, df$value_p) +
   scale_y_continuous(labels = scales::percent)
 
-save_chart(chart, "usa_inflation")
+save_chart(chart, "economy/usa/inflation")

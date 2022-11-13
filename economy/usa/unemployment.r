@@ -18,7 +18,7 @@ df <- as_tibble(data$Results$series$data[[1]]) %>%
   mutate(yearmonth = yearmonth(paste0(year, "-", right(period, 2)))) %>%
   select(yearmonth, value_p)
 
-save_csv(df, "usa_unemployment")
+save_csv(df, "economy/usa/unemployment")
 
 # Make Chart
 chart <-
@@ -35,4 +35,4 @@ chart <-
   watermark(df$yearmonth, df$value_p) +
   scale_y_continuous(labels = scales::percent)
 
-save_chart(chart, "usa_unemployment")
+save_chart(chart, "economy/usa/unemployment")

@@ -16,7 +16,7 @@ df <- df %>%
   select(date, close) %>%
   mutate(date = as.Date(date))
 
-save_csv(df, "sp500")
+save_csv(df, "finance/usa/sp500")
 
 chart <-
   ggplot(as_tsibble(df, index = date), aes(x = date, y = close)) +
@@ -37,4 +37,4 @@ chart <-
     linetype = "dashed"
   )
 
-save_chart(chart, "sp500")
+save_chart(chart, "finance/usa/sp500")
