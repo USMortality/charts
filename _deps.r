@@ -4,7 +4,8 @@ libs <- c(
   "httr",
   "tsibble",
   "ggplot2",
-  "aws.s3"
+  "aws.s3",
+  "quantmod"
 )
 
 cran_repos <- c(
