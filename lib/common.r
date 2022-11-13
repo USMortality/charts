@@ -48,15 +48,16 @@ save_csv <- function(df, name) {
 
 save_chart <- function(chart, name) {
   file_name <- paste0(name, ".png")
-  png(
+  ggsave(
     file_name,
-    width = 600 * sf,
-    height = 335 * sf,
-    res = 72 * sf,
-    type = c("cairo")
+    plot = chart,
+    width = (600 / (sf * 72)),
+    height = (335 / (sf * 72)),
+    dpi = sf * 72,
+    units = "in",
+    device = "png",
+    scale = 2
   )
-  print(chart)
-  dev.off()
   put_object(
     file = file_name,
     object = file_name,
