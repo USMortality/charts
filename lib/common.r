@@ -48,16 +48,26 @@ save_csv <- function(df, name) {
 
 save_chart <- function(chart, name) {
   file_name <- paste0(name, ".png")
+  # ggsave(
+  #   file_name,
+  #   plot = chart,
+  #   width = (600 / (sf * 72)),
+  #   height = (335 / (sf * 72)),
+  #   dpi = sf * 72,
+  #   units = "in",
+  #   device = "png",
+  #   scale = 2
+  # )
   ggsave(
-    file_name,
+    filename = file_name,
     plot = chart,
-    width = (600 / (sf * 72)),
-    height = (335 / (sf * 72)),
-    dpi = sf * 72,
-    units = "in",
-    device = "png",
-    scale = 2
+    width = 1920,
+    height = 1080,
+    units = "px",
+    dpi = 200,
+    device = grDevices::png
   )
+
   put_object(
     file = file_name,
     object = file_name,
