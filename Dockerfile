@@ -1,10 +1,8 @@
 FROM cronicle/cronicle:edge
 
 RUN apk update
-RUN apk add R R-dev build-base libxml2-dev
-
-ADD _deps.r .
-RUN Rscript _deps.r
+RUN apk add R R-dev build-base libxml2-dev terminus-font ttf-inconsolata \
+    ttf-dejavu font-noto font-noto-cjk ttf-font-awesome font-noto-extra
 
 ARG S3_SECRET
 
@@ -22,8 +20,10 @@ ENV LANG="en_US.UTF-8"
 ENV LANGUAGE="en_US.UTF-8"
 ENV LC_ALL="en_US.UTF-8"
 
-RUN apk add terminus-font ttf-inconsolata ttf-dejavu font-noto font-noto-cjk \
-  ttf-font-awesome font-noto-extra
+RUN chown cronicle /usr/lib/R/library
+
+# ADD _deps.r .
+# RUN Rscript _deps.r
 
 EXPOSE 3012
 CMD ["manager"]
