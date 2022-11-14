@@ -6,7 +6,13 @@ libs <- c(
   "ggplot2",
   "aws.s3",
   "quantmod",
-  "scales"
+  "scales",
+  "tidyverse",
+  "readxl",
+  "clock",
+  "fable",
+  "feasts",
+  "ggpubr"
 )
 
 cran_repos <- c(
@@ -26,5 +32,6 @@ for (pkg_name in libs) {
       )
     }
   }
+  message("Loading ", pkg_name)
   library(pkg_name, character.only = TRUE)
 }

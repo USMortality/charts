@@ -39,37 +39,49 @@ twitter_theme <- function() {
 
 save_csv <- function(df, name) {
   file_name <- paste0(name, ".csv")
-  write.csv(df, file_name, row.names = FALSE)
+  local_file_name <- paste0("out/", file_name)
+  dir.create(dirname(local_file_name), recursive = TRUE)
+  write.csv(df, local_file_name, row.names = FALSE)
 
   put_object(
-    file = file_name,
+    file = local_file_name,
     object = file_name,
     bucket = data_bucket
   )
-  system(paste0("rm ", file_name))
 }
 
-save_chart <- function(chart, name) {
+save_chart <- function(chart, name, scale) {
+  if (missing(scale)) scale <- sf
   file_name <- paste0(name, ".png")
+  local_file_name <- paste0("out/", file_name)
+  dir.create(dirname(local_file_name), recursive = TRUE)
+
+  print(paste0("Saving ", local_file_name))
+
   ggsave(
-    filename = file_name,
+    filename = local_file_name,
     plot = chart,
-    width = 600 * sf,
-    height = 335 * sf,
+    width = 600,
+    height = 335,
     units = "px",
-    dpi = 72 * sf,
+    scale = scale,
+    dpi = 144,
     device = grDevices::png,
     type = c("cairo")
   )
 
   put_object(
-    file = file_name,
+    file = local_file_name,
     object = file_name,
     bucket = charts_bucket
   )
-  system(paste0("rm ", file_name))
 }
 
 right <- function(string, length) {
   substring(string, nchar(string) - length + 1, nchar(string))
+}
+
+save_collage <- function(path, chart1, chart2, chart3, chart4) {
+  figure <- ggarrange(chart1, chart2, chart3, chart4, ncol = 2, nrow = 2)
+  save_chart(figure, path, scale = 4)
 }
