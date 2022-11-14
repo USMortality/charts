@@ -1,6 +1,6 @@
 source("lib/common.r")
 
-sdate <- as.Date("1940-01-01")
+sdate <- as.Date("1900-01-01")
 edate <- as.Date("2022-12-31")
 
 sp500 <- getSymbols("^GSPC", from = sdate, to = edate, auto.assign = F)
