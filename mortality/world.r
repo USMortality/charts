@@ -7,7 +7,7 @@ url <- paste0(
   ".xlsx"
 )
 download.file(
-  url, "data/WPP2022_GEN_F01_DEMOGRAPHIC_INDICATORS_COMPACT_REV1.xlsx"
+  url, "./data/WPP2022_GEN_F01_DEMOGRAPHIC_INDICATORS_COMPACT_REV1.xlsx"
 )
 
 # Load Data

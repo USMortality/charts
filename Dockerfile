@@ -34,7 +34,9 @@ ADD install_r_deps.sh .
 RUN /opt/cronicle/install_r_deps.sh
 
 # Configure SSL version for R downloader
-RUN echo "MinProtocol = TLSv1.2" >>/usr/lib/ssl/openssl.cnf
+
+ADD openssl.cnf .
+ENV OPENSSL_CONF=/opt/cronicle/openssl.cnf
 
 EXPOSE 3012
 ENTRYPOINT ["/bin/tini", "--"]
