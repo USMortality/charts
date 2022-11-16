@@ -1,3 +1,8 @@
+libs <- read.table("dependencies.txt")
+for (lib in libs$V1) {
+  library(lib, character.only = TRUE, quietly = TRUE)
+}
+
 Sys.setenv(
   "AWS_ACCESS_KEY_ID" = "minio",
   "AWS_SECRET_ACCESS_KEY" = "m!FCcXn_uuuMgkUxMDc7",

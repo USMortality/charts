@@ -1,4 +1,5 @@
 source("lib/common.r")
+library(tidyverse)
 
 chart <- ggplot(mtcars, aes(x = hp, y = mpg)) +
   geom_point(size = 3) +

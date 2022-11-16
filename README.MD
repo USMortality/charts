@@ -12,7 +12,9 @@ dokku plugin:install https://github.com/michaelshobbs/dokku-hostname.git dokku-h
 ```sh
 #!/usr/bin/env bash
 
-rm -rf charts
-git clone https://github.com/USMortality/charts.git
-Rscript charts/usa_inflation.r
+[ ! -d \"charts\" ] && git clone https://github.com/USMortality/charts.git
+cd charts
+git fetch
+git reset origin/master --hard
+Rscript test.r
 ```

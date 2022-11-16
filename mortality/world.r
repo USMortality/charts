@@ -6,9 +6,9 @@ url <- paste0(
   "EXCEL_FILES/1_General/WPP2022_GEN_F01_DEMOGRAPHIC_INDICATORS_COMPACT_REV1",
   ".xlsx"
 )
-# download.file(
-#   url, "data/WPP2022_GEN_F01_DEMOGRAPHIC_INDICATORS_COMPACT_REV1.xlsx"
-# )
+download.file(
+  url, "data/WPP2022_GEN_F01_DEMOGRAPHIC_INDICATORS_COMPACT_REV1.xlsx"
+)
 
 # Load Data
 world_population <- read_excel(
@@ -33,7 +33,6 @@ all_countries <- world_deaths %>%
   filter(year == 2015)
 
 for (country in unique(all_countries$iso3c)) {
-  # country <- "DEU"
   df <- all_countries %>%
     filter(iso3c == country)
   country_name <- unique(df$country_name)
