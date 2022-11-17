@@ -84,7 +84,10 @@ right <- function(string, length) {
   substring(string, nchar(string) - length + 1, nchar(string))
 }
 
-save_collage <- function(path, chart1, chart2, chart3, chart4) {
-  figure <- ggarrange(chart1, chart2, chart3, chart4, ncol = 2, nrow = 2)
+save_collage <- function(path, chart1, chart2, chart3, chart4, chart5, chart6) {
+  figure <- ggarrange(
+    chart1, chart2, chart3, chart4, chart5, chart6,
+    ncol = 3, nrow = 2
+  )
   save_chart(figure, path, scale = 4)
 }

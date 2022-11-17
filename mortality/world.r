@@ -156,7 +156,7 @@ for (country in unique(all_countries$iso3c)) {
     mutate(excess = mortality - baseline) %>%
     mutate(excess_percent = excess / baseline)
 
-  chart3 <- ggplot(data, aes(x = year, y = mortality)) +
+  chart3a <- ggplot(data, aes(x = year, y = mortality)) +
     labs(
       title = paste0("Mortality [", country_name, "]"),
       subtitle = paste0(
@@ -164,7 +164,7 @@ for (country in unique(all_countries$iso3c)) {
         "Source: UN, World Mortality Dataset"
       ),
       y = "Deaths/100k",
-      x = ifelse(time_unit == "weekly", "Week of Year", "Month of Year")
+      x = "Year"
     ) +
     twitter_theme() +
     watermark(df$yearmonth, df$value_p) +
@@ -178,13 +178,48 @@ for (country in unique(all_countries$iso3c)) {
     ) +
     geom_text(
       aes(label = round(mortality, 1)),
-      vjust = 2.5, colour = "white"
+      vjust = 2.5, colour = "#ffffff"
     ) +
     geom_text(
       aes(label = percent(excess_percent, accuracy = 0.1)),
       vjust = -.2
-    )
-  save_chart(chart3, paste("mortality", country_name, "3", sep = "/"))
+    ) +
+    scale_y_continuous(labels = comma_format(decimal.mark = ","))
+
+  save_chart(chart3a, paste("mortality", country_name, "3a", sep = "/"))
+
+  chart3b <- ggplot(data, aes(x = year, y = mortality)) +
+    labs(
+      title = paste0("Mortality [", country_name, "]"),
+      subtitle = paste0(
+        "Baseline: ", toString(data_bl$year), "; ",
+        "Source: UN, World Mortality Dataset"
+      ),
+      y = "Deaths/100k",
+      x = "Year"
+    ) +
+    twitter_theme() +
+    watermark(df$yearmonth, df$value_p) +
+    geom_point() +
+    geom_abline(
+      intercept = model$coefficients[1],
+      slope = model$coefficients[2],
+      linetype = "dashed",
+      colour = "#00000077",
+      size = 1
+    ) +
+    geom_text(
+      aes(label = round(mortality, 1)),
+      vjust = 1.5,
+      colour = "#00000099"
+    ) +
+    geom_text(
+      aes(label = percent(excess_percent, accuracy = 0.1)),
+      vjust = -.6,
+      colour = "#0000bb"
+    ) +
+    scale_y_continuous(labels = comma_format(decimal.mark = ","))
+  save_chart(chart3b, paste("mortality", country_name, "3b", sep = "/"))
 
   ## YTD Mortality
   date <- mortality %>%
@@ -215,7 +250,42 @@ for (country in unique(all_countries$iso3c)) {
     mutate(excess = mortality - baseline) %>%
     mutate(excess_percent = excess / baseline)
 
-  chart4 <- ggplot(data, aes(x = year, y = mortality)) +
+  chart4a <- ggplot(data, aes(x = year, y = mortality)) +
+    labs(
+      title = paste0(
+        "YTD Mortality (",
+        ifelse(time_unit == "weekly", "Week", "Month"),
+        " 1-", max_week, ") [", country_name, "]"
+      ),
+      subtitle = paste0(
+        "Baseline: ", toString(data_bl$year), "; ",
+        "Source: UN, World Mortality Dataset"
+      ),
+      y = "Deaths/100k",
+      x = "Year"
+    ) +
+    twitter_theme() +
+    watermark(df$yearmonth, df$value_p) +
+    geom_col(fill = "#5383EC") +
+    geom_abline(
+      intercept = model$coefficients[1],
+      slope = model$coefficients[2],
+      linetype = "dashed",
+      colour = "#00000077",
+      size = 1
+    ) +
+    geom_text(
+      aes(label = round(mortality, 1)),
+      vjust = 2.5, colour = "#ffffff"
+    ) +
+    geom_text(
+      aes(label = percent(excess_percent, accuracy = 0.1)),
+      vjust = -.2
+    ) +
+    scale_y_continuous(labels = comma_format(decimal.mark = ","))
+  save_chart(chart4a, paste("mortality", country_name, "4a", sep = "/"))
+
+  chart4b <- ggplot(data, aes(x = year, y = mortality)) +
     labs(
       title = paste0(
         "YTD Mortality (",
@@ -231,7 +301,7 @@ for (country in unique(all_countries$iso3c)) {
     ) +
     twitter_theme() +
     watermark(df$yearmonth, df$value_p) +
-    geom_col(fill = "#5383EC") +
+    geom_point() +
     geom_abline(
       intercept = model$coefficients[1],
       slope = model$coefficients[2],
@@ -241,15 +311,19 @@ for (country in unique(all_countries$iso3c)) {
     ) +
     geom_text(
       aes(label = round(mortality, 1)),
-      vjust = 2.5, colour = "white"
+      vjust = 1.5,
+      colour = "#00000099"
     ) +
     geom_text(
       aes(label = percent(excess_percent, accuracy = 0.1)),
-      vjust = -.2
-    )
-  save_chart(chart4, paste("mortality", country_name, "4", sep = "/"))
+      vjust = -.6,
+      colour = "#0000bb"
+    ) +
+    scale_y_continuous(labels = comma_format(decimal.mark = ","))
+  save_chart(chart4b, paste("mortality", country_name, "4b", sep = "/"))
 
   save_collage(
-    paste("mortality", country_name, sep = "/"), chart1, chart2, chart3, chart4
+    paste("mortality", country_name, sep = "/"),
+    chart1, chart3a, chart4a, chart2, chart3b, chart4b
   )
 }
