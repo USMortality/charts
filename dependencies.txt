@@ -12,3 +12,4 @@ clock
 fable
 feasts
 ggpubr
+fabletools
