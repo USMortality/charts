@@ -2,16 +2,28 @@ source("lib/common.r")
 
 # Download data
 url <- paste0(
-  "https://www2.census.gov/programs-surveys/popest/datasets/2010-2020/state/",
-  "asrh/SC-EST2020-AGESEX-CIV.csv"
+  "https://www2.census.gov/programs-surveys/popest/datasets/2010-2020/",
+  "state/asrh/SC-EST2020-AGESEX-CIV.csv"
 )
 data <- read.csv(url)
 
 url2 <- paste0(
-  "https://www2.census.gov/programs-surveys/popest/datasets/2020-2021/state/",
-  "asrh/sc-est2021-agesex-civ.csv"
+  "https://www2.census.gov/programs-surveys/popest/datasets/2020-2021/",
+  "state/asrh/sc-est2021-agesex-civ.csv"
 )
 data2 <- as_tibble(read.csv(url2))
+
+url3 <- paste0(
+  "https://www2.census.gov/programs-surveys/popest/datasets/2010-2020/",
+  "counties/asrh/CC-EST2020-ALLDATA-36.csv"
+)
+data3 <- as_tibble(read.csv(url3))
+
+url4 <- paste0(
+  "https://www2.census.gov/programs-surveys/popest/datasets/2020-2021/",
+  "counties/asrh/cc-est2021-alldata-36.csv"
+)
+data4 <- as_tibble(read.csv(url4))
 
 # Transform data
 a <- data %>%
@@ -24,10 +36,7 @@ a <- data %>%
   ) %>%
   pivot_longer(
     cols = starts_with("POPEST"), names_to = "year", values_to = "population"
-  ) %>%
-  transform(year = str_sub(year, 7, 10)) %>%
-  setNames(c("jurisdiction", "age", "year", "population")) %>%
-  as_tibble()
+  )
 
 b <- data2 %>%
   filter(SEX == 0) %>%
@@ -36,15 +45,12 @@ b <- data2 %>%
   ) %>%
   pivot_longer(
     cols = starts_with("POPEST"), names_to = "year", values_to = "population"
-  ) %>%
-  transform(year = str_sub(year, 7, 10)) %>%
-  setNames(c("jurisdiction", "age", "year", "population")) %>%
-  as_tibble()
-
-c <- bind_rows(list(a, b))
+  )
 
 # Create 6 age bands
-population_grouped <- c %>%
+population_grouped <- bind_rows(list(a, b)) %>%
+  transform(year = str_sub(year, 7, 10)) %>%
+  setNames(c("jurisdiction", "age", "year", "population")) %>%
   mutate(
     # Create categories
     age_group = case_when(
@@ -66,6 +72,57 @@ population_grouped <- c %>%
   summarise(population = sum(population)) %>%
   mutate(year = as.integer(year)) %>%
   ungroup()
+
+# NYC Data
+ny1 <- data3 %>%
+  mutate(
+    YEAR = case_when(
+      YEAR == 3 ~ 2010,
+      YEAR == 4 ~ 2011,
+      YEAR == 5 ~ 2012,
+      YEAR == 6 ~ 2013,
+      YEAR == 7 ~ 2014,
+      YEAR == 8 ~ 2015,
+      YEAR == 9 ~ 2016,
+      YEAR == 10 ~ 2017,
+      YEAR == 11 ~ 2018,
+      YEAR == 12 ~ 2019
+    )
+  ) %>%
+  filter(!is.na(YEAR))
+
+ny2 <- data4 %>%
+  mutate(YEAR = case_when(YEAR == 2 ~ 2020, YEAR == 3 ~ 2021)) %>%
+  filter(!is.na(YEAR))
+
+nyc <- bind_rows(list(ny1, ny2)) %>%
+  filter(CTYNAME %in% c(
+    "Bronx County", "Kings County", "New York County", "Queens County",
+    "Richmond County"
+  )) %>%
+  select(YEAR, AGEGRP, TOT_POP) %>%
+  setNames(c("year", "age_group", "population")) %>%
+  mutate(
+    # Translate years
+    age_group = case_when(
+      age_group == 0 ~ "all",
+      age_group >= 1 & age_group <= 5 ~ "0-24",
+      age_group >= 6 & age_group <= 9 ~ "25-44",
+      age_group >= 10 & age_group <= 13 ~ "45-64",
+      age_group >= 14 & age_group <= 15 ~ "65-74",
+      age_group >= 16 & age_group <= 17 ~ "75-84",
+      age_group == 18 ~ "85"
+    )
+  ) %>%
+  filter(!is.na(age_group)) %>%
+  select(year, age_group, population) %>%
+  mutate(year = as.integer(year)) %>%
+  group_by(year, age_group) %>%
+  summarise(population = sum(population)) %>%
+  ungroup() %>%
+  mutate(jurisdiction = "New York City", .before = "year")
+
+population_grouped <- bind_rows(list(population_grouped, nyc))
 
 # Forecast 2022/23
 forecast_population <- function(data) {
