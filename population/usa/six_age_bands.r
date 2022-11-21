@@ -153,4 +153,24 @@ population_grouped_forecasted <- population_grouped %>%
   unnest(cols = "data") %>%
   filter(!is.na(jurisdiction))
 
-save_csv(population_grouped_forecasted, "population/usa_6_age_bands")
+save_csv(population_grouped_forecasted, "population/usa/six_age_bands")
+
+for (j in unique(population_grouped_forecasted$jurisdiction)) {
+  data <- population_grouped_forecasted %>%
+    filter(jurisdiction == j) %>%
+    filter(age_group != "all")
+  chart <-
+    ggplot(data, aes(x = year, y = population)) +
+    labs(
+      title = paste0("Population per Age Group [", j, "]"),
+      subtitle = "Datasource: Census.gov",
+      y = "Population",
+      x = "Year"
+    ) +
+    geom_line(aes(color = age_group), size = 1) +
+    twitter_theme() +
+    watermark(df$yearmonth, df$value_p) +
+    scale_y_continuous(labels = label_number(suffix = "M", scale = 1e-6))
+
+  save_chart(chart, paste0("population/usa/", j))
+}
