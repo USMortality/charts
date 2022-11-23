@@ -1,32 +1,13 @@
 source("lib/common.r")
 
 # Download data
-url <- paste0(
-  "https://www2.census.gov/programs-surveys/popest/datasets/2010-2020/",
-  "state/asrh/SC-EST2020-AGESEX-CIV.csv"
-)
-data <- read.csv(url)
-
-url2 <- paste0(
-  "https://www2.census.gov/programs-surveys/popest/datasets/2020-2021/",
-  "state/asrh/sc-est2021-agesex-civ.csv"
-)
-data2 <- as_tibble(read.csv(url2))
-
-url3 <- paste0(
-  "https://www2.census.gov/programs-surveys/popest/datasets/2010-2020/",
-  "counties/asrh/CC-EST2020-ALLDATA-36.csv"
-)
-data3 <- as_tibble(read.csv(url3))
-
-url4 <- paste0(
-  "https://www2.census.gov/programs-surveys/popest/datasets/2020-2021/",
-  "counties/asrh/cc-est2021-alldata-36.csv"
-)
-data4 <- as_tibble(read.csv(url4))
+data1 <- as_tibble(read.csv("./data/population_usa_2010-2020.csv"))
+data2 <- as_tibble(read.csv("./data/population_usa_2020-2021.csv"))
+data3 <- as_tibble(read.csv("./data/population_usa_county_2010-2020.csv"))
+data4 <- as_tibble(read.csv("./data/population_usa_county_2020-2021.csv"))
 
 # Transform data
-a <- data %>%
+a <- data1 %>%
   filter(SEX == 0) %>%
   select(
     NAME, AGE,

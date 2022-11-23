@@ -1,10 +1,6 @@
 source("lib/common.r")
 
-url <- paste0(
-  "https://github.com/robert-koch-institut/COVID-19-Impfungen_in_Deutschland/",
-  "blob/master/Aktuell_Deutschland_Landkreise_COVID-19-Impfungen.csv?raw=true"
-)
-data <- read.csv(url)
+data <- read.csv("./data/covid19_deu_vaccinations.csv")
 
 df <- as_tibble(data) %>%
   mutate(Impfdatum = date_parse(Impfdatum, format = "%F")) %>%

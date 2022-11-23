@@ -1,8 +1,6 @@
 source("lib/common.r")
 
-data <- read.csv(
-  "https://data.cdc.gov/api/views/hmz2-vwda/rows.csv?accessType=DOWNLOAD"
-)
+data <- read.csv("./data/covid19_usa_live_births.csv")
 
 df <- as_tibble(data) %>%
   filter(State == "UNITED STATES") %>%
