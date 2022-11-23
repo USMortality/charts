@@ -30,7 +30,8 @@ wd2 <- deaths2 %>%
 
 wd <- full_join(wd1, wd2, by = c("iso3c", "year", "week", "date")) %>%
   mutate(deaths = as.integer(ifelse(is.na(deaths.y), deaths.x, deaths.y))) %>%
-  select(iso3c, year, week, date, deaths)
+  select(iso3c, year, week, date, deaths) %>%
+  arrange(iso3c, date)
 
 wdd <- wd %>%
   uncount(7, .id = "day") %>%
