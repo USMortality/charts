@@ -116,8 +116,6 @@ aggregate_data <- function(data, fun) {
     as_tibble()
 }
 
-save_csv(mortality_daily, "mortality/world_daily")
-
 mortality_daily_nested <- mortality_daily %>%
   nest(data = c(date, deaths, population, mortality))
 
