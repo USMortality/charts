@@ -4,16 +4,17 @@ data <- read.csv("./data/covid19_deu_vaccinations.csv")
 
 df <- as_tibble(data) %>%
   mutate(Impfdatum = date_parse(Impfdatum, format = "%F")) %>%
-  mutate(jahr = format(Impfdatum, "%Y")) %>%
-  mutate(woche = format(Impfdatum, "%V")) %>%
-  mutate(altersgruppe = Altersgruppe) %>%
-  group_by(jahr, woche, altersgruppe, Impfschutz) %>%
+  mutate(jahr = lubridate::isoyear(Impfdatum)) %>%
+  mutate(woche = lubridate::week(Impfdatum)) %>%
+  group_by(jahr, woche, Altersgruppe, Impfschutz) %>%
   summarize(n = sum(Anzahl)) %>%
+  ungroup() %>%
   mutate(jahr_woche = make_yearweek(
-    year = as.numeric(jahr), week = as.numeric(woche)
-  ), .before = jahr) %>%
-  group_by(jahr_woche, altersgruppe, Impfschutz) %>%
+    year = jahr, week = woche
+  )) %>%
+  group_by(jahr_woche, Altersgruppe, Impfschutz) %>%
   summarize(n = sum(n)) %>%
+  select(jahr_woche, Altersgruppe, Impfschutz, n) %>%
   setNames(c(
     "year_week", "age_group", "dose", "count"
   )) %>%

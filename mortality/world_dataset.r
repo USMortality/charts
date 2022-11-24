@@ -110,14 +110,44 @@ mortality_daily <- dd %>%
   mutate(mortality = deaths / population * 100000) %>%
   select(-year)
 
+filter_by_complete_temporal_values <- function(data, fun, n) {
+  df <- data %>% mutate(temporal_value = fun(date))
+
+  start <- df %>%
+    filter(temporal_value == head(df, n = 1)$temporal_value) %>%
+    group_by(temporal_value) %>%
+    filter(n() >= n) %>%
+    ungroup()
+
+  mid <- df %>%
+    filter(!temporal_value %in% c(
+      head(df, n = 1)$temporal_value,
+      tail(df, n = 1)$temporal_value
+    ))
+
+  end <- df %>%
+    filter(temporal_value == tail(df, n = 1)$temporal_value) %>%
+    group_by(temporal_value) %>%
+    filter(n() >= n) %>%
+    ungroup()
+
+  rbind(start, mid, end) %>% group_by(fun(date))
+}
+
 aggregate_data <- function(data, fun) {
-  y <- data %>%
-    as_tsibble(index = date) %>%
-    index_by(fun(date)) %>%
+  # Filter ends
+  switch(fun,
+    yearweek = filter_by_complete_temporal_values(data, yearweek, 7),
+    yearmonth = filter_by_complete_temporal_values(data, yearmonth, 28),
+    yearquarter = filter_by_complete_temporal_values(data, yearquarter, 90),
+    year =
+      filter_by_complete_temporal_values(data, lubridate::year, 365),
+  ) %>%
     summarise(
       deaths = round(sum(deaths)),
       mortality = round(sum(mortality), digits = 1)
     ) %>%
+    ungroup() %>%
     setNames(c("date", "deaths", "mortality")) %>%
     as_tibble()
 }
@@ -126,21 +156,21 @@ mortality_daily_nested <- mortality_daily %>%
   nest(data = c(date, deaths, population, mortality))
 
 weekly <- mortality_daily_nested %>%
-  mutate(data = lapply(data, aggregate_data, yearweek)) %>%
+  mutate(data = lapply(data, aggregate_data, "yearweek")) %>%
   unnest(cols = "data")
 save_csv(weekly, "mortality/world_weekly")
 
 monthly <- mortality_daily_nested %>%
-  mutate(data = lapply(data, aggregate_data, yearmonth)) %>%
+  mutate(data = lapply(data, aggregate_data, "yearmonth")) %>%
   unnest(cols = "data")
 save_csv(monthly, "mortality/world_monthly")
 
 quarterly <- mortality_daily_nested %>%
-  mutate(data = lapply(data, aggregate_data, yearquarter)) %>%
+  mutate(data = lapply(data, aggregate_data, "yearquarter")) %>%
   unnest(cols = "data")
 save_csv(quarterly, "mortality/world_quarterly")
 
 yearly <- mortality_daily_nested %>%
-  mutate(data = lapply(data, aggregate_data, lubridate::year)) %>%
+  mutate(data = lapply(data, aggregate_data, "year")) %>%
   unnest(cols = "data")
 save_csv(yearly, "mortality/world_yearly")
