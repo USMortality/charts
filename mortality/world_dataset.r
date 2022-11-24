@@ -28,10 +28,14 @@ wd2 <- deaths2 %>%
   select(CountryCode, Year, Week, date, DTotal) %>%
   setNames(c("iso3c", "year", "week", "date", "deaths"))
 
+wd2$iso3c[wd2$iso3c == "DEUTNP"] <- "DEU"
+wd2$iso3c[wd2$iso3c == "FRATNP"] <- "FRA"
+wd2$iso3c[wd2$iso3c == "NZL_NP"] <- "NZL"
+wd2$iso3c[wd2$iso3c == "GBR_NP"] <- "GBR"
+
 wd <- full_join(wd1, wd2, by = c("iso3c", "year", "week", "date")) %>%
   mutate(deaths = as.integer(ifelse(is.na(deaths.y), deaths.x, deaths.y))) %>%
-  select(iso3c, year, week, date, deaths) %>%
-  arrange(iso3c, date)
+  select(iso3c, year, week, date, deaths)
 
 wdd <- wd %>%
   uncount(7, .id = "day") %>%
@@ -63,8 +67,9 @@ mdd <- md %>%
   select(iso3c, date, deaths)
 
 dd <- full_join(wdd, mdd, by = c("iso3c", "date")) %>%
-  mutate(deaths = as.integer(ifelse(is.na(deaths.y), deaths.x, deaths.y))) %>%
-  select(iso3c, date, deaths)
+  mutate(deaths = as.integer(ifelse(!is.na(deaths.x), deaths.x, deaths.y))) %>%
+  select(iso3c, date, deaths) %>%
+  arrange(iso3c, date)
 
 # Population
 population_grouped <- world_population %>%
@@ -111,7 +116,7 @@ aggregate_data <- function(data, fun) {
     index_by(fun(date)) %>%
     summarise(
       deaths = round(sum(deaths)),
-      mortality = round(sum(mortality))
+      mortality = round(sum(mortality), digits = 1)
     ) %>%
     setNames(c("date", "deaths", "mortality")) %>%
     as_tibble()
