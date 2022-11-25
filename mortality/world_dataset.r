@@ -155,22 +155,37 @@ aggregate_data <- function(data, fun) {
 mortality_daily_nested <- mortality_daily %>%
   nest(data = c(date, deaths, population, mortality))
 
-weekly <- mortality_daily_nested %>%
-  mutate(data = lapply(data, aggregate_data, "yearweek")) %>%
-  unnest(cols = "data")
-save_csv(weekly, "mortality/world_weekly")
+de_yearly = mortality_daily %>%
+  filter(iso3c == "DEU") %>%
+  mutate(year = year(date)) %>%
+  nest(data = c(iso3c, date, deaths, population, mortality))
 
-monthly <- mortality_daily_nested %>%
-  mutate(data = lapply(data, aggregate_data, "yearmonth")) %>%
-  unnest(cols = "data")
-save_csv(monthly, "mortality/world_monthly")
+max_date = max(a$date)
 
-quarterly <- mortality_daily_nested %>%
-  mutate(data = lapply(data, aggregate_data, "yearquarter")) %>%
-  unnest(cols = "data")
-save_csv(quarterly, "mortality/world_quarterly")
+a %>% filter(month(date) <= month(max_date)) %>%
+ filter(month(date) <= month(max_date))
 
-yearly <- mortality_daily_nested %>%
-  mutate(data = lapply(data, aggregate_data, "year")) %>%
-  unnest(cols = "data")
-save_csv(yearly, "mortality/world_yearly")
+
+   %>%
+  filter(date == )
+
+
+# weekly <- mortality_daily_nested %>%
+#   mutate(data = lapply(data, aggregate_data, "yearweek")) %>%
+#   unnest(cols = "data")
+# save_csv(weekly, "mortality/world_weekly")
+
+# monthly <- mortality_daily_nested %>%
+#   mutate(data = lapply(data, aggregate_data, "yearmonth")) %>%
+#   unnest(cols = "data")
+# save_csv(monthly, "mortality/world_monthly")
+
+# quarterly <- mortality_daily_nested %>%
+#   mutate(data = lapply(data, aggregate_data, "yearquarter")) %>%
+#   unnest(cols = "data")
+# save_csv(quarterly, "mortality/world_quarterly")
+
+# yearly <- mortality_daily_nested %>%
+#   mutate(data = lapply(data, aggregate_data, "year")) %>%
+#   unnest(cols = "data")
+# save_csv(yearly, "mortality/world_yearly")

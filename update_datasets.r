@@ -34,6 +34,14 @@ urls <- list(
   c(
     "https://github.com/akarlinsky/world_mortality/raw/main/world_mortality.csv",
     "world_mortality.csv"
+  ),
+  c(
+    "https://data.cdc.gov/api/views/3yf8-kanr/rows.csv?accessType=DOWNLOAD&bom=true&format=true",
+    "usa_deaths_causes_2014_2019.csv"
+  ),
+  c(
+    "https://data.cdc.gov/api/views/muzy-jte6/rows.csv?accessType=DOWNLOAD&bom=true&format=true",
+    "usa_deaths_causes_2020_n.csv"
   )
 )
 

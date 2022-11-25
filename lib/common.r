@@ -85,10 +85,20 @@ right <- function(string, length) {
   substring(string, nchar(string) - length + 1, nchar(string))
 }
 
-save_collage <- function(path, chart1, chart2, chart3, chart4, chart5, chart6) {
-  figure <- ggarrange(
-    chart1, chart2, chart3, chart4, chart5, chart6,
-    ncol = 3, nrow = 2
-  )
+save_collage <- function(..., path = NULL, ncol = 2, nrow = 2) {
+  figure <- ggarrange(..., ncol = ncol, nrow = nrow)
   save_chart(figure, path, scale = 4)
+}
+
+lm_right <- function(formula, data, ...) {
+  mod <- lm(formula, data)
+  class(mod) <- c("lm_right", class(mod))
+  mod
+}
+
+predictdf.lm_right <- function(model, xseq, se, level) {
+  ## here the main code: truncate to x values at the right
+  init_range <- range(model$model$x)
+  xseq <- xseq[xseq >= init_range[1]]
+  ggplot2:::predictdf.default(model, xseq[-length(xseq)], se, level)
 }

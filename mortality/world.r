@@ -1,166 +1,171 @@
 source("lib/common.r")
 
-# Download Data
-url <- paste0(
-  "https://population.un.org/wpp/Download/Files/1_Indicators%20(Standard)/",
-  "EXCEL_FILES/1_General/WPP2022_GEN_F01_DEMOGRAPHIC_INDICATORS_COMPACT_REV1",
-  ".xlsx"
-)
-download.file(
-  url, "./data/WPP2022_GEN_F01_DEMOGRAPHIC_INDICATORS_COMPACT_REV1.xlsx"
-)
+data_weekly <- as_tibble(read.csv("./out/mortality/world_weekly.csv"))
+data_monthly <- as_tibble(read.csv("./out/mortality/world_monthly.csv"))
+data_quarterly <- as_tibble(read.csv("./out/mortality/world_quarterly.csv"))
+data_yearly <- as_tibble(read.csv("./out/mortality/world_yearly.csv"))
 
-# Load Data
-world_population <- read_excel(
-  "./data/WPP2022_GEN_F01_DEMOGRAPHIC_INDICATORS_COMPACT_REV1.xlsx",
-  sheet = "Estimates",
-  col_types = c(
-    "text", "text", "text", "text", "numeric", "numeric", "numeric"
-  ),
-  range = cell_cols(6:12)
-)
-world_deaths <- as_tibble(read.csv(
-  "https://github.com/akarlinsky/world_mortality/raw/main/world_mortality.csv"
-))
+print("1) Weekly")
+# for (country in unique(data_weekly$iso3c)) {
+#   print(country)
 
-# Population
-population <- world_population %>%
-  select(1, 6, 7) %>%
-  setNames(c("ISO3", "year", "population")) %>%
-  filter(year >= 2015)
+#   df <- data_weekly %>%
+#     filter(iso3c == country) %>%
+#     mutate(date = yearweek(date)) %>%
+#     as_tsibble(index = date)
 
-all_countries <- world_deaths %>%
-  filter(year == 2015)
+#   chart1 <-
+#     ggplot(df, aes(x = date, y = mortality)) +
+#     labs(
+#       title = paste0("Weekly Mortality [", country, "]"),
+#       subtitle = "Datasources: United Nations, World Mortality Dataset",
+#       y = "Deaths/100k",
+#       x = "Week of Year"
+#     ) +
+#     geom_line(color = "#5383EC", linewidth = 1) +
+#     twitter_theme() +
+#     watermark(df$yearmonth, df$value_p)
+#   save_chart(chart1, paste("mortality", country, "weekly_line", sep = "/"))
+# }
 
-for (country in unique(all_countries$iso3c)) {
-  df <- all_countries %>%
-    filter(iso3c == country)
-  country_name <- unique(df$country_name)
+print("2) Monthly")
+for (country in unique(data_monthly$iso3c)) {
+  print(country)
+  df <- data_monthly %>%
+    filter(iso3c == country) %>%
+    mutate(date = yearmonth(date)) %>%
+    as_tsibble(index = date)
 
-  print(paste(country_name, country, sep = "/"))
-
-  population_country <- as_tsibble(
-    population %>% filter(ISO3 == country),
-    index = year
-  )
-
-  if (length(population_country$ISO3) == 0) {
-    print(paste0("no population found for ", country))
-    next
-  }
-
-  # forecast 2022
-  model <- lm(
-    population ~ year,
-    data = population_country %>% filter(year >= 2020)
-  )
-  y_22 <- predict(
-    model,
-    data = population_country,
-    newdata = data.frame(year = c(2022))
-  )
-  population_country <- population_country %>%
-    add_row(ISO3 = country, year = 2022, population = y_22)
-
-  # Deaths
-  country_deaths <- world_deaths %>%
-    filter(iso3c == country)
-
-  time_unit <- unique(country_deaths$time_unit)
-  if (length(time_unit) != 1) {
-    stop("Different time_units detected.")
-  }
-  if (time_unit == "weekly") {
-    deaths <- country_deaths %>%
-      mutate(date = paste0(
-        year, "-", str_pad(time, 2, side = "left", "0"), "-1"
-      )) %>%
-      mutate(date = date_parse(date, format = "%G-%V-%u")) %>%
-      tsibble(index = date)
-  }
-  if (time_unit == "monthly") {
-    deaths <- country_deaths %>%
-      mutate(date = make_yearmonth(year = year, month = time)) %>%
-      tsibble(index = date)
-  }
-
-  # Join deaths/population
-  mortality <- deaths %>%
-    inner_join(population_country, by = "year") %>%
-    mutate(mortality = deaths / population * 100) %>%
-    mutate(year = as.integer(year)) %>%
-    fill_gaps(mortality = 0)
-
-  # Charts
-  ## Weekly Mortality
-  df <- mortality %>%
-    select(date, mortality)
-  save_csv(df, paste("mortality", country_name, "weekly", sep = "/"))
-
-  chart1 <-
-    ggplot(as_tsibble(df, index = date), aes(x = date, y = mortality)) +
+  # chart2 <-
+  ggplot(df, aes(x = date, y = mortality)) +
     labs(
-      title = paste0("Weekly Mortality [", country_name, "]"),
+      title = paste0("Monthly Mortality [", country, "]"),
       subtitle = "Datasources: United Nations, World Mortality Dataset",
       y = "Deaths/100k",
-      x = ifelse(time_unit == "weekly", "Week of Year", "Month of Year")
+      x = "Month of Year"
     ) +
     geom_line(color = "#5383EC", linewidth = 1) +
     twitter_theme() +
     watermark(df$yearmonth, df$value_p)
-  save_chart(chart1, paste("mortality", country_name, "1", sep = "/"))
+  # save_chart(chart2, paste("mortality", country, "mortality_line", sep = "/"))
+}
 
-  ## STL decomp
-  data <- mortality %>%
-    model(STL(mortality)) %>%
-    components()
-  chart2 <- autoplot(data, .vars = mortality) +
+print("3) Quarterly")
+for (country in unique(data_monthly$iso3c)) {
+  print(country)
+  df <- data_quarterly %>%
+    filter(iso3c == country) %>%
+    mutate(date = yearquarter(date)) %>%
+    as_tsibble(index = date)
+
+  # chart2 <-
+  ggplot(df, aes(x = date, y = mortality)) +
     labs(
-      title = paste0(
-        "Weekly Mortality - STL Decomposition [",
-        country_name,
-        "]"
-      ),
+      title = paste0("Quarterly Mortality [", country, "]"),
       subtitle = "Datasources: United Nations, World Mortality Dataset",
       y = "Deaths/100k",
-      x = ifelse(time_unit == "weekly", "Week of Year", "Month of Year")
+      x = "Month of Year"
+    ) +
+    geom_line(color = "#5383EC", linewidth = 1) +
+    twitter_theme() +
+    watermark(df$yearmonth, df$value_p)
+  # save_chart(chart2, paste("mortality", country, "mortality_line", sep = "/"))
+}
+
+print("3) Quarterly")
+for (country in unique(data_monthly$iso3c)) {
+  print(country)
+  df <- data_quarterly %>%
+    filter(iso3c == country) %>%
+    mutate(date = yearquarter(date)) %>%
+    as_tsibble(index = date)
+
+  # chart2 <-
+  ggplot(df, aes(x = date, y = mortality)) +
+    labs(
+      title = paste0("Quarterly Mortality [", country, "]"),
+      subtitle = "Datasources: United Nations, World Mortality Dataset",
+      y = "Deaths/100k",
+      x = "Month of Year"
+    ) +
+    geom_line(color = "#5383EC", linewidth = 1) +
+    twitter_theme() +
+    watermark(df$yearmonth, df$value_p)
+  # save_chart(chart2, paste("mortality", country, "mortality_line", sep = "/"))
+}
+
+print("4) Yearly")
+for (country in unique(data_monthly$iso3c)) {
+  print(country)
+  df <- data_yearly %>%
+    filter(iso3c == country) %>%
+    as_tsibble(index = date)
+
+  # chart2 <-
+  ggplot(df, aes(x = date, y = mortality)) +
+    labs(
+      title = paste0("Yearly Mortality [", country, "]"),
+      subtitle = "Datasources: United Nations, World Mortality Dataset",
+      y = "Deaths/100k",
+      x = "Month of Year"
+    ) +
+    geom_line(color = "#5383EC", linewidth = 1) +
+    twitter_theme() +
+    watermark(df$yearmonth, df$value_p)
+  # save_chart(chart2, paste("mortality", country, "mortality_line", sep = "/"))
+}
+
+print("6) STL Decomposition")
+for (country in unique(data_monthly$iso3c)) {
+  print(country)
+
+  df <- data_weekly %>%
+    filter(iso3c == country) %>%
+    mutate(date = yearweek(date)) %>%
+    as_tsibble(index = date) %>%
+    model(STL(mortality)) %>%
+    components()
+  # chart2 <-
+  autoplot(df, .vars = mortality) +
+    labs(
+      title = paste0("Weekly Mortality - STL Decomposition [", country, "]"),
+      subtitle = "Datasources: United Nations, World Mortality Dataset",
+      y = "Deaths/100k",
+      x = "Week of Year"
     ) +
     twitter_theme() +
     watermark(df$yearmonth, df$value_p)
-  save_chart(
-    chart2,
-    paste("mortality", country_name, "2", sep = "/")
-  )
+  save_chart(chart2, paste("mortality", country, "mortality_line", sep = "/"))
+}
 
-  ## Yearly Mortality
-  data <- mortality %>%
-    filter(!is.na(year)) %>%
-    group_by_key() %>%
-    index_by(year) %>%
-    summarise(
-      mortality = sum(mortality)
-    )
+print("7) Yearly")
+for (country in unique(data_monthly$iso3c)) {
+  print(country)
+
+  df <- data_yearly %>%
+    filter(iso3c == country) %>%
+    as_tsibble(index = date)
 
   ### Calculate Baseline & Excess w/o outliers
-  data_bl <- data %>%
-    filter(year <= 2019) %>%
+  min_year <- min(df$date)
+  start_year <- ifelse(min_year > 2010, min_year, 2010)
+  data_bl <- df %>%
+    filter(date %in% seq(start_year, 2019)) %>%
     subset(!(mortality %in% boxplot.stats(mortality)$out))
-  model <- lm(y ~ x, data = data.frame(x = data_bl$year, y = data_bl$mortality))
-  forecast <- predict(
-    model,
-    newdata = data.frame(x = seq(2015, max(data$year)))
-  )
-  fc_df <- data.frame(year = seq(2015, max(data$year)), baseline = forecast)
-  data <- data %>%
-    inner_join(fc_df, by = "year") %>%
+  model <- lm(y ~ x, data = data.frame(x = data_bl$date, y = data_bl$mortality))
+  forecast <- predict(model, newdata = data.frame(x = seq(start_year, max(df$date))))
+  fc_df <- data.frame(date = seq(2010, max(df$date)), baseline = forecast)
+  data <- df %>%
+    inner_join(fc_df, by = "date") %>%
     mutate(excess = mortality - baseline) %>%
     mutate(excess_percent = excess / baseline)
 
-  chart3a <- ggplot(data, aes(x = year, y = mortality)) +
+  # chart3a <- 
+  ggplot(data, aes(x = date, y = mortality)) +
     labs(
-      title = paste0("Mortality [", country_name, "]"),
+      title = paste0("Mortality [", country, "]"),
       subtitle = paste0(
-        "Baseline: ", toString(data_bl$year), "; ",
+        "Baseline: ", toString(data_bl$date), "; ",
         "Source: UN, World Mortality Dataset"
       ),
       y = "Deaths/100k",
@@ -186,144 +191,5 @@ for (country in unique(all_countries$iso3c)) {
     ) +
     scale_y_continuous(labels = comma_format(decimal.mark = ","))
 
-  save_chart(chart3a, paste("mortality", country_name, "3a", sep = "/"))
-
-  chart3b <- ggplot(data, aes(x = year, y = mortality)) +
-    labs(
-      title = paste0("Mortality [", country_name, "]"),
-      subtitle = paste0(
-        "Baseline: ", toString(data_bl$year), "; ",
-        "Source: UN, World Mortality Dataset"
-      ),
-      y = "Deaths/100k",
-      x = "Year"
-    ) +
-    twitter_theme() +
-    watermark(df$yearmonth, df$value_p) +
-    geom_point() +
-    geom_abline(
-      intercept = model$coefficients[1],
-      slope = model$coefficients[2],
-      linetype = "dashed",
-      colour = "#00000077",
-      size = 1
-    ) +
-    geom_text(
-      aes(label = round(mortality, 1)),
-      vjust = 1.5,
-      colour = "#00000099"
-    ) +
-    geom_text(
-      aes(label = percent(excess_percent, accuracy = 0.1)),
-      vjust = -.6,
-      colour = "#0000bb"
-    ) +
-    scale_y_continuous(labels = comma_format(decimal.mark = ","))
-  save_chart(chart3b, paste("mortality", country_name, "3b", sep = "/"))
-
-  ## YTD Mortality
-  date <- mortality %>%
-    filter(!is.na(year)) %>%
-    filter(year == max(year))
-  max_week <- max(date$time)
-
-  data <- mortality %>%
-    filter(!is.na(year)) %>%
-    filter(time <= max_week) %>%
-    group_by_key() %>%
-    index_by(year) %>%
-    summarise(
-      mortality = sum(mortality)
-    )
-  # Calculate Baseline & Excess w/o outliers
-  data_bl <- data %>%
-    filter(year <= 2019) %>%
-    subset(!(mortality %in% boxplot.stats(mortality)$out))
-  model <- lm(y ~ x, data = data.frame(x = data_bl$year, y = data_bl$mortality))
-  forecast <- predict(
-    model,
-    newdata = data.frame(x = seq(2015, max(data$year)))
-  )
-  fc_df <- data.frame(year = seq(2015, max(data$year)), baseline = forecast)
-  data <- data %>%
-    inner_join(fc_df, by = "year") %>%
-    mutate(excess = mortality - baseline) %>%
-    mutate(excess_percent = excess / baseline)
-
-  chart4a <- ggplot(data, aes(x = year, y = mortality)) +
-    labs(
-      title = paste0(
-        "YTD Mortality (",
-        ifelse(time_unit == "weekly", "Week", "Month"),
-        " 1-", max_week, ") [", country_name, "]"
-      ),
-      subtitle = paste0(
-        "Baseline: ", toString(data_bl$year), "; ",
-        "Source: UN, World Mortality Dataset"
-      ),
-      y = "Deaths/100k",
-      x = "Year"
-    ) +
-    twitter_theme() +
-    watermark(df$yearmonth, df$value_p) +
-    geom_col(fill = "#5383EC") +
-    geom_abline(
-      intercept = model$coefficients[1],
-      slope = model$coefficients[2],
-      linetype = "dashed",
-      colour = "#00000077",
-      size = 1
-    ) +
-    geom_text(
-      aes(label = round(mortality, 1)),
-      vjust = 2.5, colour = "#ffffff"
-    ) +
-    geom_text(
-      aes(label = percent(excess_percent, accuracy = 0.1)),
-      vjust = -.2
-    ) +
-    scale_y_continuous(labels = comma_format(decimal.mark = ","))
-  save_chart(chart4a, paste("mortality", country_name, "4a", sep = "/"))
-
-  chart4b <- ggplot(data, aes(x = year, y = mortality)) +
-    labs(
-      title = paste0(
-        "YTD Mortality (",
-        ifelse(time_unit == "weekly", "Week", "Month"),
-        " 1-", max_week, ") [", country_name, "]"
-      ),
-      subtitle = paste0(
-        "Baseline: ", toString(data_bl$year), "; ",
-        "Source: UN, World Mortality Dataset"
-      ),
-      y = "Deaths/100k",
-      x = ifelse(time_unit == "weekly", "Week of Year", "Month of Year")
-    ) +
-    twitter_theme() +
-    watermark(df$yearmonth, df$value_p) +
-    geom_point() +
-    geom_abline(
-      intercept = model$coefficients[1],
-      slope = model$coefficients[2],
-      linetype = "dashed",
-      colour = "#00000077",
-      size = 1
-    ) +
-    geom_text(
-      aes(label = round(mortality, 1)),
-      vjust = 1.5,
-      colour = "#00000099"
-    ) +
-    geom_text(
-      aes(label = percent(excess_percent, accuracy = 0.1)),
-      vjust = -.6,
-      colour = "#0000bb"
-    ) +
-    scale_y_continuous(labels = comma_format(decimal.mark = ","))
-  save_chart(chart4b, paste("mortality", country_name, "4b", sep = "/"))
-
-  save_collage(
-    paste("mortality", country_name, sep = "/"),
-    chart1, chart3a, chart4a, chart2, chart3b, chart4b
-  )
+  save_chart(chart3a, paste("mortality", country, "3a", sep = "/"))
 }
