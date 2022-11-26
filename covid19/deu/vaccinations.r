@@ -19,13 +19,17 @@ df <- as_tibble(data) %>%
     "year_week", "age_group", "dose", "count"
   )) %>%
   pivot_wider(names_from = dose, values_from = count) %>%
-  mutate(all = sum(`1`, `2`, `3`, `4`, na.rm = TRUE)) %>%
   ungroup()
 
+df["all"] <- rowSums(df[, 3:ncol(df)], na.rm = TRUE)
 save_csv(df, "covid19/deu/vaccinations")
 
 # Chart
-ts <- df %>% pivot_longer(cols = 3:7, names_to = "dose", values_to = "count")
+ts <- df %>% pivot_longer(
+  cols = 3:ncol(df),
+  names_to = "dose",
+  values_to = "count"
+)
 
 chart <-
   ggplot(ts %>% filter(dose == "all"), aes(x = year_week, y = count)) +
