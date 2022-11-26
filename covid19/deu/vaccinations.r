@@ -43,7 +43,9 @@ chart <-
   twitter_theme() +
   watermark(df$yearmonth, df$value_p) +
   scale_y_continuous(labels = label_number(suffix = "M", scale = 1e-6)) +
-  facet_wrap(vars(age_group))
+  scale_x_yearmonth(date_breaks = "1 year", date_labels = "%Y") +
+  facet_wrap(vars(age_group)) +
+  theme(panel.spacing = unit(0.3, "in"))
 
 chart2 <-
   ggplot(
@@ -60,7 +62,9 @@ chart2 <-
   twitter_theme() +
   watermark(df$yearmonth, df$value_p) +
   scale_y_continuous(labels = label_number(suffix = "M", scale = 1e-6)) +
-  facet_wrap(vars(age_group))
+  scale_x_yearmonth(date_breaks = "1 year", date_labels = "%Y") +
+  facet_wrap(vars(age_group)) +
+  theme(panel.spacing = unit(0.3, "in"))
 
 save_chart(chart, "covid19/deu/vaccinations_age")
 save_chart(chart2, "covid19/deu/vaccinations_age_dose")
