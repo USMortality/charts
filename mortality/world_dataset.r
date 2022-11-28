@@ -140,8 +140,7 @@ aggregate_data <- function(data, fun) {
     yearweek = filter_by_complete_temporal_values(data, yearweek, 7),
     yearmonth = filter_by_complete_temporal_values(data, yearmonth, 28),
     yearquarter = filter_by_complete_temporal_values(data, yearquarter, 90),
-    year =
-      filter_by_complete_temporal_values(data, lubridate::year, 365),
+    year = filter_by_complete_temporal_values(data, lubridate::year, 365)
   ) %>%
     summarise(
       deaths = round(sum(deaths)),
@@ -152,8 +151,39 @@ aggregate_data <- function(data, fun) {
     as_tibble()
 }
 
+filter_ytd <- function(data, max_date) {
+  year(max_date) <- year(data$date[1])
+  data %>%
+    filter(date <= max_date) %>%
+    mutate(max_date = max_date)
+}
+
+calc_ytd <- function(data) {
+  nested <- data %>%
+    mutate(year = year(date)) %>%
+    nest(data = c(date, deaths, population, mortality))
+  max_date <- max(nested[[2]][[length(nested[[2]])]]$date)
+  nested %>%
+    mutate(data = lapply(data, filter_ytd, max_date)) %>%
+    unnest(cols = "data")
+}
+
+aggregate_data_ytd <- function(data) {
+  data %>%
+    group_by(year, max_date) %>%
+    summarise(
+      deaths = round(sum(deaths)),
+      mortality = round(sum(mortality), digits = 1)
+    ) %>%
+    ungroup() %>%
+    setNames(c("date", "max_date", "deaths", "mortality")) %>%
+    as_tibble()
+}
+
 mortality_daily_nested <- mortality_daily %>%
   nest(data = c(date, deaths, population, mortality))
+mortality_daily_nested_ytd <- mortality_daily_nested %>%
+  mutate(data = lapply(data, calc_ytd))
 
 weekly <- mortality_daily_nested %>%
   mutate(data = lapply(data, aggregate_data, "yearweek")) %>%
@@ -174,3 +204,8 @@ yearly <- mortality_daily_nested %>%
   mutate(data = lapply(data, aggregate_data, "year")) %>%
   unnest(cols = "data")
 save_csv(yearly, "mortality/world_yearly")
+
+yearly_ytd <- mortality_daily_nested_ytd %>%
+  mutate(data = lapply(data, aggregate_data_ytd)) %>%
+  unnest(cols = "data")
+save_csv(yearly_ytd, "mortality/world_yearly_ytd")
