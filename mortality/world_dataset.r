@@ -140,7 +140,8 @@ aggregate_data <- function(data, fun) {
     yearweek = filter_by_complete_temporal_values(data, yearweek, 7),
     yearmonth = filter_by_complete_temporal_values(data, yearmonth, 28),
     yearquarter = filter_by_complete_temporal_values(data, yearquarter, 90),
-    year = filter_by_complete_temporal_values(data, lubridate::year, 365)
+    year = filter_by_complete_temporal_values(data, lubridate::year, 365),
+    fluseason = filter_by_complete_temporal_values(data, fluseason, 365)
   ) %>%
     summarise(
       deaths = round(sum(deaths)),
@@ -209,3 +210,8 @@ yearly_ytd <- mortality_daily_nested_ytd %>%
   mutate(data = lapply(data, aggregate_data_ytd)) %>%
   unnest(cols = "data")
 save_csv(yearly_ytd, "mortality/world_yearly_ytd")
+
+fluseason <- mortality_daily_nested %>%
+  mutate(data = lapply(data, aggregate_data, "fluseason")) %>%
+  unnest(cols = "data")
+save_csv(fluseason, "mortality/world_fluseason")

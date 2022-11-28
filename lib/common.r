@@ -102,3 +102,22 @@ predictdf.lm_right <- function(model, xseq, se, level) {
   xseq <- xseq[xseq >= init_range[1]]
   ggplot2:::predictdf.default(model, xseq[-length(xseq)], se, level)
 }
+
+fluseason_ <- function(date) {
+  x <- date
+  month(x) <- 10
+  day(x) <- 1
+  if (date >= x) {
+    paste0(year(date), "-", year(date) + 1)
+  } else {
+    paste0(year(date) - 1, "-", year(date))
+  }
+}
+
+fluseason <- function(data) {
+  if (length(data) > 1) {
+    sapply(data, fluseason_)
+  } else {
+    fluseason_(data)
+  }
+}
