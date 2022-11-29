@@ -114,10 +114,19 @@ fluseason_ <- function(date) {
   }
 }
 
+fluseason2_ <- function(date) {
+  y = year(date)
+  if (month(date) <= 9) {
+    paste0(y - 1, "-", y)
+  } else {
+    paste0(y, "-", y + 1)
+  }
+}
+
 fluseason <- function(data) {
   if (length(data) > 1) {
-    sapply(data, fluseason_)
+    sapply(data, fluseason2_)
   } else {
-    fluseason_(data)
+    fluseason2_(data)
   }
 }
