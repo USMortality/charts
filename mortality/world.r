@@ -122,9 +122,7 @@ for (country in unique(data_weekly$name)) {
 
   print("6) Flu Season")
   df <- data_fluseason %>%
-    filter(name == country)
-
-  df <- df %>%
+    filter(name == country) %>%
     mutate(index = seq(1:length(df$date))) %>%
     mutate(date = paste0(mid(date, 3, 2), "/", right(date, 2)))
   chart6 <-
