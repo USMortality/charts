@@ -11,6 +11,9 @@ world_population <- read_excel(
 )
 deaths1 <- as_tibble(read.csv("./data/world_mortality.csv"))
 deaths2 <- as_tibble(read.csv("./data/mortality_org.csv", skip = 2))
+countries <- as_tibble(read.csv("./data/countries.csv")) %>%
+  select(iso3, name) %>%
+  setNames(c("iso3c", "name"))
 
 # Deaths
 wd1 <- deaths1 %>%
@@ -75,6 +78,7 @@ dd <- full_join(wdd, mdd, by = c("iso3c", "date")) %>%
 population_grouped <- world_population %>%
   select(1, 6, 7) %>%
   setNames(c("iso3c", "year", "population")) %>%
+  inner_join(countries, by = c("iso3c")) %>%
   filter(!iso3c %in% c("ISO3 Alpha-code", NA)) %>%
   mutate(year = as.integer(year)) %>%
   mutate(population = as.integer(population * 1000)) %>%

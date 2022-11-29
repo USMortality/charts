@@ -93,9 +93,9 @@ mid <- function(string, start, length) {
   substr(string, start, start + length - 1)
 }
 
-save_collage <- function(..., path = NULL, ncol = 2, nrow = 2) {
+save_collage <- function(..., path = NULL, ncol = 2, nrow = 2, scale = 4) {
   figure <- ggarrange(..., ncol = ncol, nrow = nrow)
-  save_chart(figure, path, scale = 4)
+  save_chart(figure, path, scale = scale)
 }
 
 lm_right <- function(formula, data, ...) {

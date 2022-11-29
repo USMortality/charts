@@ -42,6 +42,10 @@ urls <- list(
   c(
     "https://data.cdc.gov/api/views/muzy-jte6/rows.csv?accessType=DOWNLOAD&bom=true&format=true",
     "usa_deaths_causes_2020_n.csv"
+  ),
+  c(
+    "https://raw.githubusercontent.com/dr5hn/countries-states-cities-database/master/csv/countries.csv",
+    "countries.csv"
   )
 )
 

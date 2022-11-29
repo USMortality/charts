@@ -7,12 +7,12 @@ data_yearly <- as_tibble(read.csv("./out/mortality/world_yearly.csv"))
 data_ytd <- as_tibble(read.csv("./out/mortality/world_ytd.csv"))
 data_fluseason <- as_tibble(read.csv("./out/mortality/world_fluseason.csv"))
 
-for (country in unique(data_weekly$iso3c)) {
+for (country in unique(data_weekly$name)) {
   print(country)
 
   print("1) Weekly")
   df <- data_weekly %>%
-    filter(iso3c == country) %>%
+    filter(name == country) %>%
     mutate(date = yearweek(date)) %>%
     as_tsibble(index = date)
 
@@ -33,7 +33,7 @@ for (country in unique(data_weekly$iso3c)) {
 
   print("2) Monthly")
   df <- data_monthly %>%
-    filter(iso3c == country) %>%
+    filter(name == country) %>%
     mutate(date = yearmonth(date)) %>%
     as_tsibble(index = date)
 
@@ -54,7 +54,7 @@ for (country in unique(data_weekly$iso3c)) {
 
   print("3) Quarterly")
   df <- data_quarterly %>%
-    filter(iso3c == country) %>%
+    filter(name == country) %>%
     mutate(date = yearquarter(date)) %>%
     as_tsibble(index = date)
 
@@ -75,7 +75,7 @@ for (country in unique(data_weekly$iso3c)) {
 
   print("4) Yearly")
   df <- data_yearly %>%
-    filter(iso3c == country) %>%
+    filter(name == country) %>%
     mutate(date = ymd(date, truncated = 2L)) %>%
     as_tsibble(index = date)
 
@@ -97,7 +97,7 @@ for (country in unique(data_weekly$iso3c)) {
 
   print("5) YTD")
   df <- data_ytd %>%
-    filter(iso3c == country) %>%
+    filter(name == country) %>%
     mutate(date = ymd(date, truncated = 2L)) %>%
     as_tsibble(index = date)
 
@@ -106,7 +106,7 @@ for (country in unique(data_weekly$iso3c)) {
     labs(
       title = paste0("Mortality YTD [", country, "]"),
       subtitle = paste0(
-        "Until: ", tail(df$max_date, n = 1),
+        "Yearly until: ", tail(df$max_date, n = 1),
         "; Source: github.com/USMortality/charts"
       ),
       y = "Deaths/100k",
@@ -122,7 +122,7 @@ for (country in unique(data_weekly$iso3c)) {
 
   print("6) Flu Season")
   df <- data_fluseason %>%
-    filter(iso3c == country)
+    filter(name == country)
 
   df <- df %>%
     mutate(index = seq(1:length(df$date))) %>%
@@ -145,9 +145,12 @@ for (country in unique(data_weekly$iso3c)) {
 
   print("7) STL Decomposition")
   df <- data_weekly %>%
-    filter(iso3c == country) %>%
+    filter(name == country) %>%
     mutate(date = yearweek(date)) %>%
     as_tsibble(index = date) %>%
+    group_by_key() %>%
+    fill_gaps() %>%
+    fill(mortality, .direction = "down") %>%
     model(STL(mortality)) %>%
     components()
   chart7 <-
@@ -164,53 +167,23 @@ for (country in unique(data_weekly$iso3c)) {
 
   print("8) Yearly")
   df <- data_yearly %>%
-    filter(iso3c == country) %>%
+    filter(name == country) %>%
     as_tsibble(index = date)
 
-  ### Calculate Baseline & Excess
-  start_year <- ifelse(min(df$date) > 2013, min(df$date), 2010)
-  data_bl <- df %>% filter(date %in% seq(start_year, 2019))
-  model <- lm(y ~ x, data = data.frame(x = data_bl$date, y = data_bl$mortality))
-  forecast <- predict(
-    model,
-    newdata = data.frame(x = seq(start_year, max(df$date)))
-  )
-  fc_df <- data.frame(
-    date = seq(max(2010, min(df$date)), max(df$date)), baseline = forecast
-  )
-  data <- df %>%
-    inner_join(fc_df, by = "date") %>%
-    mutate(excess = mortality - baseline) %>%
-    mutate(excess_percent = excess / baseline)
-
   chart8 <-
-    ggplot(data, aes(x = date, y = mortality)) +
+    ggplot(df, aes(x = date, y = mortality)) +
     labs(
       title = paste0("Yearly Mortality [", country, "]"),
-      subtitle = paste0(
-        "Baseline: ", start_year, "-2019; ",
-        "Source: github.com/USMortality/charts"
-      ),
+      subtitle = "Source: github.com/USMortality/charts",
       y = "Deaths/100k",
       x = "Year"
     ) +
     twitter_theme() +
     watermark(data$date, data$mortality) +
     geom_col(fill = "#5383EC") +
-    geom_abline(
-      intercept = model$coefficients[1],
-      slope = model$coefficients[2],
-      linetype = "dashed",
-      colour = "#00000077",
-      size = 1
-    ) +
     geom_text(
       aes(label = round(mortality)),
       vjust = 2.5, colour = "#ffffff"
-    ) +
-    geom_text(
-      aes(label = percent(excess_percent, accuracy = 0.1)),
-      vjust = -.2
     ) +
     scale_y_continuous(labels = comma_format(decimal.mark = ","))
 
@@ -218,33 +191,16 @@ for (country in unique(data_weekly$iso3c)) {
 
   print("9) YTD")
   df <- data_ytd %>%
-    filter(iso3c == country) %>%
+    filter(name == country) %>%
     as_tsibble(index = date)
 
-  ### Calculate Baseline & Excess
-  start_year <- ifelse(min(df$date) > 2013, min(df$date), 2010)
-  data_bl <- df %>% filter(date %in% seq(start_year, 2019))
-  model <- lm(y ~ x, data = data.frame(x = data_bl$date, y = data_bl$mortality))
-  forecast <- predict(
-    model,
-    newdata = data.frame(x = seq(start_year, max(df$date)))
-  )
-  fc_df <- data.frame(
-    date = seq(max(2010, min(df$date)), max(df$date)), baseline = forecast
-  )
-  data <- df %>%
-    inner_join(fc_df, by = "date") %>%
-    mutate(excess = mortality - baseline) %>%
-    mutate(excess_percent = excess / baseline)
-
   chart9 <-
-    ggplot(data, aes(x = date, y = mortality)) +
+    ggplot(df, aes(x = date, y = mortality)) +
     labs(
       title = paste0("YTD Mortality [", country, "]"),
       subtitle = paste0(
-        "Until: ", tail(df$max_date, n = 1),
-        "; Baseline: ", start_year, "-2019; ",
-        "Source: github.com/USMortality/charts"
+        "Yearly until: ", tail(df$max_date, n = 1),
+        "; Source: github.com/USMortality/charts"
       ),
       y = "Deaths/100k",
       x = "Year"
@@ -252,20 +208,9 @@ for (country in unique(data_weekly$iso3c)) {
     twitter_theme() +
     watermark(data$date, data$mortality) +
     geom_col(fill = "#5383EC") +
-    geom_abline(
-      intercept = model$coefficients[1],
-      slope = model$coefficients[2],
-      linetype = "dashed",
-      colour = "#00000077",
-      size = 1
-    ) +
     geom_text(
       aes(label = round(mortality)),
       vjust = 2.5, colour = "#ffffff"
-    ) +
-    geom_text(
-      aes(label = percent(excess_percent, accuracy = 0.1)),
-      vjust = -.2
     ) +
     scale_y_continuous(labels = comma_format(decimal.mark = ","))
 
@@ -274,6 +219,6 @@ for (country in unique(data_weekly$iso3c)) {
   save_collage(
     chart1, chart2, chart3, chart4, chart5, chart6, chart7, chart8, chart9,
     path = paste("mortality", country, sep = "/"),
-    ncol = 3, nrow = 3
+    ncol = 3, nrow = 3, scale = 5
   )
 }
