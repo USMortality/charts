@@ -81,8 +81,16 @@ save_chart <- function(chart, name, scale) {
   )
 }
 
+left <- function(string, length) {
+  substr(string, 1, length)
+}
+
 right <- function(string, length) {
-  substring(string, nchar(string) - length + 1, nchar(string))
+  substr(string, nchar(string) - length + 1, nchar(string))
+}
+
+mid <- function(string, start, length) {
+  substr(string, start, start + length - 1)
 }
 
 save_collage <- function(..., path = NULL, ncol = 2, nrow = 2) {
@@ -115,7 +123,7 @@ fluseason_ <- function(date) {
 }
 
 fluseason2_ <- function(date) {
-  y = year(date)
+  y <- year(date)
   if (month(date) <= 9) {
     paste0(y - 1, "-", y)
   } else {
