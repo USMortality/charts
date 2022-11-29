@@ -105,43 +105,45 @@ population <- population_grouped %>%
 
 # Join deaths/population
 mortality_daily <- dd %>%
+  mutate(yearweek = yearweek(date), .after = date) %>%
+  mutate(yearmonth = yearmonth(date), .after = date) %>%
+  mutate(yearquarter = yearquarter(date), .after = date) %>%
+  mutate(fluseason = fluseason(date), .after = date) %>%
   mutate(year = year(date), .after = date) %>%
   inner_join(population, by = c("iso3c", "year")) %>%
-  mutate(mortality = deaths / population * 100000) %>%
-  select(-year)
+  mutate(mortality = deaths / population * 100000)
 
-filter_by_complete_temporal_values <- function(data, fun, n) {
-  df <- data %>% mutate(temporal_value = fun(date))
-
-  start <- df %>%
-    filter(temporal_value == head(df, n = 1)$temporal_value) %>%
-    group_by(temporal_value) %>%
+filter_by_complete_temporal_values <- function(data, col, n) {
+  # data <- mortality_daily_nested[[2]][[1]]
+  # col <- "yearweek"
+  # n <- 7
+  start <- data %>%
+    filter(.data[[col]] == head(data[[col]], n = 1)) %>%
+    group_by(across(all_of(col))) %>%
     filter(n() >= n) %>%
     ungroup()
-
-  mid <- df %>%
-    filter(!temporal_value %in% c(
-      head(df, n = 1)$temporal_value,
-      tail(df, n = 1)$temporal_value
+  mid <- data %>%
+    filter(!.data[[col]] %in% c(
+      head(data, n = 1)[[col]],
+      tail(data, n = 1)[[col]]
     ))
-
-  end <- df %>%
-    filter(temporal_value == tail(df, n = 1)$temporal_value) %>%
-    group_by(temporal_value) %>%
+  end <- data %>%
+    filter(.data[[col]] == tail(data, n = 1)[[col]]) %>%
+    group_by(across(all_of(col))) %>%
     filter(n() >= n) %>%
     ungroup()
 
-  rbind(start, mid, end) %>% group_by(fun(date))
+  rbind(start, mid, end) %>% group_by(across(all_of(col)))
 }
 
 aggregate_data <- function(data, fun) {
   # Filter ends
   switch(fun,
-    yearweek = filter_by_complete_temporal_values(data, yearweek, 7),
-    yearmonth = filter_by_complete_temporal_values(data, yearmonth, 28),
-    yearquarter = filter_by_complete_temporal_values(data, yearquarter, 90),
-    year = filter_by_complete_temporal_values(data, lubridate::year, 365),
-    fluseason = filter_by_complete_temporal_values(data, fluseason, 365)
+    yearweek = filter_by_complete_temporal_values(data, fun, 7),
+    yearmonth = filter_by_complete_temporal_values(data, fun, 28),
+    yearquarter = filter_by_complete_temporal_values(data, fun, 90),
+    year = filter_by_complete_temporal_values(data, fun, 365),
+    fluseason = filter_by_complete_temporal_values(data, fun, 365)
   ) %>%
     summarise(
       deaths = round(sum(deaths)),
@@ -161,7 +163,7 @@ filter_ytd <- function(data, max_date) {
 
 calc_ytd <- function(data) {
   nested <- data %>%
-    mutate(year = year(date)) %>%
+    select(year, date, deaths, population, mortality) %>%
     nest(data = c(date, deaths, population, mortality))
   max_date <- max(nested[[2]][[length(nested[[2]])]]$date)
   nested %>%
@@ -182,9 +184,10 @@ aggregate_data_ytd <- function(data) {
 }
 
 mortality_daily_nested <- mortality_daily %>%
-  nest(data = c(date, deaths, population, mortality))
-mortality_daily_nested_ytd <- mortality_daily_nested %>%
-  mutate(data = lapply(data, calc_ytd))
+  nest(data = c(
+    date, year, fluseason, yearquarter, yearmonth, yearweek, deaths, population,
+    mortality
+  ))
 
 weekly <- mortality_daily_nested %>%
   mutate(data = lapply(data, aggregate_data, "yearweek")) %>%
@@ -206,6 +209,8 @@ yearly <- mortality_daily_nested %>%
   unnest(cols = "data")
 save_csv(yearly, "mortality/world_yearly")
 
+mortality_daily_nested_ytd <- mortality_daily_nested %>%
+  mutate(data = lapply(data, calc_ytd))
 yearly_ytd <- mortality_daily_nested_ytd %>%
   mutate(data = lapply(data, aggregate_data_ytd)) %>%
   unnest(cols = "data")
