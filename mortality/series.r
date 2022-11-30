@@ -16,6 +16,10 @@ get_data <- function(countries, year = 1900) {
 
 make_chart <- function(countries, title) {
   data <- get_data(countries, 2000)
+  training_data <- data %>%
+    filter(year(date) < 2020) %>%
+    filter(year(date) >= 2010)
+
   ggplot(
     data,
     aes(x = date, y = sma, group_name = Country, color = Country)
@@ -26,12 +30,22 @@ make_chart <- function(countries, title) {
       y = "Deaths/100k",
       x = "Month of Year"
     ) +
-    geom_line(linewidth = 1.5) +
     geom_smooth(
-      data = data %>% filter(year(date) < 2020),
-      method = "lm_right", fullrange = TRUE, se = FALSE, level = .99,
-      linetype = "dashed"
+      data = training_data,
+      method = "lm_right",
+      fullrange = TRUE,
+      se = TRUE,
+      level = .99,
+      linetype = "dashed",
     ) +
+    geom_smooth(
+      data = training_data,
+      method = "lm",
+      fullrange = FALSE,
+      se = FALSE,
+      linetype = "solid"
+    ) +
+    geom_line(linewidth = 1.2, alpha = 0.7) +
     twitter_theme() +
     watermark(df$date, df$mortality) +
     scale_x_yearquarter(date_breaks = "1 year", date_labels = "%Y") +

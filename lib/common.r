@@ -108,7 +108,7 @@ predictdf.lm_right <- function(model, xseq, se, level) {
   ## here the main code: truncate to x values at the right
   init_range <- range(model$model$x)
   xseq <- xseq[xseq >= init_range[1]]
-  ggplot2:::predictdf.default(model, xseq[-length(xseq)], se, level)
+  ggplot2:::predictdf.default(model, xseq, se, level)
 }
 
 fluseason_ <- function(date) {
