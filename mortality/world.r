@@ -9,7 +9,7 @@ data_fluseason <- as_tibble(read.csv("./out/mortality/world_fluseason.csv"))
 
 for (country in unique(data_weekly$name)) {
   print(country)
-
+  country <- "Sweden"
   print("1) Weekly")
   df <- data_weekly %>%
     filter(name == country) %>%
@@ -122,11 +122,12 @@ for (country in unique(data_weekly$name)) {
 
   print("6) Flu Season")
   df <- data_fluseason %>%
-    filter(name == country) %>%
+    filter(name == country)
+  df <- df %>%
     mutate(index = seq(1:length(df$date))) %>%
     mutate(date = paste0(mid(date, 3, 2), "/", right(date, 2)))
   chart6 <-
-    ggplot(df, aes(x = index, y = mortality)) +
+  ggplot(df, aes(x = index, y = mortality)) +
     labs(
       title = paste0("Mortality by Flu Season [", country, "]"),
       subtitle = "Oct 1 - Sep 30; Source: github.com/USMortality/charts",
