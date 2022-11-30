@@ -74,3 +74,17 @@ chart <- make_chart(
   "Monthly Mortality Sweden vs. 'Island Nations' (12M SMA)"
 )
 save_chart(chart, paste("mortality_series/Sweden_Island_Nations", sep = "/"))
+
+countries <- c("Sweden", "Germany")
+chart <- make_chart(
+  countries,
+  "Monthly Mortality Sweden vs. Germany (12M SMA)"
+)
+save_chart(chart, paste("mortality_series/Sweden_Germany", sep = "/"))
+
+countries <- c("Sweden", "Norway")
+chart <- make_chart(
+  countries,
+  "Monthly Mortality"
+)
+save_chart(chart, paste("mortality_series/Sweden_Norway", sep = "/"))
