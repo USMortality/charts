@@ -99,6 +99,6 @@ save_chart(chart, paste("mortality_series/Sweden_Germany", sep = "/"))
 countries <- c("Sweden", "Norway")
 chart <- make_chart(
   countries,
-  "Monthly Mortality"
+  "Monthly Mortality (12M SMA)"
 )
 save_chart(chart, paste("mortality_series/Sweden_Norway", sep = "/"))

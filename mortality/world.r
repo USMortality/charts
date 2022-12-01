@@ -9,7 +9,6 @@ data_fluseason <- as_tibble(read.csv("./out/mortality/world_fluseason.csv"))
 
 for (country in unique(data_weekly$name)) {
   print(country)
-  country <- "Sweden"
   print("1) Weekly")
   df <- data_weekly %>%
     filter(name == country) %>%
@@ -127,7 +126,7 @@ for (country in unique(data_weekly$name)) {
     mutate(index = seq(1:length(df$date))) %>%
     mutate(date = paste0(mid(date, 3, 2), "/", right(date, 2)))
   chart6 <-
-  ggplot(df, aes(x = index, y = mortality)) +
+    ggplot(df, aes(x = index, y = mortality)) +
     labs(
       title = paste0("Mortality by Flu Season [", country, "]"),
       subtitle = "Oct 1 - Sep 30; Source: github.com/USMortality/charts",
@@ -178,12 +177,14 @@ for (country in unique(data_weekly$name)) {
       x = "Year"
     ) +
     twitter_theme() +
-    watermark(data$date, data$mortality) +
+    watermark(df$date, df$mortality) +
     geom_col(fill = "#5383EC") +
     geom_text(
       aes(label = round(mortality)),
       vjust = 2.5, colour = "#ffffff"
     ) +
+    scale_x_continuous(breaks = df$date) +
+    theme(axis.text.x = element_text(angle = 30, hjust = 0.5, vjust = 0.5)) +
     scale_y_continuous(labels = comma_format(decimal.mark = ","))
 
   save_chart(chart8, paste("mortality", country, "yearly_bar", sep = "/"))
@@ -211,6 +212,8 @@ for (country in unique(data_weekly$name)) {
       aes(label = round(mortality)),
       vjust = 2.5, colour = "#ffffff"
     ) +
+    scale_x_continuous(breaks = df$date) +
+    theme(axis.text.x = element_text(angle = 30, hjust = 0.5, vjust = 0.5)) +
     scale_y_continuous(labels = comma_format(decimal.mark = ","))
 
   save_chart(chart9, paste("mortality", country, "ytd_bar", sep = "/"))
