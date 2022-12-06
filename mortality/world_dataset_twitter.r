@@ -8,7 +8,9 @@ my_app <- rtweet_bot(
 )
 auth_as(my_app)
 
-world_max_date_old <- read.csv("out/mortality/world_max_date.csv")
+if (file.exists("out/mortality/world_max_date.csv")) {
+  world_max_date_old <- read.csv("out/mortality/world_max_date.csv")
+}
 data_ytd <- as_tibble(read.csv("./out/mortality/world_ytd.csv"))
 
 df <- data_ytd %>%
