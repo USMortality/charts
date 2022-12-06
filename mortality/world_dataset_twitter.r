@@ -32,5 +32,7 @@ for (n in seq_len(nrow(df))) {
       media = paste0("./out/mortality/", val$name, ".png"),
       media_alt_text = paste("Mortality", val$name)
     )
+  } else {
+    print(paste(val$name, "unchanged"))
   }
 }
