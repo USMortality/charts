@@ -3,14 +3,6 @@ for (lib in libs$V1) {
   library(lib, character.only = TRUE, quietly = TRUE)
 }
 
-Sys.setenv(
-  "AWS_ACCESS_KEY_ID" = "minio",
-  "AWS_SECRET_ACCESS_KEY" = "m!FCcXn_uuuMgkUxMDc7",
-  "AWS_S3_ENDPOINT" = "xls2csv.com",
-  "AWS_DEFAULT_REGION" = "storage",
-  "AWS_SESSION_TOKEN" = ""
-)
-
 sf <- 2
 options(vsc.dev.args = list(width = 600 * sf, height = 335 * sf, res = 72 * sf))
 charts_bucket <- "charts"
