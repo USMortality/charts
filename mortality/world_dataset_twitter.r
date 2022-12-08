@@ -99,8 +99,8 @@ for (n in seq_len(nrow(df))) {
   if (val$max != val_old$max) {
     print(paste(val$name, "changed"))
     tweet(val$name, val$max)
+    Sys.sleep(15 * 60)
   } else {
     print(paste(val$name, "unchanged"))
   }
-  Sys.sleep(15 * 60)
 }
