@@ -50,6 +50,10 @@ urls <- list(
   c(
     "https://s3.mortality.watch/data/mortality/world_max_date.csv",
     "world_max_date.csv"
+  ),
+  c(
+    "https://s3.mortality.watch/data/population/usa/six_age_bands.csv",
+    "population_usa_six_age_bands.csv"
   )
 )
 
