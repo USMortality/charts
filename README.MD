@@ -9,6 +9,12 @@ MINIO_ROOT_PASSWORD=
 dokku proxy:ports-add cronicle http:80:3012
 dokku plugin:install https://github.com/michaelshobbs/dokku-hostname.git dokku-hostname
 
+dokku config:set cronicle \
+  AWS_ACCESS_KEY_ID=minio \
+  AWS_SECRET_ACCESS_KEY= \
+  AWS_S3_ENDPOINT=mortality.watch \
+  AWS_DEFAULT_REGION=s3
+
 ```sh
 #!/usr/bin/env bash
 
