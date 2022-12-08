@@ -46,6 +46,10 @@ urls <- list(
   c(
     "https://raw.githubusercontent.com/dr5hn/countries-states-cities-database/master/csv/countries.csv",
     "countries.csv"
+  ),
+  c(
+    "https://s3.mortality.watch/data/mortality/world_max_date.csv",
+    "world_max_date.csv"
   )
 )
 
