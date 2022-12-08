@@ -77,7 +77,7 @@ tweet <- function(name, max) {
     in_reply_to_status_id = get_my_timeline()$id_str[1]
   )
   post_tweet(
-    paste("Weekly Mortality in", name),
+    paste("Mortality in", name),
     media = paste0("./out/mortality/", name, ".png"),
     media_alt_text = paste("Mortality", name),
     in_reply_to_status_id = get_my_timeline()$id_str[1]
