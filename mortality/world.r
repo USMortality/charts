@@ -25,7 +25,6 @@ for (country in unique(data_weekly$name)) {
     ) +
     geom_line(color = "#5383EC", linewidth = 1) +
     twitter_theme() +
-    watermark(df$yearmonth, df$value_p) +
     scale_x_yearweek(date_breaks = "1 year", date_labels = "%Y") +
     theme(axis.text.x = element_text(angle = 30, hjust = 0.5, vjust = 0.5))
   save_chart(chart1, paste("mortality", country, "weekly_line", sep = "/"))
@@ -46,7 +45,6 @@ for (country in unique(data_weekly$name)) {
     ) +
     geom_line(color = "#5383EC", linewidth = 1) +
     twitter_theme() +
-    watermark(df$yearmonth, df$value_p) +
     scale_x_yearmonth(date_breaks = "1 year", date_labels = "%Y") +
     theme(axis.text.x = element_text(angle = 30, hjust = 0.5, vjust = 0.5))
   save_chart(chart2, paste("mortality", country, "monthly_line", sep = "/"))
@@ -67,7 +65,6 @@ for (country in unique(data_weekly$name)) {
     ) +
     geom_line(color = "#5383EC", linewidth = 1) +
     twitter_theme() +
-    watermark(df$yearmonth, df$value_p) +
     scale_x_yearquarter(date_breaks = "1 year", date_labels = "%Y") +
     theme(axis.text.x = element_text(angle = 30, hjust = 0.5, vjust = 0.5))
   save_chart(chart3, paste("mortality", country, "quarterly_line", sep = "/"))
@@ -89,7 +86,6 @@ for (country in unique(data_weekly$name)) {
     geom_line(color = "#5383EC", linewidth = 1) +
     scale_y_continuous(labels = comma_format(decimal.mark = ",")) +
     twitter_theme() +
-    watermark(df$yearmonth, df$value_p) +
     scale_x_date(date_breaks = "1 year", date_labels = "%Y") +
     theme(axis.text.x = element_text(angle = 30, hjust = 0.5, vjust = 0.5))
   save_chart(chart4, paste("mortality", country, "yearly_line", sep = "/"))
@@ -114,7 +110,6 @@ for (country in unique(data_weekly$name)) {
     geom_line(color = "#5383EC", linewidth = 1) +
     scale_y_continuous(labels = comma_format(decimal.mark = ",")) +
     twitter_theme() +
-    watermark(df$yearmonth, df$value_p) +
     scale_x_date(date_breaks = "1 year", date_labels = "%Y") +
     theme(axis.text.x = element_text(angle = 30, hjust = 0.5, vjust = 0.5))
   save_chart(chart5, paste("mortality", country, "ytd_line", sep = "/"))
@@ -137,7 +132,6 @@ for (country in unique(data_weekly$name)) {
     scale_x_continuous(breaks = 1:length(df$date), labels = df$date) +
     scale_y_continuous(labels = comma_format(decimal.mark = ",")) +
     twitter_theme() +
-    watermark(df$yearmonth, df$value_p) +
     theme(axis.text.x = element_text(angle = 30, hjust = 0.5, vjust = 0.5))
   save_chart(chart6, paste("mortality", country, "fluseason_line", sep = "/"))
 
@@ -160,7 +154,6 @@ for (country in unique(data_weekly$name)) {
       x = "Week of Year"
     ) +
     twitter_theme() +
-    watermark(df$yearmonth, df$value_p)
   save_chart(chart7, paste("mortality", country, "stl_line", sep = "/"))
 
   print("8) Yearly")
@@ -177,7 +170,6 @@ for (country in unique(data_weekly$name)) {
       x = "Year"
     ) +
     twitter_theme() +
-    watermark(df$date, df$mortality) +
     geom_col(fill = "#5383EC") +
     geom_text(
       aes(label = round(mortality)),
@@ -206,7 +198,6 @@ for (country in unique(data_weekly$name)) {
       x = "Year"
     ) +
     twitter_theme() +
-    watermark(data$date, data$mortality) +
     geom_col(fill = "#5383EC") +
     geom_text(
       aes(label = round(mortality)),
