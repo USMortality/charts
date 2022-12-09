@@ -25,7 +25,10 @@ for (country in unique(data_weekly$name)) {
     ) +
     geom_line(color = "#5383EC", linewidth = 1) +
     twitter_theme() +
-    scale_x_yearweek(date_breaks = "1 year", date_labels = "%Y") +
+    scale_x_yearweek(
+      # date_breaks = "1 year",
+      date_labels = "%Y"
+    ) +
     theme(axis.text.x = element_text(angle = 30, hjust = 0.5, vjust = 0.5))
   save_chart(chart1, paste("mortality", country, "weekly_line", sep = "/"))
 
