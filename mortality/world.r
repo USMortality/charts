@@ -153,7 +153,7 @@ for (country in unique(data_weekly$name)) {
       y = "Deaths/100k",
       x = "Week of Year"
     ) +
-    twitter_theme() +
+    twitter_theme()
   save_chart(chart7, paste("mortality", country, "stl_line", sep = "/"))
 
   print("8) Yearly")
