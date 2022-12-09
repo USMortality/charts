@@ -1,12 +1,16 @@
 # Mortality.Watch Charts
-
 Collection of R scripts, that download, combine, and display several data sources.
 It's main purpose is the generation of mortality data for mortality.watch.
 
 # S3
 Data and Charts are stored on MinIO/S3 at s3.mortality.watch.
 
-## MinIO Config
+# Usage
+See https://www.mortality.watch/ for the frontend.
+
+# Configuration
+
+## MinIO/S3
 ```
 dokku config:set minio \
   MINIO_SERVER_URL=https://s3.mortality.watch \
@@ -20,7 +24,7 @@ MINIO_ROOT_USER=minio \
 MINIO_ROOT_PASSWORD=XXX
 ```
 
-# Cronicle
+## Cronicle/Job Scheduler
 Runs on a cronicle job scheduler, daily.
 
 Cronicle config on dokku:
