@@ -19,7 +19,7 @@ for (country in unique(data_weekly$name)) {
     ggplot(df, aes(x = date, y = mortality)) +
     labs(
       title = paste0("Weekly Mortality [", country, "]"),
-      subtitle = "Source: github.com/USMortality/charts",
+      subtitle = "Source: www.mortality.watch",
       y = "Deaths/100k",
       x = "Week of Year"
     ) +
@@ -40,7 +40,7 @@ for (country in unique(data_weekly$name)) {
     ggplot(df, aes(x = date, y = mortality)) +
     labs(
       title = paste0("Monthly Mortality [", country, "]"),
-      subtitle = "Source: github.com/USMortality/charts",
+      subtitle = "Source: www.mortality.watch",
       y = "Deaths/100k",
       x = "Month of Year"
     ) +
@@ -61,7 +61,7 @@ for (country in unique(data_weekly$name)) {
     ggplot(df, aes(x = date, y = mortality)) +
     labs(
       title = paste0("Quarterly Mortality [", country, "]"),
-      subtitle = "Source: github.com/USMortality/charts",
+      subtitle = "Source: www.mortality.watch",
       y = "Deaths/100k",
       x = "Month of Year"
     ) +
@@ -82,7 +82,7 @@ for (country in unique(data_weekly$name)) {
     ggplot(df, aes(x = date, y = mortality)) +
     labs(
       title = paste0("Yearly Mortality [", country, "]"),
-      subtitle = "Source: github.com/USMortality/charts",
+      subtitle = "Source: www.mortality.watch",
       y = "Deaths/100k",
       x = "Month of Year"
     ) +
@@ -106,7 +106,7 @@ for (country in unique(data_weekly$name)) {
       title = paste0("Mortality YTD [", country, "]"),
       subtitle = paste0(
         "Yearly until: ", tail(df$max_date, n = 1),
-        "; Source: github.com/USMortality/charts"
+        "; Source: www.mortality.watch"
       ),
       y = "Deaths/100k",
       x = "Month of Year"
@@ -129,7 +129,7 @@ for (country in unique(data_weekly$name)) {
     ggplot(df, aes(x = index, y = mortality)) +
     labs(
       title = paste0("Mortality by Flu Season [", country, "]"),
-      subtitle = "Oct 1 - Sep 30; Source: github.com/USMortality/charts",
+      subtitle = "Oct 1 - Sep 30; Source: www.mortality.watch",
       y = "Deaths/100k",
       x = "Flu Season"
     ) +
@@ -155,7 +155,7 @@ for (country in unique(data_weekly$name)) {
     autoplot(df, .vars = mortality) +
     labs(
       title = paste0("Weekly Mortality - STL Decomposition [", country, "]"),
-      subtitle = "Source: github.com/USMortality/charts",
+      subtitle = "Source: www.mortality.watch",
       y = "Deaths/100k",
       x = "Week of Year"
     ) +
@@ -172,7 +172,7 @@ for (country in unique(data_weekly$name)) {
     ggplot(df, aes(x = date, y = mortality)) +
     labs(
       title = paste0("Yearly Mortality [", country, "]"),
-      subtitle = "Source: github.com/USMortality/charts",
+      subtitle = "Source: www.mortality.watch",
       y = "Deaths/100k",
       x = "Year"
     ) +
@@ -200,7 +200,7 @@ for (country in unique(data_weekly$name)) {
       title = paste0("YTD Mortality [", country, "]"),
       subtitle = paste0(
         "Yearly until: ", tail(df$max_date, n = 1),
-        "; Source: github.com/USMortality/charts"
+        "; Source: www.mortality.watch"
       ),
       y = "Deaths/100k",
       x = "Year"
