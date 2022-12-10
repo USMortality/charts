@@ -212,9 +212,37 @@ for (country in unique(data_weekly$name)) {
 
   save_chart(chart9, paste("mortality", country, "ytd_bar", sep = "/"))
 
+  print("10) Weekly (52W SMA)")
+  df <- data_weekly %>%
+    filter(name == country) %>%
+    mutate(date = yearweek(date)) %>%
+    as_tsibble(index = date) %>%
+    mutate(sma = SMA(mortality, n = 52))
+
+  chart10 <-
+    ggplot(df, aes(x = date, y = sma)) +
+    labs(
+      title = paste0("Weekly Mortality (52W SMA) [", country, "]"),
+      subtitle = "Source: www.mortality.watch",
+      y = "Deaths/100k",
+      x = "Week of Year"
+    ) +
+    geom_line(color = "#5383EC", linewidth = 1) +
+    twitter_theme() +
+    scale_x_yearweek(
+      # date_breaks = "1 year",
+      date_labels = "%Y"
+    ) +
+    theme(axis.text.x = element_text(angle = 30, hjust = 0.5, vjust = 0.5))
+  save_chart(
+    chart10,
+    paste("mortality", country, "weekly_52w_sma_line", sep = "/")
+  )
+
   save_collage(
     chart1, chart2, chart3, chart4, chart5, chart6, chart7, chart8, chart9,
+    chart10,
     path = paste("mortality", country, "collage", sep = "/"),
-    ncol = 3, nrow = 3, scale = 5
+    ncol = 2, nrow = 5, scale = 5
   )
 }
