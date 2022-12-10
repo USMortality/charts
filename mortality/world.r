@@ -240,8 +240,8 @@ for (country in unique(data_weekly$name)) {
   )
 
   save_collage(
-    chart1, chart2, chart3, chart4, chart5, chart6, chart7, chart8, chart9,
-    chart10,
+    chart10, chart1, chart2, chart3, chart4, chart5, chart6, chart7, chart8,
+    chart9,
     path = paste("mortality", country, "collage", sep = "/"),
     ncol = 2, nrow = 5, scale = 5
   )

@@ -25,8 +25,14 @@ tweet <- function(name, max) {
       "Mortality Data for ", name,
       " has been updated. Latest data now available through ", max, "."
     ),
+    media = paste0("./out/mortality/", name, "/weekly_52w_sma_line.png"),
+    media_alt_text = paste("Weekly Mortality (52W SMA)", name)
+  )
+  post_tweet(
+    paste("Weekly Mortality in", name),
     media = paste0("./out/mortality/", name, "/weekly_line.png"),
-    media_alt_text = paste("Weekly Mortality", name)
+    media_alt_text = paste("Weekly Mortality", name),
+    in_reply_to_status_id = get_my_timeline()$id_str[1]
   )
   post_tweet(
     paste("Monthly Mortality in", name),
