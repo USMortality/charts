@@ -2,7 +2,7 @@ source("lib/common.r")
 
 data1 <- as_tibble(read.csv("./data/usa_deaths_causes_2014_2019.csv"))
 data2 <- as_tibble(read.csv("./data/usa_deaths_causes_2020_n.csv"))
-population <- as_tibble(read.csv("./data/population_usa_six_age_bands.csv"))
+population <- read_remote("population/usa/six_age_bands.csv")
 
 a <- data1 %>%
   filter(Jurisdiction.of.Occurrence == "United States") %>%

@@ -130,3 +130,7 @@ fluseason <- function(data) {
     fluseason2_(data)
   }
 }
+
+read_remote <- function(path) {
+  as_tibble(read.csv(paste0("https://s3.mortality.watch/data/", path)))
+}

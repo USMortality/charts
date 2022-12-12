@@ -1,6 +1,6 @@
 source("lib/common.r")
 
-data_monthly <- as_tibble(read.csv("./out/mortality/world_monthly.csv"))
+data_monthly <- read_remote("mortality/world_monthly.csv")
 
 get_data <- function(countries, year = 1900) {
   data_monthly %>%
