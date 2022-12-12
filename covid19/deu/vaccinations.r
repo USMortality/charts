@@ -66,5 +66,26 @@ chart2 <-
   facet_wrap(vars(age_group)) +
   theme(panel.spacing = unit(0.3, "in"))
 
+quarterly <- df %>%
+  mutate(quarter = yearquarter(year_week)) %>%
+  group_by(quarter) %>%
+  summarise(all = sum(all))
+
+save_csv(quarterly, "covid19/deu/vaccinations_quarterly")
+
+chart3 <-
+  ggplot(quarterly, aes(x = quarter, y = all)) +
+  labs(
+    title = "Quarterly COVID-19 Vaccinations [Germany]",
+    subtitle = "Source: rki.de",
+    x = "Quarter of Year",
+    y = "COVID-19 Vaccinations"
+  ) +
+  geom_col(fill = "#5383EC") +
+  twitter_theme() +
+  watermark(df$yearmonth, df$value_p) +
+  scale_y_continuous(labels = label_number(suffix = "M", scale = 1e-6))
+
 save_chart(chart, "covid19/deu/vaccinations_age")
 save_chart(chart2, "covid19/deu/vaccinations_age_dose")
+save_chart(chart3, "covid19/deu/vaccinations_quarterly")
