@@ -202,8 +202,6 @@ weekly <- mortality_daily_nested %>%
   unnest(cols = "data")
 save_csv(weekly, "mortality/world_weekly")
 
-weekly %>% filter(iso3c == "USA")
-
 monthly <- mortality_daily_nested %>%
   mutate(data = lapply(data, aggregate_data, "yearmonth")) %>%
   unnest(cols = "data")
@@ -230,3 +228,12 @@ fluseason <- mortality_daily_nested %>%
   mutate(data = lapply(data, aggregate_data, "fluseason")) %>%
   unnest(cols = "data")
 save_csv(fluseason, "mortality/world_fluseason")
+
+cmr_countries <- unique(weekly$name) %>% sort()
+asmr_countries <- weekly %>%
+  filter(!is.na(asmr)) %>%
+  .$name %>%
+  unique()
+countries <- data.frame(country = cmr_countries)
+for (country in countries) countries$has_asmr <- country %in% asmr_countries
+save_csv(countries, "mortality/world_countries")

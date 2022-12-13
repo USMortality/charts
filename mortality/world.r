@@ -212,7 +212,7 @@ for (type in types) {
     chart9 <-
       ggplot(df, aes(x = date, y = !!mortality_col)) +
       labs(
-        title = paste0("YTD  ", mortality_title, " [", country, "]"),
+        title = paste0("YTD ", mortality_title, " [", country, "]"),
         subtitle = paste0(
           "Yearly until: ", tail(df$max_date, n = 1),
           "; Source: www.mortality.watch"
