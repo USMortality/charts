@@ -161,33 +161,43 @@ aggregate_data <- function(data, fun) {
     as_tibble()
 }
 
-filter_ytd <- function(data, max_date) {
-  year(max_date) <- year(data$date[1])
-  data %>%
-    filter(date <= max_date) %>%
-    mutate(max_date = max_date)
+filter_ytd <- function(data, max_date_cmr, max_date_asmr) {
+  year(max_date_cmr) <- year(data$date[1])
+  year(max_date_asmr) <- year(data$date[1])
+
+  data <- data %>%
+    filter(date <= max_date_cmr) %>%
+    mutate(asmr = ifelse(date <= max_date_asmr, asmr, NA)) %>%
+    mutate(max_date_cmr = max_date_cmr) %>%
+    mutate(max_date_asmr = max_date_asmr)
 }
 
 calc_ytd <- function(data) {
   nested <- data %>%
     select(year, date, deaths, population, cmr, asmr) %>%
     nest(data = c(date, deaths, population, cmr, asmr))
-  max_date <- max(nested[[2]][[length(nested[[2]])]]$date)
+
+  cmr_data <- nested[[2]][[length(nested[[2]])]] %>% filter(!is.na(cmr))
+  asmr_data <- nested[[2]][[length(nested[[2]])]] %>% filter(!is.na(asmr))
+  max_date_cmr <- max(cmr_data$date)
+  max_date_asmr <- max(asmr_data$date)
   nested %>%
-    mutate(data = lapply(data, filter_ytd, max_date)) %>%
+    mutate(data = lapply(data, filter_ytd, max_date_cmr, max_date_asmr)) %>%
     unnest(cols = "data")
 }
 
 aggregate_data_ytd <- function(data) {
   data %>%
-    group_by(year, max_date) %>%
+    group_by(year, max_date_cmr, max_date_asmr) %>%
     summarise(
       deaths = round(sum(deaths)),
-      cmr = round(sum(cmr), digits = 1),
-      asmr = round(sum(asmr), digits = 1)
+      cmr = round(sum(cmr, na.rm = TRUE), digits = 1),
+      asmr = round(sum(asmr, na.rm = TRUE), digits = 1)
     ) %>%
     ungroup() %>%
-    setNames(c("date", "max_date", "deaths", "cmr", "asmr")) %>%
+    setNames(
+      c("date", "max_date_cmr", "max_date_asmr", "deaths", "cmr", "asmr")
+    ) %>%
     as_tibble()
 }
 
