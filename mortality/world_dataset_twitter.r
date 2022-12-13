@@ -11,11 +11,11 @@ auth_as(my_app)
 if (file.exists("./data/world_max_date.csv")) {
   world_max_date_old <- read.csv("./data/world_max_date.csv")
 }
-data_ytd <- as_tibble(read.csv("./out/mortality/world_ytd.csv"))
+data_ytd <- read_remote("mortality/world_ytd.csv")
 
 df <- data_ytd %>%
   group_by(iso3c, name) %>%
-  summarise(max = max(max_date))
+  summarise(max = max(max_date_cmr))
 
 tweet <- function(name, max) {
   post_tweet(
