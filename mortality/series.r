@@ -1,5 +1,8 @@
 source("lib/common.r")
 
+type <- "asmr"
+type_sys <- sym(type)
+
 data_monthly <- read_remote("mortality/world_monthly.csv")
 
 get_data <- function(countries, year = 1900) {
@@ -8,17 +11,18 @@ get_data <- function(countries, year = 1900) {
     mutate(date = yearmonth(date)) %>%
     mutate(Country = name) %>%
     group_by(iso3c) %>%
-    mutate(sma = SMA(mortality, n = 12)) %>%
+    filter(!is.na(!!type_sys)) %>%
+    mutate(sma = SMA(!!type_sys, n = 12)) %>%
     ungroup() %>%
     filter(year(date) >= year) %>%
     filter(!is.na(sma))
 }
 
 make_chart <- function(countries, title) {
-  data <- get_data(countries, 2000)
-  training_data <- data %>%
-    filter(year(date) < 2020) %>%
+  data <- get_data(countries, 2000) %>%
     filter(year(date) >= 2010)
+  training_data <- data %>%
+    filter(year(date) < 2020)
 
   ggplot(
     data,
@@ -47,7 +51,7 @@ make_chart <- function(countries, title) {
     ) +
     geom_line(linewidth = 1.2, alpha = 0.7) +
     twitter_theme() +
-    watermark(df$date, df$mortality) +
+    watermark(df$date, df$cmr) +
     scale_x_yearquarter(date_breaks = "1 year", date_labels = "%Y") +
     theme(axis.text.x = element_text(angle = 30, hjust = 0.5, vjust = 0.5))
 }

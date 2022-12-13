@@ -47,7 +47,10 @@ for (type in types) {
         date_labels = "%Y"
       ) +
       theme(axis.text.x = element_text(angle = 30, hjust = 0.5, vjust = 0.5))
-    save_chart(chart1, paste("mortality", type, country, "weekly_line", sep = "/"))
+    save_chart(chart1, paste(
+      "mortality", type, country, "weekly_line",
+      sep = "/"
+    ))
 
     print("2) Monthly")
     df <- data_monthly %>%
@@ -67,7 +70,10 @@ for (type in types) {
       twitter_theme() +
       scale_x_yearmonth(date_breaks = "1 year", date_labels = "%Y") +
       theme(axis.text.x = element_text(angle = 30, hjust = 0.5, vjust = 0.5))
-    save_chart(chart2, paste("mortality", type, country, "monthly_line", sep = "/"))
+    save_chart(chart2, paste(
+      "mortality", type, country, "monthly_line",
+      sep = "/"
+    ))
 
     print("3) Quarterly")
     df <- data_quarterly %>%
@@ -87,7 +93,10 @@ for (type in types) {
       twitter_theme() +
       scale_x_yearquarter(date_breaks = "1 year", date_labels = "%Y") +
       theme(axis.text.x = element_text(angle = 30, hjust = 0.5, vjust = 0.5))
-    save_chart(chart3, paste("mortality", type, country, "quarterly_line", sep = "/"))
+    save_chart(chart3, paste(
+      "mortality", type, country, "quarterly_line",
+      sep = "/"
+    ))
 
     print("4) Yearly")
     df <- data_yearly %>%
@@ -109,7 +118,8 @@ for (type in types) {
       scale_x_date(date_breaks = "1 year", date_labels = "%Y") +
       theme(axis.text.x = element_text(angle = 30, hjust = 0.5, vjust = 0.5))
     save_chart(chart4, paste(
-      "mortality", type, country, "yearly_line", sep = "/"
+      "mortality", type, country, "yearly_line",
+      sep = "/"
     ))
 
     print("5) YTD")
@@ -123,7 +133,10 @@ for (type in types) {
       labs(
         title = paste0("YTD ", mortality_title, " [", country, "]"),
         subtitle = paste0(
-          "Yearly until: ", tail(df$max_date, n = 1),
+          "Yearly until: ", tail(
+            if (type == "cmr") df$max_date_cmr else df$max_date_asmr,
+            n = 1
+          ),
           "; Source: www.mortality.watch"
         ),
         y = "Deaths/100k",
@@ -155,7 +168,10 @@ for (type in types) {
       scale_y_continuous(labels = comma_format(decimal.mark = ",")) +
       twitter_theme() +
       theme(axis.text.x = element_text(angle = 30, hjust = 0.5, vjust = 0.5))
-    save_chart(chart6, paste("mortality", type, country, "fluseason_line", sep = "/"))
+    save_chart(chart6, paste(
+      "mortality", type, country, "fluseason_line",
+      sep = "/"
+    ))
 
     print("7) STL Decomposition")
     df <- data_weekly %>%
@@ -171,7 +187,9 @@ for (type in types) {
     chart7 <-
       autoplot(df, .vars = !!mortality_col) +
       labs(
-        title = paste0("Weekly ", mortality_title, " - STL Decomp. [", country, "]"),
+        title = paste0(
+          "Weekly ", mortality_title, " - STL Decomp. [", country, "]"
+        ),
         subtitle = "Source: www.mortality.watch",
         y = "Deaths/100k",
         x = "Week of Year"
@@ -202,7 +220,10 @@ for (type in types) {
       theme(axis.text.x = element_text(angle = 30, hjust = 0.5, vjust = 0.5)) +
       scale_y_continuous(labels = comma_format(decimal.mark = ","))
 
-    save_chart(chart8, paste("mortality", type, country, "yearly_bar", sep = "/"))
+    save_chart(chart8, paste(
+      "mortality", type, country, "yearly_bar",
+      sep = "/"
+    ))
 
     print("9) YTD")
     df <- data_ytd %>%
@@ -214,7 +235,10 @@ for (type in types) {
       labs(
         title = paste0("YTD ", mortality_title, " [", country, "]"),
         subtitle = paste0(
-          "Yearly until: ", tail(df$max_date, n = 1),
+          "Yearly until: ", tail(
+            if (type == "cmr") df$max_date_cmr else df$max_date_asmr,
+            n = 1
+          ),
           "; Source: www.mortality.watch"
         ),
         y = "Deaths/100k",
@@ -243,7 +267,9 @@ for (type in types) {
     chart10 <-
       ggplot(df, aes(x = date, y = sma)) +
       labs(
-        title = paste0("Weekly ", mortality_title, " (52W SMA) [", country, "]"),
+        title = paste0(
+          "Weekly ", mortality_title, " (52W SMA) [", country, "]"
+        ),
         subtitle = "Source: www.mortality.watch",
         y = "Deaths/100k",
         x = "Week of Year"
