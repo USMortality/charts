@@ -180,7 +180,7 @@ calc_ytd <- function(data) {
   cmr_data <- nested[[2]][[length(nested[[2]])]] %>% filter(!is.na(cmr))
   asmr_data <- nested[[2]][[length(nested[[2]])]] %>% filter(!is.na(asmr))
   max_date_cmr <- max(cmr_data$date)
-  max_date_asmr <- max(asmr_data$date)
+  max_date_asmr <- if (length(asmr_data) > 0) max(asmr_data$date) else NA
   nested %>%
     mutate(data = lapply(data, filter_ytd, max_date_cmr, max_date_asmr)) %>%
     unnest(cols = "data")
