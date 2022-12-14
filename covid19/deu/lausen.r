@@ -10,8 +10,8 @@ df <- data %>%
   ungroup()
 
 df <- df %>%
-  filter(left(name, 1) == "X") %>%
-  mutate(year = as.numeric(mid(name, 2, 4))) %>%
+  filter(left(name, 1) == "n") %>%
+  mutate(year = as.numeric(mid(name, 3, 4))) %>%
   mutate(quarter = as.numeric(right(name, 1))) %>%
   mutate(date = make_yearquarter(year = year, quarter = quarter)) %>%
   select(5, 2) %>%
@@ -22,8 +22,8 @@ training_data <- df %>% filter(date < make_yearquarter(year = 2020, quarter = 1)
 
 ggplot(df, aes(x = date, y = count)) +
   labs(
-    title = "R96.*, R98.*, R99.*, I46.1, I46.9 - Kohorte 1",
-    subtitle = "Kohorte 1 = Versicherte, die in 2021 eine ICD-Kodierung zu Impfnebenwirkung hatten.",
+    title = "R96.*, R98.*, R99.*, I46.1, I46.9",
+    subtitle = "Quelle: KBV",
     y = "Diagnosen",
     x = "Quartal"
   ) +
