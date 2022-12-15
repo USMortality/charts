@@ -32,6 +32,10 @@ urls <- list(
   c(
     "https://www.destatis.de/DE/Themen/Gesellschaft-Umwelt/Bevoelkerung/Sterbefaelle-Lebenserwartung/Tabellen/sonderauswertung-sterbefaelle.xlsx?__blob=publicationFile",
     "sonderauswertung-sterbefaelle.xlsx"
+  ),
+  c(
+    "https://covid.ourworldindata.org/data/owid-covid-data.csv",
+    "owid.csv"
   )
 )
 
