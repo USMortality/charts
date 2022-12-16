@@ -12,7 +12,7 @@ watermark <- function(x, y) {
   annotate("text",
     y = Inf,
     x = structure(Inf, class = "Date"),
-    label = "@MortalityWatch",
+    label = "@USMortality",
     vjust = 1,
     hjust = 1,
     col = "#000000",
