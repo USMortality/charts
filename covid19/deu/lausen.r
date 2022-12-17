@@ -5,24 +5,30 @@ data <- as_tibble(read.csv("./data/KBV-Datenpakete.csv", sep = ";"))
 df <- data %>%
   filter(grepl("R96|R98|R99|I46.1|I46.9", Diagnose)) %>%
   pivot_longer(2:ncol(data)) %>%
+  mutate(name = right(name, 5)) %>%
   group_by(name) %>%
   summarise(sum(value, na.rm = TRUE)) %>%
   ungroup()
 
-df <- df %>%
-  filter(left(name, 1) == "n") %>%
-  mutate(year = as.numeric(mid(name, 3, 4))) %>%
+df2 <- df %>%
+  mutate(year = as.numeric(left(name, 4))) %>%
   mutate(quarter = as.numeric(right(name, 1))) %>%
   mutate(date = make_yearquarter(year = year, quarter = quarter)) %>%
   select(5, 2) %>%
   setNames(c("date", "count")) %>%
   as_tsibble(index = date)
 
-training_data <- df %>% filter(date < make_yearquarter(year = 2020, quarter = 1))
+training_data <- df2 %>% filter(date < make_yearquarter(year = 2020, quarter = 1))
 
-ggplot(df, aes(x = date, y = count)) +
+prediction <- training_data %>%
+  model(RW(count ~ drift())) %>%
+  forecast(h = 4)
+d_2021 <- df2 %>% filter(year(date) == 2021)
+excess <- round(sum(d_2021$count) - sum(prediction$.mean))
+
+ggplot(df2, aes(x = date, y = count)) +
   labs(
-    title = "R96.*, R98.*, R99.*, I46.1, I46.9",
+    title = "Death Diagnostics - R96.*, R98.*, R99.*, I46.1, I46.9",
     subtitle = "Quelle: KBV",
     y = "Diagnosen",
     x = "Quartal"
