@@ -143,7 +143,10 @@ data <- rbind(data1, d2003_2, d2004_2, d2005_2, d2006_2, d2007_2, d2008_2, d2009
   pivot_longer(cols = c(4:24), names_to = "age_group", values_to = "deaths") %>%
   filter(age_group != "all") %>%
   mutate(deaths = as.numeric(deaths)) %>%
-  mutate(deaths = ifelse(is.na(deaths), 0, deaths))
+  mutate(deaths = ifelse(is.na(deaths), 0, deaths)) %>%
+  mutate(icd10 = tolower(icd10)) %>%
+  filter(!is.na(icd10)) %>%
+  filter(length(icd10) > 4)
 
 # By year
 data_year <- data %>%
