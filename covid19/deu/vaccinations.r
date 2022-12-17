@@ -22,6 +22,13 @@ df <- as_tibble(data) %>%
   ungroup()
 
 df["all"] <- rowSums(df[, 3:ncol(df)], na.rm = TRUE)
+
+df %>%
+  mutate(year = year(year_week)) %>%
+  select(year, `1`, all) %>%
+  group_by(year) %>%
+  summarise(`1` = sum(`1`, na.rm = TRUE), all = sum(all))
+
 save_csv(df, "covid19/deu/vaccinations")
 
 # Chart
