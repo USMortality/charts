@@ -2,21 +2,17 @@ source("lib/common.r")
 
 data <- read_remote("mortality/Germany/deaths_icd10_year.csv")
 
+codes <- c("I40", "I400", "I401", "I408", "I409", "I514", "I515")
 df <- data %>%
-  mutate(icd10 = left(icd10, 1)) %>%
-  group_by(year, icd10) %>%
-  summarise(deaths = sum(deaths)) %>%
-  ungroup() %>%
-  pivot_wider(names_from = year, values_from = deaths)
+  filter(icd10 %in% codes) %>%
+  mutate(date = ymd(year, truncated = 2L)) %>%
+  group_by(year) %>%
+  summarise(deaths = sum(deaths))
 
-df <- df %>%
-  pivot_longer(!icd10, names_to = "year", values_to = "deaths") %>%
-  relocate(year)
-
-ggplot(df, aes(x = year, y = deaths, group = icd10, group_name = "ICD-10", color = icd10)) +
+ggplot(df, aes(x = year, y = deaths)) +
   labs(
-    title = "",
-    subtitle = "",
+    title = "Myocarditis Deaths [Germany]",
+    subtitle = paste(codes, collapse = ", "),
     y = "Deaths",
     x = "Year"
   ) +
@@ -36,7 +32,7 @@ ggplot(df, aes(x = year, y = deaths, group = icd10, group_name = "ICD-10", color
   #   linetype = "solid"
   # ) +
   geom_line(linewidth = 1.2, alpha = 0.7) +
-  # twitter_theme() +
-  # watermark(df$date, df$cmr) +
+  twitter_theme() +
+  watermark(df$date, df$cmr) +
   # scale_x_date(date_breaks = "1 year", date_labels = "%Y") +
   theme(axis.text.x = element_text(angle = 30, hjust = 0.5, vjust = 0.5))

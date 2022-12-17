@@ -144,7 +144,6 @@ data <- rbind(data1, d2003_2, d2004_2, d2005_2, d2006_2, d2007_2, d2008_2, d2009
   filter(age_group != "all") %>%
   mutate(deaths = as.numeric(deaths)) %>%
   mutate(deaths = ifelse(is.na(deaths), 0, deaths)) %>%
-  mutate(icd10 = tolower(icd10)) %>%
   filter(!is.na(icd10)) %>%
   filter(nchar(icd10) <= 4)
 
