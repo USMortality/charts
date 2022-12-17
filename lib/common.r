@@ -32,21 +32,23 @@ twitter_theme <- function() {
     )
 }
 
-save_csv <- function(df, name) {
+save_csv <- function(df, name, upload = TRUE) {
   file_name <- paste0(name, ".csv")
   local_file_name <- paste0("out/", file_name)
   dir.create(dirname(local_file_name), recursive = TRUE)
   write.csv(df, local_file_name, row.names = FALSE)
 
-  put_object(
-    file = local_file_name,
-    object = file_name,
-    bucket = data_bucket,
-    multipart = TRUE
-  )
+  if (upload) {
+    put_object(
+      file = local_file_name,
+      object = file_name,
+      bucket = data_bucket,
+      multipart = TRUE
+    )
+  }
 }
 
-save_chart <- function(chart, name, scale) {
+save_chart <- function(chart, name, scale, upload = TRUE) {
   if (missing(scale)) scale <- sf
   file_name <- paste0(name, ".png")
   local_file_name <- paste0("out/", file_name)
@@ -66,11 +68,13 @@ save_chart <- function(chart, name, scale) {
     type = c("cairo")
   )
 
-  put_object(
-    file = local_file_name,
-    object = file_name,
-    bucket = charts_bucket
-  )
+  if (upload) {
+    put_object(
+      file = local_file_name,
+      object = file_name,
+      bucket = charts_bucket
+    )
+  }
 }
 
 left <- function(string, length) {
