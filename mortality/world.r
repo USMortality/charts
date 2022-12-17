@@ -29,23 +29,25 @@ for (type in types) {
     print("1) Weekly")
     df <- data_weekly %>%
       filter(name == country) %>%
-      mutate(date = yearweek(date)) %>%
+      mutate(yearweek = yearweek(date)) %>%
+      mutate(date = date(yearweek)) %>%
       as_tsibble(index = date)
 
     chart1 <-
       ggplot(df, aes(x = date, y = !!mortality_col)) +
       labs(
         title = paste0("Weekly ", mortality_title, " [", country, "]"),
-        subtitle = "Source: www.mortality.watch",
+        subtitle = paste0(
+          "Data until: ",
+          tail(df %>% filter(!is.na(!!mortality_col)), n = 1)$yearweek,
+          "; Source: www.mortality.watch"
+        ),
         y = "Deaths/100k",
         x = "Week of Year"
       ) +
       geom_line(color = "#5383EC", linewidth = 1) +
       twitter_theme() +
-      scale_x_yearweek(
-        # date_breaks = "1 year",
-        date_labels = "%Y"
-      ) +
+      scale_x_date(date_labels = "%Y", breaks = "1 year") +
       theme(axis.text.x = element_text(angle = 30, hjust = 0.5, vjust = 0.5))
     save_chart(chart1, paste(
       "mortality", type, country, "weekly_line",
@@ -62,7 +64,11 @@ for (type in types) {
       ggplot(df, aes(x = date, y = !!mortality_col)) +
       labs(
         title = paste0("Monthly ", mortality_title, " [", country, "]"),
-        subtitle = "Source: www.mortality.watch",
+        subtitle = paste0(
+          "Data until: ",
+          tail(df %>% filter(!is.na(!!mortality_col)), n = 1)$date,
+          "; Source: www.mortality.watch"
+        ),
         y = "Deaths/100k",
         x = "Month of Year"
       ) +
@@ -85,7 +91,11 @@ for (type in types) {
       ggplot(df, aes(x = date, y = !!mortality_col)) +
       labs(
         title = paste0("Quarterly ", mortality_title, " [", country, "]"),
-        subtitle = "Source: www.mortality.watch",
+        subtitle = paste0(
+          "Data until: ",
+          tail(df %>% filter(!is.na(!!mortality_col)), n = 1)$date,
+          "; Source: www.mortality.watch"
+        ),
         y = "Deaths/100k",
         x = "Month of Year"
       ) +
@@ -177,7 +187,8 @@ for (type in types) {
     df <- data_weekly %>%
       filter(name == country) %>%
       filter(!is.na(!!mortality_col)) %>%
-      mutate(date = yearweek(date)) %>%
+      mutate(yearweek = yearweek(date)) %>%
+      mutate(date = date(yearweek)) %>%
       as_tsibble(index = date) %>%
       group_by_key() %>%
       fill_gaps() %>%
@@ -190,11 +201,18 @@ for (type in types) {
         title = paste0(
           "Weekly ", mortality_title, " - STL Decomp. [", country, "]"
         ),
-        subtitle = "Source: www.mortality.watch",
+        subtitle = paste0(
+          "Data until: ",
+          tail(df %>% filter(!is.na(!!mortality_col)), n = 1)$date,
+          "; Source: www.mortality.watch"
+        ),
         y = "Deaths/100k",
         x = "Week of Year"
       ) +
-      twitter_theme()
+      scale_x_date(date_labels = "%Y", breaks = "1 year") +
+      twitter_theme() +
+      theme(axis.text.x = element_text(angle = 30, hjust = 0.5, vjust = 0.5))
+
     save_chart(chart7, paste("mortality", type, country, "stl_line", sep = "/"))
 
     print("8) Yearly")
@@ -214,7 +232,7 @@ for (type in types) {
       geom_col(fill = "#5383EC") +
       geom_text(
         aes(label = round(!!mortality_col)),
-        vjust = 2.5, colour = "#ffffff"
+        size = 3, vjust = 2.5, colour = "#ffffff"
       ) +
       scale_x_continuous(breaks = df$date) +
       theme(axis.text.x = element_text(angle = 30, hjust = 0.5, vjust = 0.5)) +
@@ -248,7 +266,7 @@ for (type in types) {
       geom_col(fill = "#5383EC") +
       geom_text(
         aes(label = round(!!mortality_col)),
-        vjust = 2.5, colour = "#ffffff"
+        size = 3, vjust = 2.5, colour = "#ffffff"
       ) +
       scale_x_continuous(breaks = df$date) +
       theme(axis.text.x = element_text(angle = 30, hjust = 0.5, vjust = 0.5)) +
@@ -260,9 +278,11 @@ for (type in types) {
     df <- data_weekly %>%
       filter(name == country) %>%
       filter(!is.na(!!mortality_col)) %>%
-      mutate(date = yearweek(date)) %>%
+      mutate(yearweek = yearweek(date)) %>%
+      mutate(date = date(yearweek)) %>%
       as_tsibble(index = date) %>%
-      mutate(sma = SMA(!!mortality_col, n = 52))
+      mutate(sma = SMA(!!mortality_col, n = 52)) %>%
+      filter(!is.na(sma))
 
     chart10 <-
       ggplot(df, aes(x = date, y = sma)) +
@@ -270,16 +290,17 @@ for (type in types) {
         title = paste0(
           "Weekly ", mortality_title, " (52W SMA) [", country, "]"
         ),
-        subtitle = "Source: www.mortality.watch",
+        subtitle = paste0(
+          "Data until: ",
+          tail(df %>% filter(!is.na(!!mortality_col)), n = 1)$yearweek,
+          "; Source: www.mortality.watch"
+        ),
         y = "Deaths/100k",
         x = "Week of Year"
       ) +
       geom_line(color = "#5383EC", linewidth = 1) +
       twitter_theme() +
-      scale_x_yearweek(
-        # date_breaks = "1 year",
-        date_labels = "%Y"
-      ) +
+      scale_x_date(date_labels = "%Y", breaks = "1 year") +
       theme(axis.text.x = element_text(angle = 30, hjust = 0.5, vjust = 0.5))
     save_chart(
       chart10,
