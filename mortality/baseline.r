@@ -3,23 +3,19 @@ source("lib/common.r")
 data <- read_remote("mortality/world_yearly.csv")
 
 result <- setNames(
-  data.frame(matrix(ncol = 3, nrow = 0)),
-  c("iso3c", "type", "window")
+  data.frame(matrix(ncol = 4, nrow = 0)),
+  c("iso3c", "name", "type", "window")
 )
 
 types <- c("cmr", "asmr")
 asmr_data <- data %>% filter(!is.na(asmr))
-for (type in types) {
-  countries <- if (type == "cmr") {
-    unique(data$iso3c)
-  } else {
-    unique(asmr_data$iso3c)
-  }
-  mortality_col <- sym(type)
-  for (iso in countries) {
-    print(iso)
+for (mortality_type in types) {
+  countries <- getCountriesForType(mortality_type, data, asmr_data)
+  mortality_col <- sym(mortality_type)
+  for (country in countries) {
+    print(country)
     df <- data %>%
-      filter(iso3c == iso) %>%
+      filter(name == country) %>%
       as_tsibble(index = date)
 
     training_data <- df %>% filter(date < 2020)
@@ -38,7 +34,8 @@ for (type in types) {
         }
       }
     }
-    result[nrow(result) + 1, ] <- c(iso, type, optimal_size)
+    iso <- head(df$iso3c, 1)
+    result[nrow(result) + 1, ] <- c(iso, country, mortality_type, optimal_size)
     print(
       paste0("Optimal window size: ", optimal_size, ", RMSE: ", round(min, 1))
     )

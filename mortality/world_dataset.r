@@ -102,9 +102,9 @@ aggregate_data <- function(data, fun) {
     fluseason = filter_by_complete_temporal_values(data, fun, 365)
   ) %>%
     summarise(
-      deaths = round(sum(deaths)),
-      cmr = round(sum(cmr), digits = 1),
-      asmr = round(sum(asmr), digits = 1)
+      deaths = round(sumIfNotEmpty(deaths)),
+      cmr = round(sumIfNotEmpty(cmr), digits = 1),
+      asmr = round(sumIfNotEmpty(asmr), digits = 1)
     ) %>%
     ungroup() %>%
     setNames(c("date", "deaths", "cmr", "asmr")) %>%
@@ -140,9 +140,9 @@ aggregate_data_ytd <- function(data) {
   data %>%
     group_by(year, max_date_cmr, max_date_asmr) %>%
     summarise(
-      deaths = round(sum(deaths)),
-      cmr = round(sum(cmr, na.rm = TRUE), digits = 1),
-      asmr = round(sum(asmr, na.rm = TRUE), digits = 1)
+      deaths = round(sumIfNotEmpty(deaths)),
+      cmr = round(sumIfNotEmpty(cmr), digits = 1),
+      asmr = round(sumIfNotEmpty(asmr), digits = 1)
     ) %>%
     ungroup() %>%
     setNames(
