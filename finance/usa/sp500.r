@@ -17,6 +17,7 @@ save_csv(df, "finance/usa/sp500")
 
 chart <-
   ggplot(as_tsibble(df, index = date), aes(x = date, y = close)) +
+  scale_x_date(date_breaks = "5 year", date_labels = "%Y") +
   scale_y_continuous(trans = "log2") +
   labs(
     title = "SP500 (Log Scale)",
@@ -32,6 +33,7 @@ chart <-
     formula = y ~ x,
     color = "black",
     linetype = "dashed"
-  )
+  ) +
+  theme(axis.text.x = element_text(angle = 30, hjust = 0.5, vjust = 0.5))
 
 save_chart(chart, "finance/usa/sp500")
