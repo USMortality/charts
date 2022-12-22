@@ -141,7 +141,6 @@ data <- rbind(data1, d2003_2, d2004_2, d2005_2, d2006_2, d2007_2, d2008_2, d2009
   setNames(c("year", "icd10", "sex", "all", "0", "01-04", "05-09", "10-14", "15-19", "20-24", "25-29", "30-34", "35-39", "40-44", "45-49", "50-54", "55-59", "60-64", "65-69", "70-74", "75-80", "80-84", "85-89", "90+")) %>%
   mutate(sex = ifelse(sex == 1, "m", "f")) %>%
   pivot_longer(cols = c(4:24), names_to = "age_group", values_to = "deaths") %>%
-  filter(age_group != "all") %>%
   mutate(deaths = as.numeric(deaths)) %>%
   mutate(deaths = ifelse(is.na(deaths), 0, deaths)) %>%
   filter(!is.na(icd10)) %>%
@@ -149,12 +148,14 @@ data <- rbind(data1, d2003_2, d2004_2, d2005_2, d2006_2, d2007_2, d2008_2, d2009
 
 # By year
 data_year <- data %>%
+  filter(age_group == "all") %>%
   select(-3, -4) %>%
   group_by(year, icd10) %>%
   summarise(deaths = sum(deaths))
 
 # By year/sex
 data_year_sex <- data %>%
+  filter(age_group != "all") %>%
   select(-4) %>%
   group_by(year, icd10, sex) %>%
   summarise(deaths = sum(deaths))
