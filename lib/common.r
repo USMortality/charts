@@ -138,3 +138,42 @@ fluseason <- function(data) {
 read_remote <- function(path) {
   as_tibble(read.csv(paste0("https://s3.mortality.watch/data/", path)))
 }
+
+get_usa_deaths <- function(file) {
+  deaths_usa <- as_tibble(read.csv(file)) %>%
+    mutate(year = left(Month.Code, 4), time = right(Month.Code, 2)) %>%
+    select(7, 8, 4)
+  deaths_usa$iso3c <- "USA"
+  deaths_usa$country_name <- "United States"
+  deaths_usa$time_unit <- "monthly"
+
+  deaths_usa %>%
+    setNames(
+      c("year", "time", "deaths", "iso3c", "country_name", "time_unit")
+    ) %>%
+    relocate(4, 5, 1, 2, 6, 3) %>%
+    mutate(
+      year = as.numeric(year),
+      time = as.numeric(time)
+    )
+}
+
+get_usa_population <- function(file) {
+  as_tibble(read.csv(file)) %>%
+    select(2, 5) %>%
+    setNames(c("year", "population"))
+}
+
+get_usa_mortality <- function(age_group) {
+  pop_usa <- get_usa_population(
+    paste0("./data_static/usa_pop_", age_group, ".csv")
+  )
+  deaths_usa <- get_usa_deaths(
+    paste0("./data_static/usa_", age_group, ".csv")
+  ) %>%
+    inner_join(pop_usa, by = "year") %>%
+    mutate(mortality = deaths / population * 100000)
+  deaths_usa$age_group <- str_replace(age_group, "_", "-")
+
+  deaths_usa %>% select(3, 4, 9, 8)
+}

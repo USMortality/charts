@@ -12,20 +12,7 @@ world_population <- read_excel(
 )
 deaths1 <- as_tibble(read.csv("./data/world_mortality.csv"))
 deaths2 <- as_tibble(read.csv("./data/mortality_org.csv", skip = 2))
-deaths_usa <- as_tibble(
-  read.csv("./data_static/Underlying_Cause_of_Death_1999_2020.csv")
-) %>%
-  mutate(year = left(Month.Code, 4), time = right(Month.Code, 2)) %>%
-  select(7, 8, 4)
-deaths_usa$iso3c <- "USA"
-deaths_usa$country_name <- "United States"
-deaths_usa$time_unit <- "monthly"
-
-deaths_usa <- deaths_usa %>%
-  setNames(
-    c("year", "time", "deaths", "iso3c", "country_name", "time_unit")
-  ) %>%
-  relocate(4, 5, 1, 2, 6, 3)
+deaths_usa <- get_usa_deaths("./data_static/usa_all.csv")
 
 countries <- as_tibble(read.csv("./data/countries.csv")) %>%
   select(iso3, name) %>%
