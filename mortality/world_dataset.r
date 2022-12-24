@@ -12,6 +12,21 @@ world_population <- read_excel(
 )
 deaths1 <- as_tibble(read.csv("./data/world_mortality.csv"))
 deaths2 <- as_tibble(read.csv("./data/mortality_org.csv", skip = 2))
+deaths_usa <- as_tibble(
+  read.csv("./data_static/Underlying_Cause_of_Death_1999_2020.csv")
+) %>%
+  mutate(year = left(Month.Code, 4), time = right(Month.Code, 2)) %>%
+  select(7, 8, 4)
+deaths_usa$iso3c <- "USA"
+deaths_usa$country_name <- "United States"
+deaths_usa$time_unit <- "monthly"
+
+deaths_usa <- deaths_usa %>%
+  setNames(
+    c("year", "time", "deaths", "iso3c", "country_name", "time_unit")
+  ) %>%
+  relocate(4, 5, 1, 2, 6, 3)
+
 countries <- as_tibble(read.csv("./data/countries.csv")) %>%
   select(iso3, name) %>%
   setNames(c("iso3c", "name"))
@@ -54,6 +69,7 @@ wdd <- wd %>%
 
 md <- deaths1 %>%
   filter(time_unit == "monthly") %>%
+  rbind(deaths_usa) %>%
   mutate(date = make_yearmonth(year = year, month = time)) %>%
   select(iso3c, year, time, date, deaths) %>%
   setNames(c("iso3c", "year", "month", "date", "deaths"))
@@ -120,9 +136,6 @@ mortality_daily <- dd %>%
   mutate(cmr = deaths / population * 100000)
 
 filter_by_complete_temporal_values <- function(data, col, n) {
-  # data <- mortality_daily_nested[[2]][[1]]
-  # col <- "yearweek"
-  # n <- 7
   start <- data %>%
     filter(.data[[col]] == head(data[[col]], n = 1)) %>%
     group_by(across(all_of(col))) %>%
