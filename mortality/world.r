@@ -215,7 +215,7 @@ for (type in types) {
 
     save_chart(chart7, paste("mortality", type, country, "stl_line", sep = "/"))
 
-    print("8) Yearly")
+    print("8) Yearly (Bar)")
     df <- data_yearly %>%
       filter(name == country) %>%
       as_tsibble(index = date)
@@ -243,7 +243,7 @@ for (type in types) {
       sep = "/"
     ))
 
-    print("9) YTD")
+    print("9) YTD (Bar)")
     df <- data_ytd %>%
       filter(name == country) %>%
       as_tsibble(index = date)
@@ -274,7 +274,35 @@ for (type in types) {
 
     save_chart(chart9, paste("mortality", type, country, "ytd_bar", sep = "/"))
 
-    print("10) Weekly (52W SMA)")
+    print("10) Flu Season (Bar)")
+    df <- data_fluseason %>%
+      filter(name == country)
+    df <- df %>%
+      mutate(index = seq(1:length(df$date))) %>%
+      mutate(date = paste0(mid(date, 3, 2), "/", right(date, 2)))
+    chart10 <-
+      ggplot(df, aes(x = index, y = !!mortality_col)) +
+      labs(
+        title = paste0("Flu Season ", mortality_title, " [", country, "]"),
+        subtitle = "Oct 1 - Sep 30; Source: www.mortality.watch",
+        y = "Deaths/100k",
+        x = "Flu Season"
+      ) +
+      twitter_theme() +
+      geom_col(fill = "#5383EC") +
+      geom_text(
+        aes(label = round(!!mortality_col)),
+        size = 3, vjust = 2.5, colour = "#ffffff"
+      ) +
+      scale_x_continuous(breaks = 1:length(df$date), labels = df$date) +
+      theme(axis.text.x = element_text(angle = 30, hjust = 0.5, vjust = 0.5)) +
+      scale_y_continuous(labels = comma_format(decimal.mark = ","))
+    save_chart(chart10, paste(
+      "mortality", type, country, "fluseason_bar",
+      sep = "/"
+    ))
+
+    print("11) Weekly (52W SMA)")
     df <- data_weekly %>%
       filter(name == country) %>%
       filter(!is.na(!!mortality_col)) %>%
@@ -284,7 +312,7 @@ for (type in types) {
       mutate(sma = SMA(!!mortality_col, n = 52)) %>%
       filter(!is.na(sma))
 
-    chart10 <-
+    chart11 <-
       ggplot(df, aes(x = date, y = sma)) +
       labs(
         title = paste0(
@@ -303,15 +331,15 @@ for (type in types) {
       scale_x_date(date_labels = "%Y", breaks = "1 year") +
       theme(axis.text.x = element_text(angle = 30, hjust = 0.5, vjust = 0.5))
     save_chart(
-      chart10,
+      chart11,
       paste("mortality", type, country, "weekly_52w_sma_line", sep = "/")
     )
 
     save_collage(
-      chart10, chart1, chart2, chart3, chart4, chart5, chart6, chart7, chart8,
-      chart9,
+      chart11, chart1, chart2, chart3, chart4, chart5, chart6, chart7, chart8,
+      chart9, chart10,
       path = paste("mortality", type, country, "collage", sep = "/"),
-      ncol = 2, nrow = 5, scale = 5
+      ncol = 3, nrow = 4, scale = 5
     )
   }
 }
