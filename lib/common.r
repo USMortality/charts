@@ -177,3 +177,23 @@ get_usa_mortality <- function(age_group) {
 
   deaths_usa %>% select(3, 4, 9, 8)
 }
+
+getDailyFromWeekly <- function(wd, column_name) {
+  col <- sym(column_name)
+  df <- wd %>%
+    uncount(7, .id = "day") %>%
+    mutate(date = date(date)) %>%
+    mutate(date = date + days(day - 1)) %>%
+    mutate("{column_name}" := !!col / 7)
+  df %>% select(-ncol(df))
+}
+
+getDailyFromMonthly <- function(wd, column_name) {
+  col <- sym(column_name)
+  df <- wd %>%
+    uncount(days_in_month(date), .id = "day") %>%
+    mutate(date = date(date)) %>%
+    mutate(date = date + days(day - 1)) %>%
+    mutate("{column_name}" := !!col / days_in_month(date))
+  df %>% select(-ncol(df))
+}

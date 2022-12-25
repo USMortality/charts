@@ -44,13 +44,7 @@ wd <- full_join(wd1, wd2, by = c("iso3c", "year", "week", "date")) %>%
   select(iso3c, year, week, date, deaths)
 
 wdd <- wd %>%
-  uncount(7, .id = "day") %>%
-  mutate(date = date_parse(
-    paste0(year, "-W", week, "-1"),
-    format = "%G-W%V-%u"
-  )) %>%
-  mutate(date = date + days(day - 1)) %>%
-  mutate(deaths = deaths / 7) %>%
+  getDailyFromWeekly("deaths") %>%
   select(iso3c, date, deaths) %>%
   distinct(iso3c, date, .keep_all = TRUE)
 
@@ -62,15 +56,7 @@ md <- deaths1 %>%
   setNames(c("iso3c", "year", "month", "date", "deaths"))
 
 mdd <- md %>%
-  uncount(days_in_month(date), .id = "day") %>%
-  mutate(
-    date = date_parse(
-      paste0(year, "-", month, "-1"),
-      format = "%Y-%m-%d"
-    )
-  ) %>%
-  mutate(date = date + days(day) - 1) %>%
-  mutate(deaths = deaths / days_in_month(date)) %>%
+  getDailyFromMonthly("deaths") %>%
   select(iso3c, date, deaths)
 
 dd <- full_join(wdd, mdd, by = c("iso3c", "date")) %>%

@@ -28,13 +28,7 @@ wd <- deaths %>%
   ungroup()
 
 dd_asmr <- wd %>%
-  uncount(7, .id = "day") %>%
-  mutate(date = date_parse(
-    paste0(year, "-W", week, "-1"),
-    format = "%G-W%V-%u"
-  )) %>%
-  mutate(date = date + days(day - 1)) %>%
-  mutate(asmr = asmr / 7) %>%
+  getDailyFromWeekly("asmr") %>%
   select(iso3c, date, asmr) %>%
   distinct(iso3c, date, .keep_all = TRUE)
 
@@ -44,7 +38,7 @@ dd_asmr$iso3c[dd_asmr$iso3c == "NZL_NP"] <- "NZL"
 dd_asmr$iso3c[dd_asmr$iso3c == "GBR_NP"] <- "GBR"
 
 
-# USA <2015
+# USA < 2015
 mortality_usa <- rbind(
   get_usa_mortality("0_14"),
   get_usa_mortality("15_64"),
@@ -52,21 +46,6 @@ mortality_usa <- rbind(
   get_usa_mortality("75_84"),
   get_usa_mortality("85+")
 )
-
-makeDailyFromMonthly <- function(monthlyData) {
-  monthlyData %>%
-    mutate(date = make_yearmonth(year = year, month = month)) %>%
-    uncount(days_in_month(date), .id = "day") %>%
-    mutate(
-      date = date_parse(
-        paste0(year, "-", month, "-1"),
-        format = "%Y-%m-%d"
-      )
-    ) %>%
-    mutate(date = date + days(day) - 1) %>%
-    mutate(deaths = deaths / days_in_month(date)) %>%
-    select(date, deaths)
-}
 
 md_usa <- mortality_usa %>%
   inner_join(std_pop, by = "age_group") %>%
@@ -76,7 +55,8 @@ md_usa <- mortality_usa %>%
   summarise(asmr = sum(asmr)) %>%
   ungroup() %>%
   setNames(c("year", "month", "deaths")) %>%
-  makeDailyFromMonthly() %>%
+  mutate(date = make_yearmonth(year = year, month = month)) %>%
+  getDailyFromMonthly("deaths") %>%
   setNames(c("date", "asmr"))
 
 md_usa$iso3c <- "USA"
