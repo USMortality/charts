@@ -54,9 +54,10 @@ md_usa <- mortality_usa %>%
   group_by(year, time) %>%
   summarise(asmr = sum(asmr)) %>%
   ungroup() %>%
-  setNames(c("year", "month", "deaths")) %>%
+  setNames(c("year", "month", "asmr")) %>%
   mutate(date = make_yearmonth(year = year, month = month)) %>%
-  getDailyFromMonthly("deaths") %>%
+  getDailyFromMonthly("asmr") %>%
+  select(4, 3) %>%
   setNames(c("date", "asmr"))
 
 md_usa$iso3c <- "USA"
