@@ -4,17 +4,15 @@ data <- read_remote("mortality/Germany/deaths_icd10_year.csv")
 
 # By Year
 df <- data %>%
-  filter(icd10 %in% c("T881", "U129")) %>%
-  group_by(year) %>%
-  summarise(deaths = sum(deaths)) %>%
+  filter(icd10 %in% c("T881")) %>%
   as_tsibble(index = year) %>%
   fill_gaps(deaths = 0) %>%
   mutate(date = ymd(year, truncated = 2L))
 
 ggplot(df, aes(x = date, y = deaths)) +
   labs(
-    title = "Vaccine Deaths [Germany]",
-    subtitle = "ICD-10: U12.9 & T88.1; Source: German Federal Statistical Office (Destatis.de)",
+    title = "Other Immunization Deaths [Germany]",
+    subtitle = "T88.1, Underlying Cause of Deaths; Source: German Federal Statistical Office (Destatis)",
     y = "Deaths",
     x = "Year"
   ) +
@@ -28,7 +26,7 @@ ggplot(df, aes(x = date, y = deaths)) +
 pre_2021 <- df %>%
   as_tibble() %>%
   filter(year < 2021) %>%
-  summarise(deaths = sum(deaths))
+  summarise(deaths = sum(deaths, na.rm = TRUE))
 d_2021 <- df %>%
   filter(year == 2021)
 df2 <- as_tibble(data.frame(
@@ -37,8 +35,8 @@ df2 <- as_tibble(data.frame(
 
 ggplot(df2, aes(x = year, y = deaths)) +
   labs(
-    title = "Vaccine Deaths 2003-2020 vs 2021 [Germany]",
-    subtitle = "ICD-10: U12.9 & T88.1; Source: German Federal Statistical Office (Destatis.de)",
+    title = "Other Immunization Deaths [Germany]",
+    subtitle = "T88.1, Underlying Cause of Deaths; Source: German Federal Statistical Office (Destatis)",
     y = "Deaths",
     x = "Years"
   ) +
@@ -75,8 +73,8 @@ model %>%
     linetype = "dashed"
   ) +
   labs(
-    title = "Pre-Pandemic Vaccine Deaths [Germany]",
-    subtitle = "ICD-10: U12.9 & T88.1; Source: German Federal Statistical Office (Destatis.de)",
+    title = "Pre-Pandemic - Other Immunization Deaths [Germany]",
+    subtitle = "T88.1, Underlying Cause of Deaths; Source: German Federal Statistical Office (Destatis)",
     y = "Deaths",
     x = "Year"
   ) +
@@ -87,23 +85,13 @@ model %>%
 data <- read_remote("mortality/Germany/deaths_icd10_year_age.csv")
 
 df <- data %>%
-  filter(icd10 %in% c("T881", "U129")) %>%
-  # mutate(
-  #   age_group = case_when(
-  #     age_group %in% c("0", "1-4") ~ "00-04",
-  #     age_group %in% c("5-9", "10-14", "15-19") ~ "05-19",
-  #     age_group %in% c("20-24", "25-29", "30-34", "35-39", "40-44", "45-49", "50-54", "55-59") ~ "20-59",
-  #     age_group %in% c("60-64", "65-69", "70-74", "75-80", "80-84", "85-89", "90+") ~ "60+"
-  #   )
-  # ) %>%
-  group_by(year, age_group) %>%
-  summarise(deaths = sum(deaths)) %>%
+  filter(icd10 == "T881") %>%
   mutate(date = ymd(year, truncated = 2L))
 
 ggplot(df, aes(x = date, y = deaths, groups = age_group, group_name = age_group, color = age_group)) +
   labs(
-    title = "Vaccine Deaths by Age Group [Germany]",
-    subtitle = "ICD-10: U12.9 & T88.1; Source: German Federal Statistical Office; (c) @USMortality",
+    title = "Other Immunization Deaths [Germany]",
+    subtitle = "T88.1, Underlying Cause of Deaths; Source: German Federal Statistical Office (Destatis)",
     y = "Deaths",
     x = "Year"
   ) +
@@ -117,15 +105,13 @@ ggplot(df, aes(x = date, y = deaths, groups = age_group, group_name = age_group,
 data <- read_remote("mortality/Germany/deaths_icd10_year_sex.csv")
 
 df <- data %>%
-  filter(icd10 %in% c("T881", "U129")) %>%
-  group_by(year, sex) %>%
-  summarise(deaths = sum(deaths)) %>%
+  filter(icd10 == "T881") %>%
   mutate(date = ymd(year, truncated = 2L))
 
 ggplot(df, aes(x = date, y = deaths, groups = sex, group_name = sex, color = sex)) +
   labs(
-    title = "Vaccine Deaths by Gender [Germany]",
-    subtitle = "ICD-10: U12.9 & T88.1; Source: German Federal Statistical Office; (c) @USMortality",
+    title = "Other Immunization Deaths [Germany]",
+    subtitle = "T88.1, Underlying Cause of Deaths; Source: German Federal Statistical Office (Destatis)",
     y = "Deaths",
     x = "Year"
   ) +
