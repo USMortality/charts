@@ -27,7 +27,6 @@ chart <-
   ) +
   geom_line(color = "#5383EC", linewidth = 1) +
   twitter_theme() +
-  watermark(ts$date, ts$close) +
   geom_smooth(
     method = "lm",
     formula = y ~ x,
