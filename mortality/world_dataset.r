@@ -1,5 +1,6 @@
 source("lib/common.r")
 source("mortality/world_dataset_asmr.r")
+source("mortality/usa/mortality.r")
 
 # Load Data
 world_population <- read_excel(
@@ -13,6 +14,7 @@ world_population <- read_excel(
 deaths1 <- as_tibble(read.csv("./data/world_mortality.csv"))
 deaths2 <- as_tibble(read.csv("./data/mortality_org.csv", skip = 2))
 deaths_usa <- get_usa_deaths("./data_static/usa_all.csv")
+us_population <- read_remote("population/usa/six_age_bands.csv")
 
 countries <- as_tibble(read.csv("./data/countries.csv")) %>%
   select(iso3, name) %>%
@@ -21,6 +23,7 @@ countries <- as_tibble(read.csv("./data/countries.csv")) %>%
 # Deaths
 wd1 <- deaths1 %>%
   filter(time_unit == "weekly") %>%
+  rbind(wd_us_states) %>%
   mutate(date = make_yearweek(year = year, week = time)) %>%
   select(iso3c, year, time, date, deaths) %>%
   setNames(c("iso3c", "year", "week", "date", "deaths"))
@@ -48,9 +51,11 @@ wdd <- wd %>%
   select(iso3c, date, deaths) %>%
   distinct(iso3c, date, .keep_all = TRUE)
 
+# Format: iso3c, country_name, year, time, time_unit, deaths
 md <- deaths1 %>%
   filter(time_unit == "monthly") %>%
   rbind(deaths_usa) %>%
+  rbind(md_us_states) %>%
   mutate(date = make_yearmonth(year = year, month = time)) %>%
   select(iso3c, year, time, date, deaths) %>%
   setNames(c("iso3c", "year", "month", "date", "deaths"))
@@ -64,14 +69,22 @@ dd <- full_join(wdd, mdd, by = c("iso3c", "date")) %>%
   select(iso3c, date, deaths) %>%
   arrange(iso3c, date)
 
+dd %>% filter(iso3c == "US-NYC")
+
 # Population
-population_grouped <- world_population %>%
+world_population <- world_population %>%
   select(1, 6, 7) %>%
   setNames(c("iso3c", "year", "population")) %>%
   inner_join(countries, by = c("iso3c")) %>%
   filter(!iso3c %in% c("ISO3 Alpha-code", NA)) %>%
   mutate(year = as.integer(year)) %>%
-  mutate(population = as.integer(population * 1000)) %>%
+  mutate(population = as.integer(population * 1000))
+us_population <- us_population %>%
+  filter(age_group == "all") %>%
+  select(3, 4, 5, 1) %>%
+  setNames(c("iso3c", "year", "population", "name"))
+
+population_grouped <- rbind(world_population, us_population) %>%
   nest(data = c("year", "population"))
 
 # Forecast 2022/23

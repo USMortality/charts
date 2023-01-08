@@ -8,12 +8,20 @@ urls <- list(
     "covid19_usa_live_births.csv"
   ),
   c(
+    "https://www2.census.gov/programs-surveys/popest/datasets/2000-2010/intercensal/state/st-est00int-agesex.csv",
+    "population_usa_2000-2010.csv"
+  ),
+  c(
     "https://www2.census.gov/programs-surveys/popest/datasets/2010-2020/state/asrh/SC-EST2020-AGESEX-CIV.csv",
     "population_usa_2010-2020.csv"
   ),
   c(
     "https://www2.census.gov/programs-surveys/popest/datasets/2020-2021/state/asrh/sc-est2021-agesex-civ.csv",
     "population_usa_2020-2021.csv"
+  ),
+  c(
+    "https://www2.census.gov/programs-surveys/popest/datasets/2000-2010/intercensal/county/co-est00int-agesex-5yr.csv",
+    "population_usa_county_2000-2010.csv"
   ),
   c(
     "https://www2.census.gov/programs-surveys/popest/datasets/2010-2020/counties/asrh/CC-EST2020-ALLDATA-36.csv",
@@ -50,10 +58,19 @@ urls <- list(
   c(
     "https://s3.mortality.watch/data/mortality/world_max_date.csv",
     "world_max_date.csv"
+  ),
+  c(
+    "https://data.cdc.gov/api/views/y5bj-9g5w/rows.csv?accessType=DOWNLOAD",
+    "usa_states_age_weekly.csv"
+  ),
+  c(
+    "https://data.cdc.gov/api/views/muzy-jte6/rows.csv?accessType=DOWNLOAD",
+    "usa_states_age_cause_weekly.csv"
   )
 )
 
 dir <- "data/"
 for (url in urls) {
+  print(paste0(dir, url[2]))
   download.file(url[1], paste0(dir, url[2]))
 }
