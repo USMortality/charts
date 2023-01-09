@@ -14,7 +14,8 @@ world_population <- read_excel(
 deaths1 <- as_tibble(read.csv("./data/world_mortality.csv"))
 deaths2 <- as_tibble(read.csv("./data/mortality_org.csv", skip = 2))
 deaths_usa <- get_usa_deaths("./data_static/usa_all.csv")
-us_population <- read_remote("population/usa/six_age_bands.csv")
+us_population <- read_remote("population/usa/six_age_bands.csv") %>%
+  mutate(jurisdiction = paste0("USA - ", jurisdiction))
 
 countries <- as_tibble(read.csv("./data/countries.csv")) %>%
   select(iso3, name) %>%

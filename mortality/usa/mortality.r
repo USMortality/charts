@@ -32,7 +32,24 @@ wd_us_states <- us_cmr_2 %>%
     by = "country_name"
   ) %>%
   mutate(time_unit = "weekly") %>%
+  mutate(country_name = paste0("USA - ", country_name)) %>%
   select(5, 1, 2, 3, 7, 4)
+
+# Combine NY/NYC
+wd_us_states_ny <- wd_us_states %>%
+  filter(country_name %in% c("USA - New York", "USA - New York City")) %>%
+  group_by(year, time, time_unit) %>%
+  summarise(deaths = sum(deaths)) %>%
+  ungroup()
+wd_us_states_ny$iso3c <- "US-NY"
+wd_us_states_ny$country_name <- "USA - New York"
+wd_us_states_ny <- wd_us_states_ny %>% relocate(iso3c, country_name)
+
+wd_us_states <- rbind(
+  wd_us_states %>%
+    filter(!country_name %in% c("USA - New York", "USA - New York City")),
+  wd_us_states_ny
+)
 
 # get_usa_states_deaths <- function(file, age_group) {
 #   deaths <- as_tibble(read.csv(file)) %>%
