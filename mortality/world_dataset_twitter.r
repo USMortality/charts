@@ -65,16 +65,32 @@ tweet <- function(name, max) {
   )
 }
 
+tweets <- 0
 for (n in seq_len(nrow(df))) {
   val <- df[n, ]
   val_old <- world_max_date_old %>% filter(iso3c == val$iso3c)
-  if (val$max != val_old$max) {
+  if (length(val_old$iso3c) == 0 || val$max != val_old$max) {
     print(paste(val$name, "changed"))
     tweet(val$name, val$max)
     Sys.sleep(15 * 60)
+    tweets <- tweets + 1
   } else {
     print(paste(val$name, "unchanged"))
   }
 }
 
 save_csv(df, "mortality/world_max_date")
+
+if (tweets == 0) {
+  rnd_index <- round(runif(1) * length(df$name))
+  name <- df$name[rnd_index]
+  downloadImage(name, "/weekly_52w_sma_line.png")
+  post_tweet(
+    paste0(
+      "No data updates today - but here's the lateset Mortality Data for ",
+      name, "."
+    ),
+    media = paste0("/tmp/tweet.png"),
+    media_alt_text = paste("Weekly Mortality (52W SMA)", name)
+  )
+}
