@@ -4,7 +4,7 @@ source("mortality/usa/mortality.r")
 
 # Load Data
 world_population <- read_excel(
-  "./data/WPP2022_GEN_F01_DEMOGRAPHIC_INDICATORS_COMPACT_REV1.xlsx",
+  "./data_static/WPP2022_GEN_F01_DEMOGRAPHIC_INDICATORS_COMPACT_REV1.xlsx",
   sheet = "Estimates",
   col_types = c(
     "text", "text", "text", "text", "numeric", "numeric", "numeric"
@@ -17,7 +17,7 @@ deaths_usa <- get_usa_deaths("./data_static/usa_all.csv")
 us_population <- read_remote("population/usa/six_age_bands.csv") %>%
   mutate(jurisdiction = paste0("USA - ", jurisdiction))
 
-countries <- as_tibble(read.csv("./data/countries.csv")) %>%
+countries <- as_tibble(read.csv("./data_static/countries.csv")) %>%
   select(iso3, name) %>%
   setNames(c("iso3c", "name"))
 

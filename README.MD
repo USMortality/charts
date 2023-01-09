@@ -6,6 +6,13 @@ It's main purpose is the generation of mortality data for mortality.watch.
 Data and Charts are stored on MinIO/S3 at s3.mortality.watch.
 
 # Usage
+Sample usage:
+```
+./install_r_deps.sh
+Rscript update_datasets.r
+Rscript population/who_std_pop.r
+```
+
 See https://www.mortality.watch/ for the frontend.
 
 # Configuration
