@@ -57,8 +57,13 @@ tweet <- function(name, max) {
   )
   Sys.sleep(10)
   downloadImage(name, "/collage.png")
+  url <- paste0(
+    "https://www.mortality.watch/?q=%7B%22c%22%3A%5B%22",
+    URLencode(name),
+    "%22%5D%2C%22cs%22%3A0%2C%22ct%22%3A0%2C%22t%22%3A2%2C%22df%22%3A%222009+W47%22%2C%22dt%22%3A%222022+W46%22%2C%22m%22%3A0%7D"
+  )
   post_tweet(
-    paste0("Find all charts at: https://www.mortality.watch/?country=", name),
+    paste0("Find all charts at: ", url),
     media = paste0("/tmp/tweet.png"),
     media_alt_text = paste("Mortality", name),
     in_reply_to_status_id = get_my_timeline()$id_str[1]
@@ -85,10 +90,16 @@ if (tweets == 0) {
   rnd_index <- round(runif(1) * length(df$name))
   name <- df$name[rnd_index]
   downloadImage(name, "/weekly_52w_sma_line.png")
+  url <- paste0(
+    "https://www.mortality.watch/?q=%7B%22c%22%3A%5B%22",
+    URLencode(name),
+    "%22%5D%2C%22cs%22%3A0%2C%22ct%22%3A0%2C%22t%22%3A2%2C%22df%22%3A%222009+W47%22%2C%22dt%22%3A%222022+W46%22%2C%22m%22%3A0%7D"
+  )
   post_tweet(
     paste0(
       "No data updates today - but here's the lateset Mortality Data for ",
-      name, "."
+      name, ".",
+      "Find all charts at: ", url
     ),
     media = paste0("/tmp/tweet.png"),
     media_alt_text = paste("Weekly Mortality (52W SMA)", name)
