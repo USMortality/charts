@@ -1,7 +1,8 @@
 source("lib/common.r")
 
 us_states_iso3c <- as_tibble(read.csv("./data_static/usa_states_iso3c.csv")) %>%
-  add_row(iso3c = "US-NYC", state = "New York City")
+  add_row(iso3c = "US-NYC", state = "New York City") %>%
+  add_row(iso3c = "USA", state = "United States")
 
 # Download data
 data0 <- as_tibble(read.csv("./data/population_usa_2000-2010.csv"))
