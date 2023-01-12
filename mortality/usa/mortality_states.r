@@ -1,8 +1,9 @@
 source("lib/common.r")
 
 # CMR
-us_cmr_1 <- as_tibble(read.csv("./data_static/usa_states_1999_2020.csv"))
-us_cmr_2 <- as_tibble(read.csv("./data/usa_states_cause_weekly.csv"))
+md_usa <- get_usa_deaths("./data_static/usa_all.csv") # USA 1999/1 - 2020/12
+us_cmr_1 <- as_tibble(read.csv("./data_static/usa_states_1999_2020.csv")) # US States 1999/1 - 2020/12
+us_cmr_2 <- as_tibble(read.csv("./data/usa_states_age_cause_weekly.csv"))
 us_states_iso3c <- as_tibble(read.csv("./data_static/usa_states_iso3c.csv")) %>%
   add_row(iso3c = "US-NYC", state = "New York City") %>%
   add_row(iso3c = "USA", state = "United States")
@@ -25,16 +26,21 @@ md_us_states <- us_cmr_1 %>%
   ) %>%
   filter(!is.na(year))
 
+md_us_states <- rbind(md_usa, md_us_states)
+
 wd_us_states <- us_cmr_2 %>%
   select(2, 3, 4, 6) %>%
   setNames(c("country_name", "year", "time", "deaths")) %>%
-  filter(country_name != "United States") %>%
   left_join(
     us_states_iso3c %>% mutate(country_name = state),
     by = "country_name"
   ) %>%
   mutate(time_unit = "weekly") %>%
-  mutate(country_name = paste0("USA - ", country_name)) %>%
+  mutate(country_name = ifelse(
+    country_name == "United States",
+    "United States",
+    paste0("USA - ", country_name)
+  )) %>%
   select(5, 1, 2, 3, 7, 4)
 
 # Combine NY/NYC
@@ -52,6 +58,29 @@ wd_us_states <- rbind(
     filter(!country_name %in% c("USA - New York", "USA - New York City")),
   wd_us_states_ny
 )
+
+mdd_us <- md_us_states %>%
+  mutate(date = make_yearmonth(year = year, month = time)) %>%
+  filter(!is.na(year)) %>%
+  getDailyFromMonthly("deaths") %>%
+  select(iso3c, date, deaths) %>%
+  distinct(iso3c, date, .keep_all = TRUE)
+
+wdd_us <- wd_us_states %>%
+  mutate(date = make_yearweek(year = year, week = time)) %>%
+  getDailyFromWeekly("deaths") %>%
+  select(iso3c, date, deaths) %>%
+  distinct(iso3c, date, .keep_all = TRUE)
+
+# Merge Final DF, use weekly if available, otherwise monthly.
+dd_us <- merge(
+  x = mdd_us,
+  y = wdd_us,
+  by = c("iso3c", "date"), all.x = TRUE, all.y = TRUE
+) %>%
+  mutate(deaths = ifelse(!is.na(deaths.y), deaths.y, deaths.x)) %>%
+  select(iso3c, date, deaths) %>%
+  as_tibble()
 
 # ASMR/Weekly
 std_pop <- read_remote("population/who_std_pop_2.csv")
@@ -89,7 +118,7 @@ deaths <- deaths %>% filter(state %in% complete_states$state)
 
 # Calculate Mortality
 usa_pop <- read_remote("population/usa/six_age_bands.csv") %>%
-  setNames(c("state", "age_group", "iso3c", "year", "population"))
+  setNames(c("iso3c", "state", "age_group", "year", "population", "is_projection"))
 
 # Calculate ASMR
 dd_asmr_us_states <- deaths %>%

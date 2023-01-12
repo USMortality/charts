@@ -154,34 +154,12 @@ nyc <- bind_rows(list(ny0, ny1, ny2)) %>%
 population_grouped <- bind_rows(list(population_grouped, nyc)) %>%
   inner_join(us_states_iso3c, by = c("jurisdiction" = "state"))
 
-# Forecast 2022/23
-forecast_population <- function(data) {
-  y <- data %>%
-    as_tsibble(index = year) %>%
-    model(NAIVE(population ~ drift())) %>%
-    forecast(h = 2)
-
-  last_available_year <- data$year[length(data$year)]
-  data %>%
-    add_row(
-      jurisdiction = data$jurisdiction[1],
-      year = last_available_year + 1,
-      age_group = data$age_group[1],
-      population = round(y$.mean[1])
-    ) %>%
-    add_row(
-      jurisdiction = data$jurisdiction[1],
-      year = last_available_year + 2,
-      age_group = data$age_group[1],
-      population = round(y$.mean[2])
-    )
-}
-
 population_grouped_forecasted <- population_grouped %>%
   nest(data = c("year", "population")) %>%
   mutate(data = lapply(data, forecast_population)) %>%
   unnest(cols = "data") %>%
-  filter(!is.na(jurisdiction))
+  filter(!is.na(jurisdiction)) %>%
+  relocate(iso3c, jurisdiction, age_group)
 
 save_csv(population_grouped_forecasted, "population/usa/six_age_bands")
 

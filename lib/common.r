@@ -207,3 +207,25 @@ getDailyFromYearly <- function(wd, column_name) {
     x %/% days(1) + 1
   })
 }
+
+# Forecast n+3
+forecast_population <- function(data) {
+  y <- data %>%
+    as_tsibble(index = year) %>%
+    model(NAIVE(population ~ drift())) %>%
+    forecast(h = 3)
+
+  last_available_year <- data$year[length(data$year)]
+  data$is_projection <- FALSE
+  data %>%
+    add_row(
+      year = as.integer(last_available_year + 1),
+      population = as.integer(y$.mean[1]),
+      is_projection = TRUE
+    ) %>%
+    add_row(
+      year = as.integer(last_available_year + 2),
+      population = as.integer(y$.mean[2]),
+      is_projection = TRUE
+    )
+}

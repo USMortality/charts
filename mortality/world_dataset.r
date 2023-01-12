@@ -3,28 +3,13 @@ source("mortality/world_dataset_asmr.r")
 source("mortality/usa/mortality_states.r")
 
 # Load Data
-world_population <- read_excel(
-  "./data_static/WPP2022_GEN_F01_DEMOGRAPHIC_INDICATORS_COMPACT_REV1.xlsx",
-  sheet = "Estimates",
-  col_types = c(
-    "text", "text", "text", "text", "numeric", "numeric", "numeric"
-  ),
-  range = cell_cols(6:12)
-)
 deaths1 <- as_tibble(read.csv("./data/world_mortality.csv"))
 deaths2 <- as_tibble(read.csv("./data/mortality_org.csv", skip = 2))
-deaths_usa <- get_usa_deaths("./data_static/usa_all.csv")
-us_population <- read_remote("population/usa/six_age_bands.csv") %>%
-  mutate(jurisdiction = paste0("USA - ", jurisdiction))
-
-countries <- as_tibble(read.csv("./data_static/countries.csv")) %>%
-  select(iso3, name) %>%
-  setNames(c("iso3c", "name"))
+population <- read_remote("population/world.csv")
 
 # Deaths
 wd1 <- deaths1 %>%
   filter(time_unit == "weekly") %>%
-  rbind(wd_us_states) %>%
   mutate(date = make_yearweek(year = year, week = time)) %>%
   select(iso3c, year, time, date, deaths) %>%
   setNames(c("iso3c", "year", "week", "date", "deaths"))
@@ -55,8 +40,6 @@ wdd <- wd %>%
 # Format: iso3c, country_name, year, time, time_unit, deaths
 md <- deaths1 %>%
   filter(time_unit == "monthly") %>%
-  rbind(deaths_usa) %>%
-  rbind(md_us_states) %>%
   mutate(date = make_yearmonth(year = year, month = time)) %>%
   select(iso3c, year, time, date, deaths) %>%
   setNames(c("iso3c", "year", "month", "date", "deaths"))
@@ -68,48 +51,12 @@ mdd <- md %>%
 dd <- full_join(wdd, mdd, by = c("iso3c", "date")) %>%
   mutate(deaths = as.integer(ifelse(!is.na(deaths.x), deaths.x, deaths.y))) %>%
   select(iso3c, date, deaths) %>%
-  arrange(iso3c, date)
+  arrange(iso3c, date) %>%
+  filter(iso3c != "USA")
 
-# Population
-world_population <- world_population %>%
-  select(1, 6, 7) %>%
-  setNames(c("iso3c", "year", "population")) %>%
-  inner_join(countries, by = c("iso3c")) %>%
-  filter(!iso3c %in% c("ISO3 Alpha-code", NA)) %>%
-  mutate(year = as.integer(year)) %>%
-  mutate(population = as.integer(population * 1000))
-us_population <- us_population %>%
-  filter(age_group == "all") %>%
-  select(3, 4, 5, 1) %>%
-  setNames(c("iso3c", "year", "population", "name"))
+dd <- rbind(dd, dd_us)
 
-population_grouped <- rbind(world_population, us_population) %>%
-  nest(data = c("year", "population"))
-
-# Forecast 2022/23
-forecast_population <- function(data) {
-  y <- data %>%
-    as_tsibble(index = year) %>%
-    model(NAIVE(population ~ drift())) %>%
-    forecast(h = 2)
-
-  last_available_year <- data$year[length(data$year)]
-  data %>%
-    add_row(
-      year = as.integer(last_available_year + 1),
-      population = as.integer(y$.mean[1])
-    ) %>%
-    add_row(
-      year = as.integer(last_available_year + 2),
-      population = as.integer(y$.mean[2])
-    )
-}
-
-population <- population_grouped %>%
-  mutate(data = lapply(data, forecast_population)) %>%
-  unnest(cols = "data")
-
-# Join deaths/population
+# Join deaths/asmr/population
 mortality_daily <- dd %>%
   left_join(rbind(dd_asmr, dd_asmr_us_states), by = c("iso3c", "date")) %>%
   mutate(yearweek = yearweek(date), .after = date) %>%
