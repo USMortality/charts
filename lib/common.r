@@ -199,3 +199,11 @@ getDailyFromMonthly <- function(wd, column_name) {
     days_in_month(date)
   })
 }
+
+getDailyFromYearly <- function(wd, column_name) {
+  getDailyFromN(wd, column_name, function(date) {
+    y <- year(date)
+    x <- interval(paste0(y, "-01-01"), paste0(y, "-12-31"))
+    x %/% days(1) + 1
+  })
+}

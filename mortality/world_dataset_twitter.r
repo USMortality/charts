@@ -98,7 +98,7 @@ if (tweets == 0) {
   post_tweet(
     paste0(
       "No data updates today - but here's the lateset Mortality Data for ",
-      name, ".",
+      name, ". ",
       "Find all charts at: ", url
     ),
     media = paste0("/tmp/tweet.png"),

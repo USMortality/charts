@@ -1,6 +1,6 @@
 source("lib/common.r")
 source("mortality/world_dataset_asmr.r")
-source("mortality/usa/mortality.r")
+source("mortality/usa/mortality_states.r")
 
 # Load Data
 world_population <- read_excel(
@@ -70,8 +70,6 @@ dd <- full_join(wdd, mdd, by = c("iso3c", "date")) %>%
   select(iso3c, date, deaths) %>%
   arrange(iso3c, date)
 
-dd %>% filter(iso3c == "US-NYC")
-
 # Population
 world_population <- world_population %>%
   select(1, 6, 7) %>%
@@ -113,7 +111,7 @@ population <- population_grouped %>%
 
 # Join deaths/population
 mortality_daily <- dd %>%
-  left_join(dd_asmr, by = c("iso3c", "date")) %>%
+  left_join(rbind(dd_asmr, dd_asmr_us_states), by = c("iso3c", "date")) %>%
   mutate(yearweek = yearweek(date), .after = date) %>%
   mutate(yearmonth = yearmonth(date), .after = date) %>%
   mutate(yearquarter = yearquarter(date), .after = date) %>%
