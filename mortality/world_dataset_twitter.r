@@ -73,7 +73,8 @@ tweet <- function(name, max) {
 tweets <- 0
 for (n in seq_len(nrow(df))) {
   val <- df[n, ]
-  if (left(val$jurisdiction, 6) != "USA - ") {
+  if (left(val$jurisdiction, 6) != "USA - " &&
+    left(val$jurisdiction, 6) != "DEU - ") {
     val_old <- world_max_date_old %>% filter(iso3c == val$iso3c)
     if (length(val_old$iso3c) == 0 || val$max != val_old$max) {
       print(paste(val$jurisdiction, "changed"))
