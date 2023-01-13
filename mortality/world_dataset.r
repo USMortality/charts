@@ -66,7 +66,8 @@ mortality_daily <- dd %>%
   mutate(fluseason = fluseason(date), .after = date) %>%
   mutate(year = year(date), .after = date) %>%
   inner_join(population, by = c("iso3c", "year")) %>%
-  mutate(cmr = deaths / population * 100000)
+  mutate(cmr = deaths / population * 100000) %>%
+  select(-is_projection)
 
 filter_by_complete_temporal_values <- function(data, col, n) {
   start <- data %>%
