@@ -7,9 +7,9 @@ data_monthly <- read_remote("mortality/world_monthly.csv")
 
 get_data <- function(countries, year = 1900) {
   data_monthly %>%
-    filter(name %in% countries) %>%
+    filter(jurisdiction %in% countries) %>%
     mutate(date = yearmonth(date)) %>%
-    mutate(Country = name) %>%
+    mutate(Country = jurisdiction) %>%
     group_by(iso3c) %>%
     filter(!is.na(!!type_sys)) %>%
     mutate(sma = SMA(!!type_sys, n = 12)) %>%
