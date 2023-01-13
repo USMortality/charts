@@ -44,9 +44,5 @@ dd_de <- df %>%
     jurisdiction = paste0("DEU - ", jurisdiction)
   ) %>%
   getDailyFromWeekly("deaths") %>%
-  select(iso3c, date, deaths)
-
-dd_de %>%
-  filter(iso3c == "DE-BW")
-
-save_csv(dd_de, "test", upload = TRUE)
+  select(iso3c, date, deaths) %>%
+  arrange(iso3c, date)
