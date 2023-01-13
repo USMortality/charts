@@ -59,7 +59,10 @@ dd <- rbind(dd, dd_us, dd_de)
 
 # Join deaths/asmr/population
 mortality_daily <- dd %>%
-  left_join(rbind(dd_asmr, dd_asmr_us_states), by = c("iso3c", "date")) %>%
+  left_join(
+    rbind(dd_asmr, dd_asmr_us_states, dd_asmr_de_states),
+    by = c("iso3c", "date")
+  ) %>%
   mutate(yearweek = yearweek(date), .after = date) %>%
   mutate(yearmonth = yearmonth(date), .after = date) %>%
   mutate(yearquarter = yearquarter(date), .after = date) %>%
