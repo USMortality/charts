@@ -13,7 +13,7 @@ world_max_date_old <- read_remote("mortality/world_max_date.csv")
 data_ytd <- read_remote("mortality/world_ytd.csv")
 
 df <- data_ytd %>%
-  group_by(iso3c, name) %>%
+  group_by(iso3c, jurisdiction) %>%
   summarise(max = max(max_date_cmr))
 
 downloadImage <- function(name, type) {
@@ -73,22 +73,24 @@ tweet <- function(name, max) {
 tweets <- 0
 for (n in seq_len(nrow(df))) {
   val <- df[n, ]
-  val_old <- world_max_date_old %>% filter(iso3c == val$iso3c)
-  if (length(val_old$iso3c) == 0 || val$max != val_old$max) {
-    print(paste(val$name, "changed"))
-    tweet(val$name, val$max)
-    Sys.sleep(15 * 60)
-    tweets <- tweets + 1
-  } else {
-    print(paste(val$name, "unchanged"))
+  if (left(val$jurisdiction, 6) != "USA - ") {
+    val_old <- world_max_date_old %>% filter(iso3c == val$iso3c)
+    if (length(val_old$iso3c) == 0 || val$max != val_old$max) {
+      print(paste(val$jurisdiction, "changed"))
+      tweet(val$jurisdiction, val$max)
+      Sys.sleep(15 * 60)
+      tweets <- tweets + 1
+    } else {
+      print(paste(val$jurisdiction, "unchanged"))
+    }
   }
 }
 
 save_csv(df, "mortality/world_max_date")
 
 if (tweets == 0) {
-  rnd_index <- round(runif(1) * length(df$name))
-  name <- df$name[rnd_index]
+  rnd_index <- round(runif(1) * length(df$jurisdiction))
+  name <- df$jurisdiction[rnd_index]
   downloadImage(name, "/weekly_52w_sma_line.png")
   url <- paste0(
     "https://www.mortality.watch/?q=%7B%22c%22%3A%5B%22",
