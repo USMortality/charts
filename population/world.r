@@ -1,4 +1,5 @@
 source("lib/common.r")
+source("population/deu/deu.r")
 
 world_population <- read_excel(
   "./data_static/WPP2022_GEN_F01_DEMOGRAPHIC_INDICATORS_COMPACT_REV1.xlsx",
@@ -8,8 +9,11 @@ world_population <- read_excel(
   ),
   range = cell_cols(6:12)
 )
+
 us_population <- read_remote("population/usa/six_age_bands.csv") %>%
-  mutate(jurisdiction = paste0("USA - ", jurisdiction))
+  mutate(jurisdiction = paste0("USA - ", jurisdiction)) %>%
+  filter(age_group == "all") %>%
+  select(-age_group)
 
 countries <- as_tibble(read.csv("./data_static/countries.csv")) %>%
   select(iso3, name) %>%
@@ -24,16 +28,12 @@ world_population <- world_population %>%
   mutate(year = as.integer(year)) %>%
   mutate(population = as.integer(population * 1000))
 
-us_population <- us_population %>%
-  filter(age_group == "all") %>%
-  select(-age_group)
-
 population <- world_population %>%
   nest(data = c("year", "population")) %>%
   mutate(data = lapply(data, forecast_population)) %>%
   unnest(cols = "data") %>%
   setNames(c("iso3c", "jurisdiction", "year", "population", "is_projection"))
 
-population <- rbind(population, us_population)
+population <- rbind(population, us_population, de_population)
 
 save_csv(population, "population/world")

@@ -1,6 +1,7 @@
 source("lib/common.r")
 source("mortality/world_dataset_asmr.r")
 source("mortality/usa/mortality_states.r")
+source("mortality/deu/mortality_states.r")
 
 # Load Data
 deaths1 <- as_tibble(read.csv("./data/world_mortality.csv"))
@@ -54,7 +55,7 @@ dd <- full_join(wdd, mdd, by = c("iso3c", "date")) %>%
   arrange(iso3c, date) %>%
   filter(iso3c != "USA")
 
-dd <- rbind(dd, dd_us)
+dd <- rbind(dd, dd_us, dd_de)
 
 # Join deaths/asmr/population
 mortality_daily <- dd %>%

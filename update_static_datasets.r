@@ -34,6 +34,10 @@ urls <- list(
   c(
     "https://raw.githubusercontent.com/dr5hn/countries-states-cities-database/master/csv/countries.csv",
     "countries.csv"
+  ),
+  c(
+    "https://www.destatis.de/DE/Themen/Gesellschaft-Umwelt/Bevoelkerung/Sterbefaelle-Lebenserwartung/Tabellen/sonderauswertung-sterbefaelle-endgueltige-daten.xlsx?__blob=publicationFile",
+    "sonderauswertung-sterbefaelle-endgueltige-daten.xlsx"
   )
 )
 
