@@ -21,7 +21,7 @@ data <- df %>%
   mutate(date = ymd(date), possible_price = calculateAmount(rate)) %>%
   as_tsibble(index = date)
 
-ggplot(data, aes(x = date)) +
+chart <- ggplot(data, aes(x = date)) +
   geom_line(aes(y = possible_price)) +
   scale_y_continuous(
     labels = scales::dollar_format(prefix = "$", suffix = "")
@@ -32,3 +32,5 @@ ggplot(data, aes(x = date)) +
     x = "Week of Year"
   ) +
   twitter_theme()
+
+save_chart(chart, "economy/usa/mortgage_buying_power.png")
