@@ -37,7 +37,6 @@ dd_asmr$iso3c[dd_asmr$iso3c == "FRATNP"] <- "FRA"
 dd_asmr$iso3c[dd_asmr$iso3c == "NZL_NP"] <- "NZL"
 dd_asmr$iso3c[dd_asmr$iso3c == "GBR_NP"] <- "GBR"
 
-
 # USA < 2015
 mortality_usa <- rbind(
   get_usa_mortality("0_14"),
@@ -68,3 +67,22 @@ dd_asmr <- rbind(
   md_usa %>% filter(date < as.Date("2015-01-05")),
   dd_asmr %>% filter(iso3c == "USA")
 )
+
+maybe_impute_gaps <- function(data) {
+  ts <- data %>% as_tsibble(index = date, validate = FALSE)
+  if (has_gaps(ts)$.gaps == FALSE) {
+    return(data)
+  }
+  result <- ts %>%
+    fill_gaps(.full = start()) %>%
+    tidyr::fill(iso3c)
+  result$asmr <- na_ma(result$asmr)
+  result %>% as_tibble()
+}
+
+dd_asmr <- dd_asmr %>%
+  mutate(iso3c_g = iso3c) %>%
+  nest(data = c(iso3c, date, asmr)) %>%
+  mutate(data = lapply(data, maybe_impute_gaps)) %>%
+  unnest(cols = c(data)) %>%
+  select(-iso3c_g)
