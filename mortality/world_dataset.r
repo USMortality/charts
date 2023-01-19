@@ -176,6 +176,11 @@ calc_sma <- function(data, n) {
 mortality_weekly_nested <- mortality_daily_nested %>%
   mutate(data = lapply(data, aggregate_data, "yearweek"))
 
+weekly104wsma <- mortality_weekly_nested %>%
+  mutate(data = lapply(data, calc_sma, 104)) %>%
+  unnest(cols = "data")
+save_csv(weekly104wsma, "mortality/world_weekly_104w_sma")
+
 weekly52wsma <- mortality_weekly_nested %>%
   mutate(data = lapply(data, calc_sma, 52)) %>%
   unnest(cols = "data")
