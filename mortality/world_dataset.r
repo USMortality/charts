@@ -170,7 +170,7 @@ calc_sma <- function(data, n) {
       select(-asmr.x) %>%
       setNames(c("date", "deaths", "cmr", "asmr"))
   }
-  data
+  data %>% filter(!(is.na(cmr) & is.na(asmr)))
 }
 
 mortality_weekly_nested <- mortality_daily_nested %>%
