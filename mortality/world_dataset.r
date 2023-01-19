@@ -157,8 +157,41 @@ mortality_daily_nested <- mortality_daily %>%
     cmr, asmr
   ))
 
-weekly <- mortality_daily_nested %>%
-  mutate(data = lapply(data, aggregate_data, "yearweek")) %>%
+calc_sma <- function(data, n) {
+  data$deaths <- round(SMA(data$deaths, n = n), 0)
+  data$cmr <- round(SMA(data$cmr, n = n), 2)
+  if (nrow(data %>% filter(!is.na(asmr))) > 0) {
+    data_non_na <- data %>% drop_na()
+    data_non_na$asmr <- round(SMA(data_non_na$asmr, n = n), 2)
+    data <- left_join(data,
+      data_non_na %>% select(date, asmr),
+      by = c("date")
+    ) %>%
+      select(-asmr.x) %>%
+      setNames(c("date", "deaths", "cmr", "asmr"))
+  }
+  data
+}
+
+mortality_weekly_nested <- mortality_daily_nested %>%
+  mutate(data = lapply(data, aggregate_data, "yearweek"))
+
+weekly52wsma <- mortality_weekly_nested %>%
+  mutate(data = lapply(data, calc_sma, 52)) %>%
+  unnest(cols = "data")
+save_csv(weekly52wsma, "mortality/world_weekly_52w_sma")
+
+weekly26wsma <- mortality_weekly_nested %>%
+  mutate(data = lapply(data, calc_sma, 26)) %>%
+  unnest(cols = "data")
+save_csv(weekly26wsma, "mortality/world_weekly_26w_sma")
+
+weekly13wsma <- mortality_weekly_nested %>%
+  mutate(data = lapply(data, calc_sma, 13)) %>%
+  unnest(cols = "data")
+save_csv(weekly13wsma, "mortality/world_weekly_13w_sma")
+
+weekly <- mortality_weekly_nested %>%
   unnest(cols = "data")
 save_csv(weekly, "mortality/world_weekly")
 
