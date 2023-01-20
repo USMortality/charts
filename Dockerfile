@@ -1,7 +1,7 @@
 FROM eddelbuettel/r2u:22.04
 
 RUN apt-get update
-RUN apt-get install -y nodejs npm tini curl git libssl-dev bash
+RUN apt-get install -y nodejs npm tini curl git libssl-dev bash jq
 
 RUN curl -s https://raw.githubusercontent.com/jhuckaby/Cronicle/master/bin/install.js | node
 WORKDIR /opt/cronicle
@@ -34,9 +34,12 @@ ADD install_r_deps.sh .
 RUN /opt/cronicle/install_r_deps.sh
 
 # Configure SSL version for R downloader
-
 ADD openssl.cnf .
 ENV OPENSSL_CONF=/opt/cronicle/openssl.cnf
+
+# Bump Job Memory Limit to 2G
+RUN cd /opt/cronicle/conf/
+RUN jq '.job_memory_max |= 2147483648' config.json >config_new.json && rm config.json && mv config_new.json config.json
 
 EXPOSE 3012
 ENTRYPOINT ["/bin/tini", "--"]
