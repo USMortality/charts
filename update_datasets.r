@@ -1,3 +1,5 @@
+options(timeout = 600)
+
 urls <- list(
   c(
     "https://github.com/robert-koch-institut/COVID-19-Impfungen_in_Deutschland/blob/master/Aktuell_Deutschland_Landkreise_COVID-19-Impfungen.csv?raw=true",
