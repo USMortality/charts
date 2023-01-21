@@ -54,8 +54,7 @@ wd_us_states_ny$country_name <- "USA - New York"
 wd_us_states_ny <- wd_us_states_ny %>% relocate(iso3c, country_name)
 
 wd_us_states <- rbind(
-  wd_us_states %>%
-    filter(!country_name %in% c("USA - New York", "USA - New York City")),
+  wd_us_states %>% filter(iso3c != "US-NY"),
   wd_us_states_ny
 )
 
@@ -113,9 +112,19 @@ deaths <- as_tibble(read.csv("./data/usa_states_age_weekly.csv")) %>%
 n_ <- length((deaths %>% filter(state == "United States"))$state)
 complete_states <- deaths %>%
   count(state) %>%
-  filter(n >= n_ * .99) %>%
-  filter(state != "New York") # Does not include NYC, hence exclude.
+  filter(n >= n_ * .99)
 deaths <- deaths %>% filter(state %in% complete_states$state)
+
+# Combine NY/NYC
+deaths_ny <- deaths %>%
+  filter(state %in% c("New York", "New York City")) %>%
+  group_by(year, time, age_group) %>%
+  summarise(deaths = sum(deaths)) %>%
+  ungroup()
+deaths_ny$iso3c <- "US-NY"
+deaths_ny$state <- "New York"
+deaths_ny <- deaths_ny %>% relocate(iso3c, state)
+deaths <- rbind(deaths %>% filter(iso3c != "US-NY"), deaths_ny)
 
 # Calculate Mortality
 usa_pop <- read_remote("population/usa/six_age_bands.csv") %>%
