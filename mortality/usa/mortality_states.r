@@ -113,7 +113,7 @@ deaths <- as_tibble(read.csv("./data/usa_states_age_weekly.csv")) %>%
 n_ <- length((deaths %>% filter(state == "United States"))$state)
 complete_states <- deaths %>%
   count(state) %>%
-  filter(n == n_) %>%
+  filter(n >= n_ * .99) %>%
   filter(state != "New York") # Does not include NYC, hence exclude.
 deaths <- deaths %>% filter(state %in% complete_states$state)
 
@@ -136,7 +136,6 @@ dd_asmr_us_states <- deaths %>%
   ungroup() %>%
   filter(iso3c != "USA") %>%
   getDailyFromWeekly("asmr")
-
 
 # ASMR Yearly
 getAgeData <- function(age_group) {
