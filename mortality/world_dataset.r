@@ -7,6 +7,7 @@ source("mortality/deu/mortality_states.r")
 deaths1 <- as_tibble(read.csv("./data/world_mortality.csv"))
 deaths2 <- as_tibble(read.csv("./data/mortality_org.csv", skip = 2))
 population <- read_remote("population/world.csv")
+baseline_size <- read_remote("mortality/world_baseline.csv")
 
 # Deaths
 wd1 <- deaths1 %>%
@@ -89,7 +90,7 @@ filter_by_complete_temporal_values <- function(data, col, n) {
     filter(n() >= n) %>%
     ungroup()
 
-  rbind(start, mid, end) %>% group_by(across(all_of(col)))
+  rbind(start, mid, end) %>% group_by(across(all_of(c("iso3c", col))))
 }
 
 aggregate_data <- function(data, fun) {
@@ -107,7 +108,7 @@ aggregate_data <- function(data, fun) {
       asmr = round(sumIfNotEmpty(asmr), digits = 1)
     ) %>%
     ungroup() %>%
-    setNames(c("date", "deaths", "cmr", "asmr")) %>%
+    setNames(c("iso3c", "date", "deaths", "cmr", "asmr")) %>%
     as_tibble()
 }
 
@@ -151,12 +152,6 @@ aggregate_data_ytd <- function(data) {
     as_tibble()
 }
 
-mortality_daily_nested <- mortality_daily %>%
-  nest(data = c(
-    date, year, fluseason, yearquarter, yearmonth, yearweek, deaths, population,
-    cmr, asmr
-  ))
-
 calc_sma <- function(data, n) {
   data$deaths <- round(SMA(data$deaths, n = n), 0)
   data$cmr <- round(SMA(data$cmr, n = n), 2)
@@ -172,6 +167,90 @@ calc_sma <- function(data, n) {
   }
   data %>% filter(!(is.na(cmr) & is.na(asmr)))
 }
+
+calculate_excess <- function(data, col_name) {
+  col <- sym(col_name)
+  data %>% mutate(
+    "{col_name}_excess" := !!col - !!sym(paste0(col_name, "_baseline")),
+    "{col_name}_excess_lower" := !!col - !!sym(paste0(col_name, "_baseline_lower")),
+    "{col_name}_excess_upper" := !!col - !!sym(paste0(col_name, "_baseline_upper"))
+  )
+}
+
+calculate_baseline <- function(data, col_name, iso3c) {
+  iso <- unique(data$iso3c)
+  baseline <- baseline_size %>%
+   filter(iso3c == iso & chart_type == chartType & type == col_name)
+
+  col <- sym(col_name)
+  df <- data %>% filter(date < 2020)
+
+  # No rows, return
+  if (nrow(drop_na(df %>% select(!!col))) == 0) {
+    data[paste0(col, "_baseline")] <- NA
+    data[paste0(col, "_baseline_lower")] <- NA
+    data[paste0(col, "_baseline_upper")] <- NA
+    data[paste0(col, "_excess")] <- NA
+    data[paste0(col, "_excess_lower")] <- NA
+    data[paste0(col, "_excess_upper")] <- NA
+
+    return(data)
+  } else {
+    bl_size <- baseline$window
+    fc <- df %>%
+      model(TSLM(!!col ~ trend())) %>%
+      forecast(h = h)
+    fc_hl <- hilo(fc, 95) %>% unpack_hilo(cols = `95%`)
+
+    bl <- df %>%
+      model(TSLM(!!col ~ trend())) %>%
+      forecast(new_data = tail(df, bl_size))
+    bl_hl <- hilo(bl, 95) %>% unpack_hilo(cols = `95%`)
+
+    result <- data.frame(date = c(bl$date, fc$date))
+    result[paste0(col, "_baseline")] <- c(bl$.mean, fc$.mean)
+    result[paste0(col, "_baseline_lower")] <- c(
+      fc_hl$`95%_lower`,
+      bl_hl$`95%_lower`
+    )
+    result[paste0(col, "_baseline_upper")] <- c(
+      fc_hl$`95%_upper`,
+      bl_hl$`95%_upper`
+    )
+
+    data %>%
+      left_join(result, by = "date") %>%
+      calculate_excess(col_name) %>%
+      round_x(col_name, ifelse(col_name == "deaths", 0, 2))
+  }
+}
+
+round_x <- function(data, col_name, digits = 0) {
+  data %>%
+    mutate(
+      "{col_name}_baseline" := round(!!sym(paste0(col_name, "_baseline")), digits),
+      "{col_name}_baseline_lower" := round(!!sym(paste0(col_name, "_baseline_lower")), digits),
+      "{col_name}_baseline_upper" := round(!!sym(paste0(col_name, "_baseline_upper")), digits),
+      "{col_name}_excess" := round(!!sym(paste0(col_name, "_excess")), digits),
+      "{col_name}_excess_lower" := round(!!sym(paste0(col_name, "_excess_lower")), digits),
+      "{col_name}_excess_upper" := round(!!sym(paste0(col_name, "_excess_upper")), digits)
+    )
+}
+
+calculate_baseline_excess <- function(data) {
+  data %>%
+    as_tsibble(index = date) %>%
+    calculate_baseline("deaths") %>%
+    calculate_baseline("cmr") %>%
+    calculate_baseline("asmr") %>%
+    as_tibble()
+}
+
+mortality_daily_nested <- mortality_daily %>%
+  nest(data = c(
+    iso3c, date, year, fluseason, yearquarter, yearmonth, yearweek, deaths,
+    population, cmr, asmr
+  ))
 
 mortality_weekly_nested <- mortality_daily_nested %>%
   mutate(data = lapply(data, aggregate_data, "yearweek"))
@@ -212,26 +291,20 @@ save_csv(quarterly, "mortality/world_quarterly")
 
 yearly <- mortality_daily_nested %>%
   mutate(data = lapply(data, aggregate_data, "year")) %>%
-  unnest(cols = "data")
+  mutate(data = lapply(data, calculate_baseline_excess, "yearly")) %>%
+  unnest(cols = c(data))
 save_csv(yearly, "mortality/world_yearly")
 
 mortality_daily_nested_ytd <- mortality_daily_nested %>%
   mutate(data = lapply(data, calc_ytd))
 ytd <- mortality_daily_nested_ytd %>%
   mutate(data = lapply(data, aggregate_data_ytd)) %>%
+  mutate(data = lapply(data, calculate_baseline_excess, "yearly")) %>%
   unnest(cols = "data")
 save_csv(ytd, "mortality/world_ytd")
 
 fluseason <- mortality_daily_nested %>%
   mutate(data = lapply(data, aggregate_data, "fluseason")) %>%
+  mutate(data = lapply(data, calculate_baseline_excess, "yearly")) %>%
   unnest(cols = "data")
 save_csv(fluseason, "mortality/world_fluseason")
-
-cmr_countries <- unique(weekly$name) %>% sort()
-asmr_countries <- weekly %>%
-  filter(!is.na(asmr)) %>%
-  .$name %>%
-  unique()
-countries <- data.frame(country = cmr_countries)
-for (country in countries) countries$has_asmr <- country %in% asmr_countries
-save_csv(countries, "mortality/world_countries")
