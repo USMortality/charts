@@ -11,6 +11,7 @@ world_population <- read_excel(
 )
 
 us_population <- read_remote("population/usa/six_age_bands.csv") %>%
+  filter(jurisdiction != "United States") %>%
   mutate(jurisdiction = paste0("USA - ", jurisdiction)) %>%
   filter(age_group == "all") %>%
   select(-age_group)
