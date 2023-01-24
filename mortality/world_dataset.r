@@ -163,7 +163,7 @@ calc_sma <- function(data, n) {
       by = c("date")
     ) %>%
       select(-asmr.x) %>%
-      setNames(c("date", "deaths", "cmr", "asmr"))
+      setNames(c("iso3c", "date", "deaths", "cmr", "asmr"))
   }
   data %>% filter(!(is.na(cmr) & is.na(asmr)))
 }
@@ -177,10 +177,10 @@ calculate_excess <- function(data, col_name) {
   )
 }
 
-calculate_baseline <- function(data, col_name, iso3c) {
+calculate_baseline <- function(data, col_name, chartType, h = 3) {
   iso <- unique(data$iso3c)
   baseline <- baseline_size %>%
-   filter(iso3c == iso & chart_type == chartType & type == col_name)
+    filter(iso3c == iso & chart_type == chartType & type == col_name)
 
   col <- sym(col_name)
   df <- data %>% filter(date < 2020)
@@ -237,12 +237,12 @@ round_x <- function(data, col_name, digits = 0) {
     )
 }
 
-calculate_baseline_excess <- function(data) {
+calculate_baseline_excess <- function(data, chartType) {
   data %>%
     as_tsibble(index = date) %>%
-    calculate_baseline("deaths") %>%
-    calculate_baseline("cmr") %>%
-    calculate_baseline("asmr") %>%
+    calculate_baseline("deaths", chartType) %>%
+    calculate_baseline("cmr", chartType) %>%
+    calculate_baseline("asmr", chartType) %>%
     as_tibble()
 }
 
@@ -305,6 +305,6 @@ save_csv(ytd, "mortality/world_ytd")
 
 fluseason <- mortality_daily_nested %>%
   mutate(data = lapply(data, aggregate_data, "fluseason")) %>%
-  mutate(data = lapply(data, calculate_baseline_excess, "yearly")) %>%
+  mutate(data = lapply(data, calculate_baseline_excess, "fluseason")) %>%
   unnest(cols = "data")
 save_csv(fluseason, "mortality/world_fluseason")
