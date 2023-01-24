@@ -139,6 +139,22 @@ read_remote <- function(path) {
   as_tibble(read.csv(paste0("https://s3.mortality.watch/data/", path)))
 }
 
+sumIfNotEmpty <- function(vec) {
+  if (all(is.na(vec))) {
+    NA
+  } else {
+    sum(vec, na.rm = TRUE)
+  }
+}
+
+getCountriesForType <- function(mortality_type, data_yearly, asmr_data) {
+  if (mortality_type == "cmr") {
+    unique(data_yearly$name)
+  } else {
+    unique(asmr_data$name)
+  }
+}
+
 get_usa_deaths <- function(file) {
   deaths_usa <- as_tibble(read.csv(file)) %>%
     mutate(year = left(Month.Code, 4), time = right(Month.Code, 2)) %>%
