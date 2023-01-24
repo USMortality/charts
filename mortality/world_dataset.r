@@ -238,8 +238,15 @@ round_x <- function(data, col_name, digits = 0) {
 }
 
 calculate_baseline_excess <- function(data, chartType) {
-  data %>%
-    as_tsibble(index = date) %>%
+  if (chartType == "yearly") {
+    ts <- data %>% as_tsibble(index = date)
+  } else if (chartType == "fluseason") {
+    ts <- data %>%
+      mutate(date = as.integer(left(date, 4))) %>%
+      as_tsibble(index = date)
+  }
+
+  ts %>%
     calculate_baseline("deaths", chartType) %>%
     calculate_baseline("cmr", chartType) %>%
     calculate_baseline("asmr", chartType) %>%
@@ -299,7 +306,6 @@ mortality_daily_nested_ytd <- mortality_daily_nested %>%
   mutate(data = lapply(data, calc_ytd))
 ytd <- mortality_daily_nested_ytd %>%
   mutate(data = lapply(data, aggregate_data_ytd)) %>%
-  mutate(data = lapply(data, calculate_baseline_excess, "yearly")) %>%
   unnest(cols = "data")
 save_csv(ytd, "mortality/world_ytd")
 
