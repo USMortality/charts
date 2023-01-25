@@ -125,8 +125,8 @@ filter_ytd <- function(data, max_date_cmr, max_date_asmr) {
 
 calc_ytd <- function(data) {
   nested <- data %>%
-    select(year, date, deaths, population, cmr, asmr) %>%
-    nest(data = c(date, deaths, population, cmr, asmr))
+    select(iso3c, year, date, deaths, population, cmr, asmr) %>%
+    nest(data = c(iso3c, date, deaths, population, cmr, asmr))
 
   cmr_data <- nested[[2]][[length(nested[[2]])]] %>% filter(!is.na(cmr))
   asmr_data <- nested[[2]][[length(nested[[2]])]] %>% filter(!is.na(asmr))
@@ -139,7 +139,7 @@ calc_ytd <- function(data) {
 
 aggregate_data_ytd <- function(data) {
   data %>%
-    group_by(year, max_date_cmr, max_date_asmr) %>%
+    group_by(iso3c, year, max_date_cmr, max_date_asmr) %>%
     summarise(
       deaths = round(sumIfNotEmpty(deaths)),
       cmr = round(sumIfNotEmpty(cmr), digits = 1),
@@ -147,7 +147,7 @@ aggregate_data_ytd <- function(data) {
     ) %>%
     ungroup() %>%
     setNames(
-      c("date", "max_date_cmr", "max_date_asmr", "deaths", "cmr", "asmr")
+      c("iso3c", "date", "max_date_cmr", "max_date_asmr", "deaths", "cmr", "asmr")
     ) %>%
     as_tibble()
 }
