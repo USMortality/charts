@@ -243,7 +243,7 @@ calculate_baseline_excess <- function(data, chartType) {
     ts <- data %>% as_tsibble(index = date)
   } else if (chartType == "fluseason") {
     ts <- data %>%
-      mutate(date = as.integer(left(date, 4))) %>%
+      mutate(date = as.integer(right(date, 4))) %>%
       as_tsibble(index = date)
   }
 
