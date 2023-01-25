@@ -52,10 +52,10 @@ getData <- function(df, bl_size, mortality_col) {
     )) %>%
     mutate(
       iso3c = df$iso3c[1],
-      name = df$name[1],
+      jurisdiction = df$jurisdiction[1],
       baseline = round(baseline, digits = 1)
     ) %>%
-    relocate(iso3c, name)
+    relocate(iso3c, jurisdiction)
 }
 
 calculateExcess <- function(data) {
@@ -72,19 +72,16 @@ calculateExcess <- function(data) {
     )
 }
 
-country <- "Aruba"
-df <- data_yearly %>%
-  filter(name == country)
+country <- "Germany"
+df <- data_yearly %>% filter(jurisdiction == country)
 mortality_type <- "cmr"
 mortality_col <- sym(mortality_type)
-bl_size <- (data_baseline %>%
-  filter(name == country) %>%
-  filter(type == mortality_type))$window
+bl_size <- 4
 data <- df %>%
-  select(iso3c, name, date, !!mortality_col) %>%
+  select(iso3c, jurisdiction, date, !!mortality_col) %>%
   right_join(
     getData(df, bl_size, mortality_col),
-    by = c("iso3c", "name", "date")
+    by = c("iso3c", "jurisdiction", "date")
   )
 
 for (mortality_type in types) {

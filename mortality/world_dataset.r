@@ -197,14 +197,15 @@ calculate_baseline <- function(data, col_name, chartType, h = 3) {
     return(data)
   } else {
     bl_size <- baseline$window
-    fc <- df %>%
+    bl_data <- tail(df, bl_size)
+    fc <- bl_data %>%
       model(TSLM(!!col ~ trend())) %>%
       forecast(h = h)
     fc_hl <- hilo(fc, 99.9) %>% unpack_hilo(cols = `99.9%`)
 
-    bl <- df %>%
+    bl <- bl_data %>%
       model(TSLM(!!col ~ trend())) %>%
-      forecast(new_data = tail(df, bl_size))
+      forecast(new_data = bl_data)
     bl_hl <- hilo(bl, 99.9) %>% unpack_hilo(cols = `99.9%`)
 
     result <- data.frame(date = c(bl$date, fc$date))
