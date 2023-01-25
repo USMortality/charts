@@ -247,11 +247,18 @@ calculate_baseline_excess <- function(data, chartType) {
       as_tsibble(index = date)
   }
 
-  ts %>%
+  result <- ts %>%
     calculate_baseline("deaths", chartType) %>%
     calculate_baseline("cmr", chartType) %>%
     calculate_baseline("asmr", chartType) %>%
     as_tibble()
+
+  if (chartType == "fluseason") {
+    # Restore Flu Season Notation
+    result %>% mutate(date = paste0(date - 1, "-", date))
+  } else {
+    result
+  }
 }
 
 mortality_daily_nested <- mortality_daily %>%
