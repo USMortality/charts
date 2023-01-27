@@ -201,22 +201,22 @@ calculate_baseline <- function(data, col_name, chartType, h = 3) {
     fc <- bl_data %>%
       model(TSLM(!!col ~ trend())) %>%
       forecast(h = h)
-    fc_hl <- hilo(fc, 99.9) %>% unpack_hilo(cols = `99.9%`)
+    fc_hl <- hilo(fc, 95) %>% unpack_hilo(cols = `95%`)
 
     bl <- bl_data %>%
       model(TSLM(!!col ~ trend())) %>%
       forecast(new_data = bl_data)
-    bl_hl <- hilo(bl, 99.9) %>% unpack_hilo(cols = `99.9%`)
+    bl_hl <- hilo(bl, 95) %>% unpack_hilo(cols = `95%`)
 
     result <- data.frame(date = c(bl$date, fc$date))
     result[paste0(col, "_baseline")] <- c(bl$.mean, fc$.mean)
     result[paste0(col, "_baseline_lower")] <- c(
-      bl_hl$`99.9%_lower`,
-      fc_hl$`99.9%_lower`
+      bl_hl$`95%_lower`,
+      fc_hl$`95%_lower`
     )
     result[paste0(col, "_baseline_upper")] <- c(
-      bl_hl$`99.9%_upper`,
-      fc_hl$`99.9%_upper`
+      bl_hl$`95%_upper`,
+      fc_hl$`95%_upper`
     )
 
     data %>%
