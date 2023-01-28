@@ -314,6 +314,7 @@ mortality_daily_nested_ytd <- mortality_daily_nested %>%
   mutate(data = lapply(data, calc_ytd))
 ytd <- mortality_daily_nested_ytd %>%
   mutate(data = lapply(data, aggregate_data_ytd)) %>%
+  mutate(data = lapply(data, calculate_baseline_excess, "yearly")) %>%
   unnest(cols = "data")
 save_csv(ytd, "mortality/world_ytd")
 
