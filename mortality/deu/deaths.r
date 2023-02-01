@@ -4,7 +4,7 @@ source("lib/common.r")
 df <- read_excel(
   "./data/sonderauswertung-sterbefaelle.xlsx",
   sheet = "D_2016_2023_KW_AG_Ins",
-  range = "B9:BE569"
+  range = "B9:BE9999"
 )
 
 df1 <- df %>%
@@ -17,7 +17,7 @@ df1 <- df %>%
 df <- read_excel(
   "./data/sonderauswertung-sterbefaelle.xlsx",
   sheet = "BL_2016_2023_KW_AG_Ins",
-  range = "B9:BE569"
+  range = "B9:BE9999"
 )
 
 df2 <- df %>%
