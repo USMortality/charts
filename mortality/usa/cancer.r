@@ -29,7 +29,7 @@ data <- rbind(a, b) %>%
   select(date, year, deaths, mortality) %>%
   as_tsibble(index = date)
 
-save_csv(data, paste("mortality", "USA", "cancer", sep = "/"))
+save_csv(data, paste("mortality", "usa", "cancer", sep = "/"))
 
 # Weekly
 w_data <- data %>%
@@ -138,5 +138,5 @@ save_chart(chart4, paste("mortality", "USA", "cancer", "quarterly", sep = "/"))
 
 save_collage(
   chart1, chart2, chart3, chart4,
-  path = paste("mortality", "USA", "cancer", sep = "/")
+  path = paste("mortality", "usa", "cancer", sep = "/")
 )
