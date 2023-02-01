@@ -15,15 +15,12 @@ df2 <- read_excel(
 )
 
 df1 <- df1 %>%
-  mutate(`53` = as.numeric(`53`)) %>%
+  mutate_if(is.character, as.numeric) %>%
   pivot_longer(cols = 4:ncol(df1), names_to = "week", values_to = "deaths") %>%
   setNames(c("year", "jurisdiction", "age_group", "week", "deaths"))
 
 df2 <- df2 %>%
-  mutate(`50` = as.numeric(`50`)) %>%
-  mutate(`51` = as.numeric(`51`)) %>%
-  mutate(`52` = as.numeric(`52`)) %>%
-  mutate(`53` = as.numeric(`53`)) %>%
+  mutate_if(is.character, as.numeric) %>%
   pivot_longer(cols = 4:ncol(df2), names_to = "week", values_to = "deaths") %>%
   setNames(c("year", "jurisdiction", "age_group", "week", "deaths"))
 
