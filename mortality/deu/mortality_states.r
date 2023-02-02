@@ -1,11 +1,11 @@
 source("lib/common.r")
 
-df <- read_remote("mortality/deu/deaths.csv")
 de_states <- as_tibble(read.csv("./data_static/deu_states_iso3c.csv"))
+df <- read_remote("mortality/deu/deaths.csv") %>%
+  inner_join(de_states, by = "jurisdiction")
 
 # Format: iso3c, date, deaths
 dd_de <- df %>%
-  inner_join(de_states, by = "jurisdiction") %>%
   filter(age_group == "Insgesamt") %>%
   mutate(
     date = make_yearweek(year = year, week = week),
