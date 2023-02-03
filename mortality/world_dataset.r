@@ -177,13 +177,41 @@ calculate_excess <- function(data, col_name) {
   )
 }
 
-calculate_baseline <- function(data, col_name, chartType, h = 3) {
-  iso <- unique(data$iso3c)
+get_period_multiplier <- function(chart_type) {
+  if (chart_type %in% c("yearly", "fluseason")) {
+    return(1)
+  } else {
+    return(52)
+  }
+}
+
+apply_model <- function(data, chart_type) {
+  if (chart_type %in% c("weekly_26w_sma", "weekly_13w_sma", "quarterly", "monthly", "weekly")) {
+    data %>% model(TSLM(!!col ~ trend() + season()))
+  } else {
+    data %>% model(TSLM(!!col ~ trend()))
+  }
+}
+
+get_baseline_length <- function(iso, ct, cn) {
+  if (ct != "fluseason") ct <- "yearly"
   baseline <- baseline_size %>%
-    filter(iso3c == iso & chart_type == chartType & type == col_name)
+    filter(iso3c == iso & chart_type == ct & type == cn)
+  baseline$window
+}
+
+calculate_baseline <- function(data, col_name, chart_type) {
+  iso <- unique(data$iso3c)
+  multiplier <- get_period_multiplier(chart_type)
+  bl_size <- get_baseline_length(iso, chart_type, col_name) * multiplier
+  forecast_interval <- 3 * multiplier
 
   col <- sym(col_name)
-  df <- data %>% filter(date < 2020)
+  if (chart_type %in% c("yearly", "fluseason")) {
+    df <- data %>% filter(date < 2020)
+  } else {
+    df <- data %>% filter(year(date) < 2020)
+  }
 
   # No rows, return
   if (nrow(drop_na(df %>% select(!!col))) == 0) {
@@ -196,15 +224,14 @@ calculate_baseline <- function(data, col_name, chartType, h = 3) {
 
     return(data)
   } else {
-    bl_size <- baseline$window
     bl_data <- tail(df, bl_size)
     fc <- bl_data %>%
-      model(TSLM(!!col ~ trend())) %>%
-      forecast(h = h)
+      apply_model(chart_type) %>%
+      forecast(h = forecast_interval)
     fc_hl <- hilo(fc, 95) %>% unpack_hilo(cols = `95%`)
 
     bl <- bl_data %>%
-      model(TSLM(!!col ~ trend())) %>%
+      apply_model(chart_type) %>%
       forecast(new_data = bl_data)
     bl_hl <- hilo(bl, 95) %>% unpack_hilo(cols = `95%`)
 
@@ -238,22 +265,22 @@ round_x <- function(data, col_name, digits = 0) {
     )
 }
 
-calculate_baseline_excess <- function(data, chartType) {
-  if (chartType == "yearly") {
-    ts <- data %>% as_tsibble(index = date)
-  } else if (chartType == "fluseason") {
+calculate_baseline_excess <- function(data, chart_type) {
+  if (chart_type == "fluseason") {
     ts <- data %>%
       mutate(date = as.integer(right(date, 4))) %>%
       as_tsibble(index = date)
+  } else {
+    ts <- data %>% as_tsibble(index = date)
   }
 
   result <- ts %>%
-    calculate_baseline("deaths", chartType) %>%
-    calculate_baseline("cmr", chartType) %>%
-    calculate_baseline("asmr", chartType) %>%
+    calculate_baseline("deaths", chart_type) %>%
+    calculate_baseline("cmr", chart_type) %>%
+    calculate_baseline("asmr", chart_type) %>%
     as_tibble()
 
-  if (chartType == "fluseason") {
+  if (chart_type == "fluseason") {
     # Restore Flu Season Notation
     result %>% mutate(date = paste0(date - 1, "-", date))
   } else {
@@ -272,35 +299,42 @@ mortality_weekly_nested <- mortality_daily_nested %>%
 
 weekly104wsma <- mortality_weekly_nested %>%
   mutate(data = lapply(data, calc_sma, 104)) %>%
+  mutate(data = lapply(data, calculate_baseline_excess, "weekly_104w_sma")) %>%
   unnest(cols = "data")
 save_csv(weekly104wsma, "mortality/world_weekly_104w_sma")
 
 weekly52wsma <- mortality_weekly_nested %>%
   mutate(data = lapply(data, calc_sma, 52)) %>%
+  mutate(data = lapply(data, calculate_baseline_excess, "weekly_52w_sma")) %>%
   unnest(cols = "data")
 save_csv(weekly52wsma, "mortality/world_weekly_52w_sma")
 
 weekly26wsma <- mortality_weekly_nested %>%
   mutate(data = lapply(data, calc_sma, 26)) %>%
+  mutate(data = lapply(data, calculate_baseline_excess, "weekly_26w_sma")) %>%
   unnest(cols = "data")
 save_csv(weekly26wsma, "mortality/world_weekly_26w_sma")
 
 weekly13wsma <- mortality_weekly_nested %>%
   mutate(data = lapply(data, calc_sma, 13)) %>%
+  mutate(data = lapply(data, calculate_baseline_excess, "weekly_13w_sma")) %>%
   unnest(cols = "data")
 save_csv(weekly13wsma, "mortality/world_weekly_13w_sma")
 
 weekly <- mortality_weekly_nested %>%
+  mutate(data = lapply(data, calculate_baseline_excess, "weekly")) %>%
   unnest(cols = "data")
 save_csv(weekly, "mortality/world_weekly")
 
 monthly <- mortality_daily_nested %>%
   mutate(data = lapply(data, aggregate_data, "yearmonth")) %>%
+  mutate(data = lapply(data, calculate_baseline_excess, "monthly")) %>%
   unnest(cols = "data")
 save_csv(monthly, "mortality/world_monthly")
 
 quarterly <- mortality_daily_nested %>%
   mutate(data = lapply(data, aggregate_data, "yearquarter")) %>%
+  mutate(data = lapply(data, calculate_baseline_excess, "quarterly")) %>%
   unnest(cols = "data")
 save_csv(quarterly, "mortality/world_quarterly")
 
