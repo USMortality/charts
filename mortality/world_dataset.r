@@ -185,7 +185,7 @@ get_period_multiplier <- function(chart_type) {
   }
 }
 
-apply_model <- function(data, chart_type) {
+apply_model <- function(data, col, chart_type) {
   if (chart_type %in% c("weekly_26w_sma", "weekly_13w_sma", "quarterly", "monthly", "weekly")) {
     data %>% model(TSLM(!!col ~ trend() + season()))
   } else {
@@ -226,12 +226,12 @@ calculate_baseline <- function(data, col_name, chart_type) {
   } else {
     bl_data <- tail(df, bl_size)
     fc <- bl_data %>%
-      apply_model(chart_type) %>%
+      apply_model(col, chart_type) %>%
       forecast(h = forecast_interval)
     fc_hl <- hilo(fc, 95) %>% unpack_hilo(cols = `95%`)
 
     bl <- bl_data %>%
-      apply_model(chart_type) %>%
+      apply_model(col, chart_type) %>%
       forecast(new_data = bl_data)
     bl_hl <- hilo(bl, 95) %>% unpack_hilo(cols = `95%`)
 
