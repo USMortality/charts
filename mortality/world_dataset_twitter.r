@@ -26,47 +26,11 @@ tweet <- function(name, max) {
   post_tweet(
     paste0(
       "Mortality Data for ", name,
-      " has been updated. Latest data now available through ", max, "."
+      " has been updated. Latest data now available through ", max, ".",
+      paste0("🔗 ", url)
     ),
     media = paste0("/tmp/tweet.png"),
     media_alt_text = paste("Weekly Mortality (52W SMA)", name)
-  )
-  Sys.sleep(10)
-  downloadImage(name, "/weekly_line.png")
-  post_tweet(
-    paste("Weekly Mortality in", name),
-    media = paste0("/tmp/tweet.png"),
-    media_alt_text = paste("Weekly Mortality", name),
-    in_reply_to_status_id = get_my_timeline()$id_str[1]
-  )
-  Sys.sleep(10)
-  downloadImage(name, "/yearly_bar.png")
-  post_tweet(
-    paste("Yearly Mortality in", name),
-    media = paste0("/tmp/tweet.png"),
-    media_alt_text = paste("Yearly Mortality", name),
-    in_reply_to_status_id = get_my_timeline()$id_str[1]
-  )
-  Sys.sleep(10)
-  downloadImage(name, "/ytd_bar.png")
-  post_tweet(
-    paste("YTD Mortality in", name, "through", max),
-    media = paste0("/tmp/tweet.png"),
-    media_alt_text = paste("YTD Mortality", name),
-    in_reply_to_status_id = get_my_timeline()$id_str[1]
-  )
-  Sys.sleep(10)
-  downloadImage(name, "/collage.png")
-  url <- paste0(
-    "https://www.mortality.watch/?q=%7B%22c%22%3A%5B%22",
-    URLencode(name),
-    "%22%5D%2C%22cs%22%3A0%2C%22ct%22%3A0%2C%22t%22%3A2%2C%22df%22%3A%222009+W47%22%2C%22dt%22%3A%222022+W46%22%2C%22m%22%3A0%7D"
-  )
-  post_tweet(
-    paste0("Find all charts at: ", url),
-    media = paste0("/tmp/tweet.png"),
-    media_alt_text = paste("Mortality", name),
-    in_reply_to_status_id = get_my_timeline()$id_str[1]
   )
 }
 
@@ -79,7 +43,7 @@ for (n in seq_len(nrow(df))) {
     if (length(val_old$iso3c) == 0 || val$max != val_old$max) {
       print(paste(val$jurisdiction, "changed"))
       tweet(val$jurisdiction, val$max)
-      Sys.sleep(15 * 60)
+      Sys.sleep(5 * 60)
       tweets <- tweets + 1
     } else {
       print(paste(val$jurisdiction, "unchanged"))
@@ -88,23 +52,3 @@ for (n in seq_len(nrow(df))) {
 }
 
 save_csv(df, "mortality/world_max_date")
-
-if (tweets == 0) {
-  rnd_index <- round(runif(1) * length(df$jurisdiction))
-  name <- df$jurisdiction[rnd_index]
-  downloadImage(name, "/weekly_52w_sma_line.png")
-  url <- paste0(
-    "https://www.mortality.watch/?q=%7B%22c%22%3A%5B%22",
-    URLencode(name),
-    "%22%5D%2C%22cs%22%3A0%2C%22ct%22%3A0%2C%22t%22%3A2%2C%22df%22%3A%222009+W47%22%2C%22dt%22%3A%222022+W46%22%2C%22m%22%3A0%7D"
-  )
-  post_tweet(
-    paste0(
-      "No data updates today - but here's the lateset Mortality Data for ",
-      name, ". ",
-      "Find all charts at: ", url
-    ),
-    media = paste0("/tmp/tweet.png"),
-    media_alt_text = paste("Weekly Mortality (52W SMA)", name)
-  )
-}
