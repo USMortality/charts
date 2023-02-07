@@ -178,15 +178,23 @@ calculate_excess <- function(data, col_name) {
 }
 
 get_period_multiplier <- function(chart_type) {
-  if (chart_type %in% c("yearly", "fluseason")) {
+  if (chart_type %in% c("yearly", "fluseason", "ytd")) {
     return(1)
+  } else if (chart_type == "quarterly") {
+    return(4)
+  } else if (chart_type == "monthly") {
+    return(12)
+  } else if (chart_type == "weekly") {
+    return(52.143)
   } else {
-    return(52)
+    return(52) # SMA
   }
 }
 
 apply_model <- function(data, col, chart_type) {
-  if (chart_type %in% c("weekly_26w_sma", "weekly_13w_sma", "quarterly", "monthly", "weekly")) {
+  if (chart_type %in% c(
+    "weekly_26w_sma", "weekly_13w_sma", "quarterly", "monthly", "weekly"
+  )) {
     data %>% model(TSLM(!!col ~ trend() + season()))
   } else {
     data %>% model(TSLM(!!col ~ trend()))
@@ -203,8 +211,8 @@ get_baseline_length <- function(iso, ct, cn) {
 calculate_baseline <- function(data, col_name, chart_type) {
   iso <- unique(data$iso3c)
   multiplier <- get_period_multiplier(chart_type)
-  bl_size <- get_baseline_length(iso, chart_type, col_name) * multiplier
-  forecast_interval <- 3 * multiplier
+  bl_size <- round(get_baseline_length(iso, chart_type, col_name) * multiplier)
+  forecast_interval <- round(4 * multiplier)
 
   col <- sym(col_name)
   if (chart_type %in% c("yearly", "fluseason")) {
