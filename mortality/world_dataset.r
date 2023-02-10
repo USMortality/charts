@@ -105,10 +105,11 @@ aggregate_data <- function(data, fun) {
     summarise(
       deaths = round(sumIfNotEmpty(deaths)),
       cmr = round(sumIfNotEmpty(cmr), digits = 1),
-      asmr = round(sumIfNotEmpty(asmr), digits = 1)
+      asmr = round(sumIfNotEmpty(asmr), digits = 1),
+      population = round(mean(population))
     ) %>%
     ungroup() %>%
-    setNames(c("iso3c", "date", "deaths", "cmr", "asmr")) %>%
+    setNames(c("iso3c", "date", "deaths", "cmr", "asmr", "population")) %>%
     as_tibble()
 }
 
@@ -163,7 +164,7 @@ calc_sma <- function(data, n) {
       by = c("date")
     ) %>%
       select(-asmr.x) %>%
-      setNames(c("iso3c", "date", "deaths", "cmr", "asmr"))
+      setNames(c("iso3c", "date", "deaths", "cmr", "asmr", "population"))
   }
   data %>% filter(!(is.na(cmr) & is.na(asmr)))
 }
