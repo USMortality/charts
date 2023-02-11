@@ -164,7 +164,8 @@ calc_sma <- function(data, n) {
       by = c("date")
     ) %>%
       select(-asmr.x) %>%
-      setNames(c("iso3c", "date", "deaths", "cmr", "asmr", "population"))
+      setNames(c("iso3c", "date", "deaths", "cmr", "population", "asmr")) %>%
+      arrange(iso3c, date, deaths, cmr, asmr, population)
   }
   data %>% filter(!(is.na(cmr) & is.na(asmr)))
 }
