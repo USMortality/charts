@@ -12,9 +12,9 @@ asmr_data <- data_weekly %>% filter(!is.na(asmr))
 
 for (type in types) {
   countries <- if (type == "cmr") {
-    unique(data_weekly$name)
+    unique(data_weekly$jurisdiction)
   } else {
-    unique(asmr_data$name)
+    unique(asmr_data$jurisdiction)
   }
   mortality_col <- sym(type)
   mortality_title <- ifelse(
@@ -28,7 +28,7 @@ for (type in types) {
     print(country)
     print("1) Weekly")
     df <- data_weekly %>%
-      filter(name == country) %>%
+      filter(jurisdiction == country) %>%
       mutate(yearweek = yearweek(date)) %>%
       mutate(date = date(yearweek)) %>%
       as_tsibble(index = date)
@@ -56,7 +56,7 @@ for (type in types) {
 
     print("2) Monthly")
     df <- data_monthly %>%
-      filter(name == country) %>%
+      filter(jurisdiction == country) %>%
       mutate(date = yearmonth(date)) %>%
       as_tsibble(index = date)
 
@@ -83,7 +83,7 @@ for (type in types) {
 
     print("3) Quarterly")
     df <- data_quarterly %>%
-      filter(name == country) %>%
+      filter(jurisdiction == country) %>%
       mutate(date = yearquarter(date)) %>%
       as_tsibble(index = date)
 
@@ -110,7 +110,7 @@ for (type in types) {
 
     print("4) Yearly")
     df <- data_yearly %>%
-      filter(name == country) %>%
+      filter(jurisdiction == country) %>%
       mutate(date = ymd(date, truncated = 2L)) %>%
       as_tsibble(index = date)
 
@@ -134,7 +134,7 @@ for (type in types) {
 
     print("5) YTD")
     df <- data_ytd %>%
-      filter(name == country) %>%
+      filter(jurisdiction == country) %>%
       mutate(date = ymd(date, truncated = 2L)) %>%
       as_tsibble(index = date)
 
@@ -161,7 +161,7 @@ for (type in types) {
 
     print("6) Flu Season")
     df <- data_fluseason %>%
-      filter(name == country)
+      filter(jurisdiction == country)
     df <- df %>%
       mutate(index = seq(1:length(df$date))) %>%
       mutate(date = paste0(mid(date, 3, 2), "/", right(date, 2)))
@@ -185,7 +185,7 @@ for (type in types) {
 
     print("7) STL Decomposition")
     df <- data_weekly %>%
-      filter(name == country) %>%
+      filter(jurisdiction == country) %>%
       filter(!is.na(!!mortality_col)) %>%
       mutate(yearweek = yearweek(date)) %>%
       mutate(date = date(yearweek)) %>%
@@ -217,7 +217,7 @@ for (type in types) {
 
     print("8) Yearly (Bar)")
     df <- data_yearly %>%
-      filter(name == country) %>%
+      filter(jurisdiction == country) %>%
       as_tsibble(index = date)
 
     chart8 <-
@@ -245,7 +245,7 @@ for (type in types) {
 
     print("9) YTD (Bar)")
     df <- data_ytd %>%
-      filter(name == country) %>%
+      filter(jurisdiction == country) %>%
       as_tsibble(index = date)
 
     chart9 <-
@@ -276,7 +276,7 @@ for (type in types) {
 
     print("10) Flu Season (Bar)")
     df <- data_fluseason %>%
-      filter(name == country)
+      filter(jurisdiction == country)
     df <- df %>%
       mutate(index = seq(1:length(df$date))) %>%
       mutate(date = paste0(mid(date, 3, 2), "/", right(date, 2)))
@@ -304,7 +304,7 @@ for (type in types) {
 
     print("11) Weekly (52W SMA)")
     df <- data_weekly %>%
-      filter(name == country) %>%
+      filter(jurisdiction == country) %>%
       filter(!is.na(!!mortality_col)) %>%
       mutate(yearweek = yearweek(date)) %>%
       mutate(date = date(yearweek)) %>%
