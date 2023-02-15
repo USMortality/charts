@@ -72,3 +72,28 @@ pop_4 <- pop[[1]][, 1:2] %>%
   filter(!is.na(age_group))
 
 save_csv(pop_4, "population/who_std_pop_3")
+
+
+pop_9 <- pop[[1]][, 1:2] %>%
+  setNames(c("age_group", "percentage")) %>%
+  mutate(
+    # Translate years
+    age_group = case_when(
+      age_group %in% c("0-4", "5-9") ~ "0-9",
+      age_group %in% c("10-19", "15-19") ~ "10-19",
+      age_group %in% c("20-24", "25-29") ~ "20-29",
+      age_group %in% c("30-34", "35-39") ~ "30-39",
+      age_group %in% c("40-44", "45-49") ~ "40-49",
+      age_group %in% c("50-54", "55-59") ~ "50-59",
+      age_group %in% c("60-64", "65-69") ~ "60-69",
+      age_group %in% c("70-74", "75-79") ~ "70-79",
+      age_group %in% c("80-84", "85-89", "90-94", "95-99") ~ "80+"
+    )
+  ) %>%
+  group_by(age_group) %>%
+  summarise(percentage = sum(percentage)) %>%
+  ungroup() %>%
+  mutate(percentage = percentage / 100) %>%
+  filter(!is.na(age_group))
+
+save_csv(pop_9, "population/who_std_pop_9")
