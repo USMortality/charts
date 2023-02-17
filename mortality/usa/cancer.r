@@ -131,10 +131,10 @@ chart4 <- q_data %>%
     color = "#000000"
   )
 
-save_chart(chart1, paste("mortality", "USA", "cancer", "weekly", sep = "/"))
-save_chart(chart2, paste("mortality", "USA", "cancer", "stl", sep = "/"))
-save_chart(chart3, paste("mortality", "USA", "cancer", "monthly", sep = "/"))
-save_chart(chart4, paste("mortality", "USA", "cancer", "quarterly", sep = "/"))
+save_chart(chart1, paste("mortality", "usa", "cancer", "weekly", sep = "/"))
+save_chart(chart2, paste("mortality", "usa", "cancer", "stl", sep = "/"))
+save_chart(chart3, paste("mortality", "usa", "cancer", "monthly", sep = "/"))
+save_chart(chart4, paste("mortality", "usa", "cancer", "quarterly", sep = "/"))
 
 save_collage(
   chart1, chart2, chart3, chart4,
