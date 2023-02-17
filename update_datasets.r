@@ -36,6 +36,10 @@ urls <- list(
   c(
     "https://covid.ourworldindata.org/data/owid-covid-data.csv",
     "owid.csv"
+  ),
+  c(
+    "https://dam-api.bfs.admin.ch/hub/api/dam/assets/24266415/master",
+    "che_deaths_2022_n.csv"
   )
 )
 
