@@ -283,7 +283,9 @@ calculate_baseline_excess <- function(data, chart_type) {
   } else {
     ts <- data %>% as_tsibble(index = date)
   }
-
+  
+  print(paste("calculate_baseline_excess:", ts$iso3c))
+  print(paste("ts:", ts))
   result <- ts %>%
     calculate_baseline("deaths", chart_type) %>%
     calculate_baseline("cmr", chart_type) %>%
