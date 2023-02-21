@@ -39,8 +39,18 @@ df <- data |>
   summarise(deaths = sum(deaths, na.rm = TRUE)) |>
   ungroup()
 
-excess_deaths <- deaths_weekly |>
-  filter(date >= min(df$date), date <= max(df$date))
+owid <- read.csv("data_static/owid.csv") |>
+  as_tibble() |>
+  filter(iso_code == "CHE")
+
+excess_daths <- owid |>
+  select(date, excess_mortality) |>
+  filter(!is.na(excess_mortality)) |>
+  mutate(
+    date = yearweek(ymd(date)),
+    excess_deaths = excess_mortality * 8703000 / 100000
+  ) |>
+  select(date, excess_deaths)
 
 df2 <- df |>
   pivot_wider(
@@ -103,7 +113,11 @@ make_chart(
   "Source: www.covid19.admin.ch"
 )
 
+make_chart(df2, "Source: www.covid19.admin.ch, ourworldindata.org")
+
+# Bar Chart
 df3 <- df2 |>
+  filter(death_type != "Non COVID-19 Excess") |>
   getDailyFromWeekly("deaths") |>
   mutate(quarter = yearquarter(date)) |>
   select(quarter, death_type, deaths) |>
@@ -113,17 +127,19 @@ df3 <- df2 |>
 ggplot(
   df3,
   aes(
-    x = quarter
+    x = quarter,
+    y = deaths,
+    fill = death_type
   )
 ) +
   labs(
-    title = "Weekly COVID-19 Deaths by Vaccination Status [Switzerland]",
-    x = "Week of Year",
+    title = "Quarterly COVID-19 Deaths by Vaccination Status [Switzerland]",
+    subtitle = "Source: www.covid19.admin.ch",
+    x = "Quarter of Year",
     y = "COVID-19 Deaths"
   ) +
-  geom_bar(stat = "deaths") +
+  geom_bar(stat = "identity") +
   twitter_theme() +
-  scale_x_yearweek(date_breaks = "4 weeks", date_labels = "%Y/%W") +
   scale_fill_manual(
     name = "",
     values = c(
@@ -132,9 +148,4 @@ ggplot(
       "#404E64",
       "#41F06A"
     )
-  ) +
-  theme(
-    legend.position = "top",
-    axis.text.x = element_text(angle = 30, hjust = 1, vjust = 1)
-  ) +
-  ylim(c(0, 450))
+  )
