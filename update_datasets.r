@@ -36,6 +36,18 @@ urls <- list(
   c(
     "https://dam-api.bfs.admin.ch/hub/api/dam/assets/24266415/master",
     "che_deaths_2022_n.csv"
+  ),
+  c(
+    "https://www.ons.gov.uk/file?uri=/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths/datasets/deathsbyvaccinationstatusengland/deathsoccurringbetween1april2021and31december2022/referencetable.xlsx",
+    "uk_acm_vaxx.xlsx"
+  ),
+  c(
+    "https://www.ons.gov.uk/file?uri=/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths/datasets/deathsbyvaccinationstatusengland/deathsoccurringbetween1january2021and31may2022/referencetable06072022accessible.xlsx",
+    "uk_acm_vaxx_old.xlsx"
+  ),
+  c(
+    "https://www.ons.gov.uk/file?uri=/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths/datasets/weeklyprovisionalfiguresondeathsregisteredinenglandandwales/2022/publicationfileweek522022.xlsx",
+    "uk_acm.xlsx"
   )
 )
 
