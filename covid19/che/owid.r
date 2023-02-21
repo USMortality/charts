@@ -1,19 +1,15 @@
 source("lib/common.r")
 
-options(vsc.dev.args = list(
-  width = 1920 * sf, height = 1080 * sf, res = 72 * sf
-))
-
-df <- read.csv("./data_static/COVID19Death_vaccpersons_AKL10_w.csv") %>%
-  select(date, altersklasse_covid19, vaccination_status, entries, pop) %>%
+df <- read.csv("./data_static/COVID19Death_vaccpersons_AKL10_w.csv") |>
+  select(date, altersklasse_covid19, vaccination_status, entries, pop) |>
   setNames(c(
     "date",
     "age_group",
     "vaccination_status",
     "deaths",
     "population"
-  )) %>%
-  as_tibble() %>%
+  )) |>
+  as_tibble() |>
   mutate(
     vaccination_status = case_when(
       vaccination_status %in% c(
@@ -25,24 +21,24 @@ df <- read.csv("./data_static/COVID19Death_vaccpersons_AKL10_w.csv") %>%
       ) ~ "fully_vaccinated_with_booster",
       vaccination_status %in% c("not_vaccinated") ~ "unvaccinated"
     )
-  ) %>%
-  group_by(date, age_group, vaccination_status) %>%
-  summarise(deaths = sum(deaths), population = sum(population)) %>%
-  ungroup() %>%
+  ) |>
+  group_by(date, age_group, vaccination_status) |>
+  summarise(deaths = sum(deaths), population = sum(population)) |>
+  ungroup() |>
   mutate(date = make_yearweek(
     year = as.integer(left(date, 4)),
     week = as.integer(right(date, 2))
   ))
 
-df1 <- df %>%
+df1 <- df |>
   filter(!age_group %in% c(
     "12 - 15",
     "16 - 64",
     "5 - 11",
     "65+",
     "Unbekannt"
-  )) %>%
-  filter(!is.na(vaccination_status)) %>%
+  )) |>
+  filter(!is.na(vaccination_status)) |>
   mutate(death_rate = deaths / population * 100000)
 
 # Age adjusted rate
@@ -50,13 +46,13 @@ std_pop <- as_tibble(
   read.csv("https://s3.mortality.watch/data/population/who_std_pop_9.csv")
 )
 
-df2 <- df1 %>%
-  select(-deaths, -population) %>%
-  mutate(age_group = gsub(" ", "", age_group)) %>%
-  inner_join(std_pop, by = c("age_group")) %>%
-  mutate(asmr = death_rate * percentage) %>%
-  group_by(date, vaccination_status) %>%
-  summarise(asmr = sum(asmr, na.rm = TRUE)) %>%
+df2 <- df1 |>
+  select(-deaths, -population) |>
+  mutate(age_group = gsub(" ", "", age_group)) |>
+  inner_join(std_pop, by = c("age_group")) |>
+  mutate(asmr = death_rate * percentage) |>
+  group_by(date, vaccination_status) |>
+  summarise(asmr = sum(asmr, na.rm = TRUE)) |>
   ungroup()
 
 ggplot(
@@ -76,10 +72,9 @@ ggplot(
   ) +
   geom_line(linewidth = 1) +
   twitter_theme() +
-  scale_x_yearweek(date_breaks = "1 year", date_labels = "%Y") +
   scale_color_manual(values = c(
     "#404E64",
     "#39827E",
     "#A33F1C"
   )) +
-  theme(legend.position = "bottom")
+  theme(legend.position = "top")

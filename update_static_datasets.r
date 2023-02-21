@@ -1,3 +1,5 @@
+options(timeout = 600)
+
 urls <- list(
   c(
     "https://www2.census.gov/programs-surveys/popest/datasets/2000-2010/intercensal/state/st-est00int-agesex.csv",
@@ -38,6 +40,10 @@ urls <- list(
   c(
     "https://www.destatis.de/DE/Themen/Gesellschaft-Umwelt/Bevoelkerung/Sterbefaelle-Lebenserwartung/Tabellen/sonderauswertung-sterbefaelle-endgueltige-daten.xlsx?__blob=publicationFile",
     "sonderauswertung-sterbefaelle-endgueltige-daten.xlsx"
+  ),
+  c(
+    "https://dam-api.bfs.admin.ch/hub/api/dam/assets/22324726/master",
+    "che_deaths_n_2021.csv"
   )
 )
 

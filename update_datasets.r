@@ -32,6 +32,10 @@ urls <- list(
   c(
     "https://www.destatis.de/DE/Themen/Gesellschaft-Umwelt/Bevoelkerung/Sterbefaelle-Lebenserwartung/Tabellen/sonderauswertung-sterbefaelle.xlsx?__blob=publicationFile",
     "sonderauswertung-sterbefaelle.xlsx"
+  ),
+  c(
+    "https://dam-api.bfs.admin.ch/hub/api/dam/assets/24266415/master",
+    "che_deaths_2022_n.csv"
   )
 )
 
