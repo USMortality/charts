@@ -106,12 +106,15 @@ ggplot(
   twitter_theme() +
   geom_hline(yintercept = 0) +
   watermark(df$yearmonth, df$value_p) +
-  scale_x_yearmonth(date_breaks = "1 year", date_labels = "%Y") +
+  scale_x_yearmonth(date_breaks = "1 months", date_labels = "%Y/%m") +
   scale_y_continuous(
     labels = scales::percent,
     limits = c(-1, 1)
   ) +
-  theme(legend.position = "top")
+  theme(
+    axis.text.x = element_text(angle = 30, hjust = 0.5, vjust = 0.5),
+    legend.position = "top"
+  )
 
 options(vsc.dev.args = list(width = 1920, height = 1080, res = 72 * sf))
 ggplot(
@@ -133,7 +136,7 @@ ggplot(
   twitter_theme() +
   geom_hline(yintercept = 0) +
   watermark(df$yearmonth, df$value_p) +
-  scale_x_yearmonth(date_breaks = "1 year", date_labels = "%Y") +
+  scale_x_yearmonth(date_breaks = "2 months", date_labels = "%Y/%m") +
   scale_y_continuous(
     labels = scales::percent,
     limits = c(-1, 1)
@@ -141,5 +144,9 @@ ggplot(
   facet_wrap(vars(age_group), scales = "free") +
   theme(
     panel.spacing = unit(0.3, "in"),
+    legend.position = "top"
+  ) +
+  theme(
+    axis.text.x = element_text(angle = 30, hjust = 0.5, vjust = 0.5),
     legend.position = "top"
   )

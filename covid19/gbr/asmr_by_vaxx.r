@@ -7,7 +7,7 @@ make_chart <- function(data, title) {
   ) +
     labs(
       title = title,
-      subtitle = "Dec 2022 Release | Source: ons.gov.uk",
+      subtitle = "Dec 2022 Release | Jan-March 2021 now omitted by ONS | Source: ons.gov.uk",
       x = "Month of Year",
       y = "Age-standardised mortality rate / 100,000 person-years"
     ) +
@@ -19,12 +19,14 @@ make_chart <- function(data, title) {
     ), alpha = .3, linetype = 0) +
     twitter_theme() +
     watermark(df$yearmonth, df$value_p) +
+    scale_x_yearmonth(date_breaks = "1 months", date_labels = "%Y/%m") +
     scale_y_continuous(
       labels = label_number(suffix = "k", scale = 1e-3),
       # limits = c(0, 6000)
     ) +
     theme(
-      legend.position = "top"
+      legend.position = "top",
+      axis.text.x = element_text(angle = 30, hjust = 0.5, vjust = 0.5)
     )
 }
 

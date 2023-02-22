@@ -15,7 +15,7 @@ make_chart <- function(data, title) {
     geom_line(linewidth = 1) +
     twitter_theme() +
     watermark(df$yearmonth, df$value_p) +
-    scale_x_yearmonth(date_breaks = "1 year", date_labels = "%Y") +
+    scale_x_yearmonth(date_breaks = "2 months", date_labels = "%Y/%m") +
     scale_y_continuous(
       labels = label_number(suffix = "k", scale = 1e-3),
       # limits = c(0, 2500)
@@ -23,7 +23,8 @@ make_chart <- function(data, title) {
     facet_wrap(vars(age_group), scales = "free") +
     theme(
       # panel.spacing = unit(0.3, "in"),
-      legend.position = "top"
+      legend.position = "top",
+      axis.text.x = element_text(angle = 30, hjust = 0.5, vjust = 0.5)
     )
 }
 
