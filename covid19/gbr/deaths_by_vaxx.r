@@ -68,6 +68,7 @@ covid <- df |>
   select(-type)
 make_chart(covid, "Monthly COVID-19 Deaths by Vaxx [UK]")
 
+# Non-COVID-19 deaths by vaxx
 colnames(covid)[4] <- "covid_deaths"
 non_covid <- acm |>
   inner_join(covid, by = c("date", "age_group", "vaxx_status")) |>
