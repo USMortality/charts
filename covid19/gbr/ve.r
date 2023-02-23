@@ -5,41 +5,6 @@ deaths <- df |>
   filter(type == "All causes") |>
   select(-type)
 
-# Vaxx Rates
-data <- read.csv(
-  "https://api.coronavirus.data.gov.uk/v2/data?areaType=nation&areaCode=E92000001&metric=vaccinationsAgeDemographics&format=csv"
-)
-
-vaxxed <- data |>
-  as_tibble() |>
-  select(4, 5, cumVaccinationFirstDoseUptakeByVaccinationDatePercentage) |>
-  set_names(c("date", "age_group", "vaxxed")) |>
-  mutate(
-    date = ymd(date),
-    age_group = str_replace(age_group, "_", "-"),
-    vaxxed = vaxxed / 100
-  ) |>
-  mutate(
-    # Translate years
-    age_group = case_when(
-      age_group %in% c("18-24", "25-29", "30-34", "35-39") ~ "18-39",
-      age_group %in% c("40-44", "45-49") ~ "40-49",
-      age_group %in% c("50-54", "55-59") ~ "50-59",
-      age_group %in% c("60-64", "65-69") ~ "60-69",
-      age_group %in% c("70-74", "75-79") ~ "70-79",
-      age_group %in% c("80-84", "85-89") ~ "80-89",
-      age_group %in% c("90+") ~ "90+"
-    )
-  ) |>
-  filter(!is.na(age_group)) |>
-  mutate(date = yearmonth(date)) |>
-  group_by(date, age_group) |>
-  summarise(
-    vaxxed_lower = min(vaxxed),
-    vaxxed_upper = max(vaxxed),
-    vaxxed = mean(vaxxed)
-  )
-
 # Deaths
 ve <- deaths |>
   inner_join(vaxxed, by = c("date", "age_group")) |>
