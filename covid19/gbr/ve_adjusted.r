@@ -5,7 +5,7 @@ deaths <- df |>
   filter(type == "All causes") |>
   select(-type)
 
-# Vaxx Rates
+# Vaccination Rates
 data <- read.csv(
   "https://api.coronavirus.data.gov.uk/v2/data?areaType=nation&areaCode=E92000001&metric=vaccinationsAgeDemographics&format=csv"
 ) |>
@@ -48,24 +48,24 @@ mr <- deaths |>
   inner_join(vaxxed, by = c("date", "age_group")) |>
   mutate(
     population = ifelse(
-      vaxx_status == "Unvaccinated",
+      vaccination_status == "Unvaccinated",
       population - vaxxed,
       vaxxed
     ),
     # population_lower = ifelse(
-    #   vaxx_status == "Unvaccinated",
+    #   vaccination_status == "Unvaccinated",
     #   population - vaxxed_lower,
     #   vaxxed_lower
     # ),
     # population_upper = ifelse(
-    #   vaxx_status == "Unvaccinated",
+    #   vaccination_status == "Unvaccinated",
     #   population - vaxxed_upper,
     #   vaxxed_upper
     # )
   ) |>
   select(-vaxxed, -vaxxed_lower, -vaxxed_upper) |>
   pivot_wider(
-    names_from = vaxx_status,
+    names_from = vaccination_status,
     values_from = c(deaths, population,
     #  population_lower, population_upper
      )

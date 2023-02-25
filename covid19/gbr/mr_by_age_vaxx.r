@@ -4,7 +4,7 @@ options(vsc.dev.args = list(width = 1920, height = 1080, res = 72 * sf))
 make_chart <- function(data, title) {
   ggplot(
     data,
-    aes(x = date, y = rate_py, group = vaxx_status, color = vaxx_status)
+    aes(x = date, y = rate_py, group = vaccination_status, color = vaccination_status)
   ) +
     labs(
       title = title,
@@ -16,7 +16,7 @@ make_chart <- function(data, title) {
     geom_ribbon(aes(
       ymin = rate_py_lower,
       ymax = rate_py_upper,
-      fill = vaxx_status
+      fill = vaccination_status
     ), alpha = .3, linetype = 0) +
     twitter_theme() +
     watermark(df$yearmonth, df$value_p) +
@@ -44,7 +44,7 @@ df <- data |>
     "year",
     "month",
     "age_group",
-    "vaxx_status",
+    "vaccination_status",
     "rate_py",
     "rate_py_lower",
     "rate_py_upper"
@@ -64,16 +64,16 @@ df <- data |>
 acm <- df |>
   filter(type == "All causes") |>
   select(-type)
-make_chart(acm, "Monthly All-Cause Mortality Rate-PY by Vaxx [UK]")
+make_chart(acm, "Monthly All-Cause Mortality Rate-PY by Vaccination [UK]")
 
 # Non-COVID-19
 acm_non_covid <- df |>
   filter(type == "Non-COVID-19 deaths") |>
   select(-type)
-make_chart(acm_non_covid, "Monthly Non-COVID-19 Mortality Rate-PY by Vaxx [UK]")
+make_chart(acm_non_covid, "Monthly Non-COVID-19 Mortality Rate-PY by Vaccination [UK]")
 
 # COVID-19 deaths
 covid <- df |>
   filter(type == "Deaths involving COVID-19") |>
   select(-type)
-make_chart(covid, "Monthly COVID-19 Mortality Rate-PY by Vaxx [UK]")
+make_chart(covid, "Monthly COVID-19 Mortality Rate-PY by Vaccination [UK]")

@@ -4,7 +4,7 @@ options(vsc.dev.args = list(width = 1920, height = 1080, res = 72 * sf))
 make_chart <- function(data, title) {
   ggplot(
     data,
-    aes(x = date, y = deaths, group = vaxx_status, color = vaxx_status)
+    aes(x = date, y = deaths, group = vaccination_status, color = vaccination_status)
   ) +
     labs(
       title = title,
@@ -40,7 +40,7 @@ df <- data |>
     "year",
     "month",
     "age_group",
-    "vaxx_status",
+    "vaccination_status",
     "deaths"
   )) |>
   mutate(date = make_yearmonth(
@@ -54,28 +54,28 @@ df <- data |>
 acm <- df |>
   filter(
     type == "All causes",
-    vaxx_status %in% c("Unvaccinated", "Ever vaccinated")
+    vaccination_status %in% c("Unvaccinated", "Ever vaccinated")
   ) |>
   select(-type)
-make_chart(acm, "Monthly All-Cause Deaths by Vaxx [UK]")
+make_chart(acm, "Monthly All-Cause Deaths by Vaccination [UK]")
 
 # COVID-19 deaths by vaxx
 covid <- df |>
   filter(
     type == "Deaths involving COVID-19",
-    vaxx_status %in% c("Unvaccinated", "Ever vaccinated")
+    vaccination_status %in% c("Unvaccinated", "Ever vaccinated")
   ) |>
   select(-type)
-make_chart(covid, "Monthly COVID-19 Deaths by Vaxx [UK]")
+make_chart(covid, "Monthly COVID-19 Deaths by Vaccination [UK]")
 
 # Non-COVID-19 deaths by vaxx
 colnames(covid)[4] <- "covid_deaths"
 non_covid <- acm |>
-  inner_join(covid, by = c("date", "age_group", "vaxx_status")) |>
+  inner_join(covid, by = c("date", "age_group", "vaccination_status")) |>
   mutate(non_covid_deaths = deaths - ifelse(
     is.na(covid_deaths), 0, covid_deaths
   )) |>
   select(-deaths, -covid_deaths)
 colnames(non_covid)[4] <- "deaths"
 
-make_chart(non_covid, "Monthly Non-COVID-19 Deaths by Vaxx [UK]")
+make_chart(non_covid, "Monthly Non-COVID-19 Deaths by Vaccination [UK]")

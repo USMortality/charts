@@ -53,12 +53,12 @@ quarterly_excess$type <- "_excess"
 
 quarterly_covid <- covid |>
   mutate(date = yearquarter(date)) |>
-  group_by(date, vaxx_status) |>
+  group_by(date, vaccination_status) |>
   summarise(deaths = sum(covid_deaths, na.rm = TRUE))
 
 # Unvaccinated
 quarterly_covid_unvaxx <- quarterly_covid |>
-  filter(vaxx_status == "Unvaccinated") |>
+  filter(vaccination_status == "Unvaccinated") |>
   select(1, 3)
 quarterly_covid_unvaxx$type <- "unvaxx_covid19"
 
@@ -70,14 +70,14 @@ make_chart(
 
 # Vaccinated
 quarterly_covid_unvaxx <- quarterly_covid |>
-  filter(vaxx_status == "Ever vaccinated") |>
+  filter(vaccination_status == "Ever vaccinated") |>
   select(1, 3)
 quarterly_covid_unvaxx$type <- "vaxx_covid19"
 
 make_chart(
   rbind(quarterly_excess, quarterly_covid_unvaxx) |>
     filter(date > make_yearquarter(year = 2021, quarter = 1)),
-  "Quarterly All-Cause Excess & Vaxx COVID-19 Deaths [UK]"
+  "Quarterly All-Cause Excess & Vaccination COVID-19 Deaths [UK]"
 )
 
 # All
