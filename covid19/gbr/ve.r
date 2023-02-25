@@ -1,6 +1,8 @@
 source("lib/common.r")
 
 source("covid19/gbr/deaths_by_vaxx.r")
+source("covid19/gbr/vaxx.r")
+
 deaths <- df |>
   filter(type == "All causes") |>
   select(-type)
