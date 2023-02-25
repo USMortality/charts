@@ -1,166 +1,307 @@
 source("lib/common.r")
 
 source("covid19/gbr/deaths_by_vaxx.r")
-deaths <- df |>
-  filter(type == "All causes") |>
-  select(-type)
+source("covid19/gbr/vaxx.r")
+source("population/esp2013.r")
 
-# Vaccination Rates
-data <- read.csv(
-  "https://api.coronavirus.data.gov.uk/v2/data?areaType=nation&areaCode=E92000001&metric=vaccinationsAgeDemographics&format=csv"
-) |>
-  as_tibble() |>
-  select(4, 5, cumPeopleVaccinatedFirstDoseByVaccinationDate, cumVaccinationFirstDoseUptakeByVaccinationDatePercentage) |>
-  set_names(c("date", "age_group", "vaxxed", "vaxxed_pct"))
 
-vaxxed <- data |>
+# Deaths by Vaxx Status
+
+## Deaths
+mr <- acm |>
+  pivot_wider(names_from = vaccination_status, values_from = c(deaths)) |>
+  setNames(c(
+    "date",
+    "age_group",
+    "deaths_unvaxx",
+    "deaths_vaxx"
+  )) |>
+  inner_join(vaxxed_population |> select(1:6),
+    by = c("date", "age_group")
+  ) |>
   mutate(
-    date = ymd(date),
-    age_group = str_replace(age_group, "_", "-")
+    unvaxxed = population - vaxxed,
+    unvaxxed_lower = population - vaxxed_upper,
+    unvaxxed_upper = population - vaxxed_lower
   ) |>
-  mutate(
-    # Translate years
-    age_group = case_when(
-      age_group %in% c("05-11", "12-15", "16-17") ~ "0-17",
-      age_group %in% c("18-24", "25-29", "30-34", "35-39") ~ "18-39",
-      age_group %in% c("40-44", "45-49") ~ "40-49",
-      age_group %in% c("50-54", "55-59") ~ "50-59",
-      age_group %in% c("60-64", "65-69") ~ "60-69",
-      age_group %in% c("70-74", "75-79") ~ "70-79",
-      age_group %in% c("80-84", "85-89") ~ "80-89",
-      age_group %in% c("90+") ~ "90+"
-    )
-  ) |>
-  filter(!is.na(age_group)) |>
-  mutate(date = yearmonth(date)) |>
-  group_by(date, age_group) |>
-  summarise(
-    vaxxed_lower = as.integer(min(vaxxed)),
-    vaxxed_upper = as.integer(max(vaxxed)),
-    vaxxed = as.integer(mean(vaxxed))
-  ) |>
-  inner_join(population, by = "age_group")
-
-save_csv(ve, "test", upload = FALSE)
-
-# Deaths
-mr <- deaths |>
-  inner_join(vaxxed, by = c("date", "age_group")) |>
-  mutate(
-    population = ifelse(
-      vaccination_status == "Unvaccinated",
-      population - vaxxed,
-      vaxxed
-    ),
-    # population_lower = ifelse(
-    #   vaccination_status == "Unvaccinated",
-    #   population - vaxxed_lower,
-    #   vaxxed_lower
-    # ),
-    # population_upper = ifelse(
-    #   vaccination_status == "Unvaccinated",
-    #   population - vaxxed_upper,
-    #   vaxxed_upper
-    # )
-  ) |>
-  select(-vaxxed, -vaxxed_lower, -vaxxed_upper) |>
-  pivot_wider(
-    names_from = vaccination_status,
-    values_from = c(deaths, population,
-    #  population_lower, population_upper
-     )
-  ) |>
+  select(-population) |>
   set_names(c(
     "date",
     "age_group",
     "deaths_unvaxx",
     "deaths_vaxx",
+    "population_vaxx",
+    "population_vaxx_lower",
+    "population_vaxx_upper",
     "population_unvaxx",
-    "population_vaxx"
-    # "population_unvaxx_lower",
-    # "population_vaxx_lower",
-    # "population_unvaxx_upper",
-    # "population_vaxx_upper"
+    "population_unvaxx_lower",
+    "population_unvaxx_upper"
   )) |>
+  dplyr::arrange(date, age_group) |>
+  group_by(date) |>
+  nest() |>
+  mutate(data = map(data, ~ .x |> adorn_totals("row", name = "all"))) |>
+  unnest(cols = c(data)) |>
   mutate(
-    mr_vaxx = deaths_vaxx / population_vaxx * 100000,
-    mr_unvaxx = deaths_unvaxx / population_unvaxx * 100000,
+    mr_vaccinated = deaths_vaxx / population_vaxx * 100000,
+    mr_vaccinated_lower = deaths_vaxx / population_vaxx_upper * 100000,
+    mr_vaccinated_upper = deaths_vaxx / population_vaxx_lower * 100000,
+    mr_unvaccinated = deaths_unvaxx / population_unvaxx * 100000,
+    mr_unvaccinated_lower = deaths_unvaxx / population_unvaxx_upper * 100000,
+    mr_unvaccinated_upper = deaths_unvaxx / population_unvaxx_lower * 100000
   ) |>
-  select(date, age_group, mr_vaxx, mr_unvaxx)
-
-mr
-
-#  |>
-# mutate(
-#   ve = 1 - (deaths_vaxx / population_vaxx) /
-#     (deaths_unvaxx / population_unvaxx),
-#   ve_lower = 1 - (deaths_vaxx / population_vaxx_lower) /
-#     (deaths_unvaxx / population_unvaxx_lower),
-#   ve_upper = 1 - (deaths_vaxx / population_vaxx_upper) /
-#     (deaths_unvaxx / population_unvaxx_upper)
-# ) |>
-# select(date, age_group, ve, ve_lower, ve_upper)
-
-ggplot(
-  ve,
-  aes(x = date, y = ve, group = age_group, color = age_group)
-) +
-  labs(
-    title = "COVID-19 Vaccine Efficacy (Any Death) [England]",
-    subtitle = "Source: ons.gov.uk",
-    x = "Month of Year",
-    y = "Vaccine Efficacy"
-  ) +
-  geom_line(linewidth = 1) +
-  geom_ribbon(aes(
-    ymin = ve_lower,
-    ymax = ve_upper,
-    fill = age_group
-  ), alpha = .3, linetype = 0) +
-  twitter_theme() +
-  geom_hline(yintercept = 0) +
-  watermark(df$yearmonth, df$value_p) +
-  scale_x_yearmonth(date_breaks = "1 months", date_labels = "%Y/%m") +
-  scale_y_continuous(
-    labels = scales::percent,
-    limits = c(-1, 1)
-  ) +
-  theme(
-    axis.text.x = element_text(angle = 30, hjust = 0.5, vjust = 0.5),
-    legend.position = "top"
+  select(
+    date, age_group,
+    mr_vaccinated, mr_vaccinated_lower, mr_vaccinated_upper,
+    mr_unvaccinated, mr_unvaccinated_lower, mr_unvaccinated_upper
   )
+
+# CMR by age
+mr_crude_age <- mr |>
+  filter(age_group != "all") |>
+  pivot_longer(
+    cols = starts_with("mr_"),
+    names_to = "vaccination_status",
+    values_to = "rate",
+    names_prefix = "mr_"
+  ) |>
+  separate(
+    vaccination_status,
+    c("vaccination_status", "kind")
+  ) |>
+  mutate(kind = ifelse(is.na(kind), "rate", kind)) |>
+  pivot_wider(names_from = kind, values_from = c(rate)) |>
+  arrange(date, age_group, vaccination_status)
 
 options(vsc.dev.args = list(width = 1920, height = 1080, res = 72 * sf))
 ggplot(
-  ve,
-  aes(x = date, y = ve, group = age_group, color = age_group)
+  data = mr_crude_age,
+  aes(
+    x = date, y = rate,
+    group = vaccination_status, color = vaccination_status
+  )
 ) +
   labs(
-    title = "COVID-19 Vaccine Efficacy (Any Death) [England]",
+    title = "Crude Mortality Rate (CMR) by Vaccination Status [England]",
     subtitle = "Source: ons.gov.uk",
     x = "Month of Year",
-    y = "Vaccine Efficacy"
+    y = "Deaths/100k"
   ) +
   geom_line(linewidth = 1) +
   geom_ribbon(aes(
-    ymin = ve_lower,
-    ymax = ve_upper,
-    fill = age_group
+    ymin = lower,
+    ymax = upper,
+    fill = vaccination_status
   ), alpha = .3, linetype = 0) +
   twitter_theme() +
-  geom_hline(yintercept = 0) +
   watermark(df$yearmonth, df$value_p) +
-  scale_x_yearmonth(date_breaks = "2 months", date_labels = "%Y/%m") +
-  scale_y_continuous(
-    labels = scales::percent,
-    limits = c(-1, 1)
+  theme(
+    legend.position = "top",
+    axis.text.x = element_text(angle = 30, hjust = 0.5, vjust = 0.5)
   ) +
   facet_wrap(vars(age_group), scales = "free") +
-  theme(
-    panel.spacing = unit(0.3, "in"),
-    legend.position = "top"
-  ) +
-  theme(
-    axis.text.x = element_text(angle = 30, hjust = 0.5, vjust = 0.5),
-    legend.position = "top"
+  scale_color_manual(values = c(
+    "#569FE5",
+    "#ED6D85"
+  )) +
+  scale_fill_manual(values = c("#569FE5", "#ED6D85"))
+
+# CMR
+mr_crude <- mr |>
+  filter(age_group == "all") |>
+  select(-age_group) |>
+  pivot_longer(
+    cols = !date,
+    names_to = "vaccination_status",
+    values_to = "rate",
+    names_prefix = "mr_"
+  ) |>
+  separate(
+    vaccination_status,
+    c("vaccination_status", "kind")
+  ) |>
+  mutate(kind = ifelse(is.na(kind), "rate", kind)) |>
+  pivot_wider(names_from = kind, values_from = c("rate"))
+
+ggplot(
+  data = mr_crude,
+  aes(
+    x = date, y = rate,
+    group = vaccination_status, color = vaccination_status
   )
+) +
+  labs(
+    title = "Crude Mortality Rate (CMR) by Vaccination Status [England]",
+    subtitle = "18+ | Source: ons.gov.uk",
+    x = "Month of Year",
+    y = "Deaths/100k"
+  ) +
+  geom_line(linewidth = 1) +
+  geom_ribbon(aes(
+    ymin = lower,
+    ymax = upper,
+    fill = vaccination_status
+  ), alpha = .3, linetype = 0) +
+  twitter_theme() +
+  watermark(df$yearmonth, df$value_p) +
+  scale_x_yearmonth(date_breaks = "1 months", date_labels = "%Y/%m") +
+  theme(
+    legend.position = "top",
+    axis.text.x = element_text(angle = 30, hjust = 0.5, vjust = 0.5)
+  ) +
+  scale_color_manual(values = c(
+    "#569FE5",
+    "#ED6D85"
+  )) +
+  scale_fill_manual(values = c("#569FE5", "#ED6D85"))
+
+# ASMR
+std_pop <- get_weights(c("0-17", unique(mr$age_group)), esp2013_yearly)
+mr_asmr <- mr |>
+  filter(age_group != "all") |>
+  inner_join(std_pop, by = "age_group") |>
+  group_by(date) |>
+  mutate(
+    mr_vaccinated = mr_vaccinated * weight,
+    mr_vaccinated_lower = mr_vaccinated_lower * weight,
+    mr_vaccinated_upper = mr_vaccinated_upper * weight,
+    mr_unvaccinated = mr_unvaccinated * weight,
+    mr_unvaccinated_lower = mr_unvaccinated_lower * weight,
+    mr_unvaccinated_upper = mr_unvaccinated_upper * weight
+  ) |>
+  summarise(
+    mr_vaccinated = sum(mr_vaccinated),
+    mr_vaccinated_lower = sum(mr_vaccinated_lower),
+    mr_vaccinated_upper = sum(mr_vaccinated_upper),
+    mr_unvaccinated = sum(mr_unvaccinated),
+    mr_unvaccinated_lower = sum(mr_unvaccinated_lower),
+    mr_unvaccinated_upper = sum(mr_unvaccinated_upper)
+  ) |>
+  pivot_longer(
+    cols = !date,
+    names_to = "vaccination_status",
+    values_to = "rate",
+    names_prefix = "mr_"
+  ) |>
+  separate(
+    vaccination_status,
+    c("vaccination_status", "kind")
+  ) |>
+  mutate(kind = ifelse(is.na(kind), "rate", kind)) |>
+  pivot_wider(names_from = kind, values_from = c(rate))
+
+ggplot(
+  mr_asmr,
+  aes(
+    x = date, y = rate,
+    group = vaccination_status, color = vaccination_status
+  )
+) +
+  labs(
+    title = "Age-Std. Mortality Rate (ASMR) by Vaccination Status [England]",
+    subtitle = "18+ | Std. Pop.: ESP2013 | Source: ons.gov.uk",
+    x = "Month of Year",
+    y = "Deaths/100k"
+  ) +
+  geom_line(linewidth = 1) +
+  geom_ribbon(aes(
+    ymin = lower,
+    ymax = upper,
+    fill = vaccination_status
+  ), alpha = .3, linetype = 0) +
+  twitter_theme() +
+  watermark(df$yearmonth, df$value_p) +
+  scale_x_yearmonth(date_breaks = "1 months", date_labels = "%Y/%m") +
+  theme(
+    legend.position = "top",
+    axis.text.x = element_text(angle = 30, hjust = 0.5, vjust = 0.5)
+  ) +
+  scale_color_manual(values = c(
+    "#569FE5",
+    "#ED6D85"
+  )) +
+  scale_fill_manual(values = c("#569FE5", "#ED6D85"))
+
+
+# Death totals, dataset comparison
+
+## Deaths from Table 5, Dataset by Vaxx St
+monthly_deaths1 <- acm |>
+  group_by(date) |>
+  summarize(deaths = sum(deaths))
+
+## Weekly Totals Dataset
+data <- read_excel(
+  "./data/uk_acm.xlsx",
+  sheet = "1",
+  range = "A6:H99"
+)
+
+daily_deaths <- data |>
+  select(1, 6, 7, 8) |>
+  setNames(c("week", "deaths_2022", "deaths_2021", "baseline")) %>%
+  pivot_longer(
+    cols = starts_with("deaths_"), names_prefix = "deaths_",
+    names_to = "year", values_to = "deaths"
+  ) |>
+  mutate(date = make_yearweek(
+    year = as.numeric(year), week = as.numeric(week)
+  ), .before = "baseline") |>
+  select(-week, -year) |>
+  mutate(excess = deaths - baseline) |>
+  filter(!is.na(date)) |>
+  arrange(date) |>
+  select(date, deaths) |>
+  getDailyFromWeekly("deaths")
+
+monthly_deaths2 <- daily_deaths |>
+  mutate(date = yearmonth(date)) |>
+  group_by(date) |>
+  summarise(deaths = sum(deaths))
+
+monthly_deaths <- monthly_deaths1 |>
+  inner_join(monthly_deaths2, by = c("date")) |>
+  setNames((c(
+    "date",
+    "Monthly Deaths by Age & Vaccination status (table 5)",
+    "Weekly Deaths England"
+  ))) |>
+  pivot_longer(!date, values_to = "deaths", names_to = "source")
+
+## Plot both
+ggplot(
+  data = monthly_deaths,
+  aes(x = date, y = deaths, group = source, color = source)
+) +
+  labs(
+    title = "Monthly Death Totals by different Datasets [England]",
+    subtitle = "Source: ons.gov.uk",
+    x = "Month of Year",
+    y = "Deaths"
+  ) +
+  geom_line(linewidth = 1) +
+  twitter_theme() +
+  watermark(df$yearmonth, df$value_p) +
+  scale_x_yearmonth(date_breaks = "1 months", date_labels = "%Y/%m") +
+  scale_y_continuous(labels = label_number(suffix = "k", scale = 1e-3)) +
+  theme(
+    legend.position = "top",
+    legend.title = element_blank(),
+    axis.text.x = element_text(angle = 30, hjust = 0.5, vjust = 0.5)
+  ) +
+  scale_color_manual(values = c(
+    "#ED6D85",
+    "#000000"
+  ))
+
+# Yearly difference
+monthly_deaths1 |>
+  inner_join(monthly_deaths2, by = c("date")) |>
+  mutate(date = year(date), diff = deaths.x - deaths.y) |>
+  group_by(date) |>
+  summarise(diff = sum(diff))
+
+monthly_deaths2 |>
+  mutate(date = year(date)) |>
+  group_by(date) |>
+  summarise(deaths = sum(deaths))
