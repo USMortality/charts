@@ -299,7 +299,7 @@ calculate_baseline_excess <- function(data, chart_type) {
     ts <- data %>% as_tsibble(index = date)
   }
 
-  print(paste("calculate_baseline_excess:", ts$iso3c))
+  print(paste("calculate_baseline_excess:", unique(ts$iso3c)))
   print(paste("ts:", ts))
   result <- ts %>%
     calculate_baseline("deaths", chart_type) %>%

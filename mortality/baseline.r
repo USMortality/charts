@@ -10,7 +10,7 @@ get_optimal_size <- function(df, col_name) {
   if (nrow(na.omit(df)) < 3) {
     return(optimal_size)
   }
-  for (size in 4:min(10, nrow(df))) {
+  for (size in 5:min(15, nrow(df))) {
     acc <- df %>%
       slide_tsibble(.size = size) %>%
       model(TSLM(!!col_name ~ trend())) %>%
