@@ -207,7 +207,7 @@ get_baseline_length <- function(iso, ct, cn) {
   if (ct != "fluseason") ct <- "yearly"
   baseline <- baseline_size %>%
     filter(iso3c == iso & chart_type == ct & type == cn)
-  baseline$window
+  ifelse(nrow(baseline) == 0, 5, baseline$window)
 }
 
 # TODO: Remove when next version of fabeletools (>0.3.2) is published.
@@ -300,7 +300,7 @@ calculate_baseline_excess <- function(data, chart_type) {
   }
 
   print(paste("calculate_baseline_excess:", unique(ts$iso3c)))
-  print(paste("ts:", ts))
+  # print(paste("ts:", ts))
   result <- ts %>%
     calculate_baseline("deaths", chart_type) %>%
     calculate_baseline("cmr", chart_type) %>%
