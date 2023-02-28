@@ -1,20 +1,17 @@
 source("lib/common.r")
 
 get_optimal_size <- function(df, col_name) {
-  if (nrow(df) < 5) {
-    return(nrow(df))
-  }
   min <- Inf
   optimal_size <- nrow(df)
   col_name <- sym(col_name)
   if (nrow(na.omit(df)) < 3) {
     return(optimal_size)
   }
-  for (size in 5:min(15, nrow(df))) {
-    acc <- df %>%
-      slide_tsibble(.size = size) %>%
-      model(TSLM(!!col_name ~ trend())) %>%
-      forecast(h = 3) %>%
+  for (size in 5:ceiling(nrow(df) / 2)) {
+    acc <- df |>
+      slide_tsibble(.size = size) |>
+      model(TSLM(!!col_name ~ trend())) |>
+      forecast(h = 3) |>
       accuracy(df)
     if (!is.nan(acc$RMSE) && acc$RMSE < min) {
       min <- acc$RMSE
@@ -36,13 +33,19 @@ get_baseline_size <- function(data) {
     mortality_col <- sym(mortality_type)
     for (country in unique(data$jurisdiction)) {
       print(paste(country, mortality_type))
-      df <- data %>%
-        filter(jurisdiction == country) %>%
+      df <- data |>
+        filter(
+          jurisdiction == country,
+          date < 2020
+        ) |>
         as_tsibble(index = date)
 
-      optimal_size <- get_optimal_size(df, mortality_type)
+      optimal_size <- ifelse(ceiling(nrow(df) / 2) > 5,
+        get_optimal_size(df, mortality_type),
+        nrow(df)
+      )
 
-      iso <- head(df$iso3c, 1)
+      iso <- head(data |> filter(jurisdiction == country), 1)$iso3c
       result[nrow(result) + 1, ] <- c(
         iso, country, mortality_type, optimal_size
       )
@@ -53,14 +56,14 @@ get_baseline_size <- function(data) {
 }
 
 data <- read_remote("mortality/world_yearly.csv")
-yearly <- data %>%
-  get_baseline_size() %>%
+yearly <- data |>
+  get_baseline_size() |>
   mutate(chart_type = "yearly", .after = "jurisdiction")
 
 data <- read_remote("mortality/world_fluseason.csv")
-fluseason <- data %>%
-  mutate(date = as.integer(left(date, 4))) %>%
-  get_baseline_size() %>%
+fluseason <- data |>
+  mutate(date = as.integer(left(date, 4))) |>
+  get_baseline_size() |>
   mutate(chart_type = "fluseason", .after = "jurisdiction")
 
 save_csv(rbind(yearly, fluseason), "mortality/world_baseline")
