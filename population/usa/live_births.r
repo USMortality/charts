@@ -10,7 +10,7 @@ df <- as_tibble(data) %>%
   select(yearmonth, Data.Value) %>%
   setNames(c("yearmonth", "births"))
 
-save_csv(df, "covid19/usa/live_births")
+save_csv(df, "population/usa/live_births")
 
 # Make Chart
 chart <-
@@ -27,4 +27,4 @@ chart <-
   watermark(df$yearmonth, df$value_p) +
   scale_y_continuous(labels = label_number(suffix = "K", scale = 1e-3))
 
-save_chart(chart, "covid19/usa/live_births")
+save_chart(chart, "population/usa/live_births")
