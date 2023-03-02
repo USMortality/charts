@@ -35,13 +35,17 @@ wd_us_states <- us_cmr_2 %>%
     us_states_iso3c %>% mutate(country_name = state),
     by = "country_name"
   ) %>%
-  mutate(time_unit = "weekly") %>%
-  mutate(country_name = ifelse(
-    country_name == "United States",
-    "United States",
-    paste0("USA - ", country_name)
-  )) %>%
-  select(5, 1, 2, 3, 7, 4)
+  mutate(
+    time_unit = "weekly",
+    country_name = ifelse(
+      country_name == "United States",
+      "United States",
+      paste0("USA - ", country_name)
+    ),
+    deaths = ifelse(deaths == 0, NA, deaths)
+  ) %>%
+  select(5, 1, 2, 3, 7, 4) |>
+  filter(!is.na(deaths))
 
 # Combine NY/NYC
 wd_us_states_ny <- wd_us_states %>%

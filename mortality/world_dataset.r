@@ -154,6 +154,7 @@ aggregate_data_ytd <- function(data) {
 }
 
 calc_sma <- function(data, n) {
+  print(unique(data$iso3c))
   data$deaths <- round(SMA(data$deaths, n = n), 0)
   data$cmr <- round(SMA(data$cmr, n = n), 2)
   if (nrow(data %>% filter(!is.na(asmr))) > 0) {
