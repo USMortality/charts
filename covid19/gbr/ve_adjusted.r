@@ -299,7 +299,11 @@ monthly_deaths1 |>
   inner_join(monthly_deaths2, by = c("date")) |>
   mutate(date = year(date), diff = deaths.x - deaths.y) |>
   group_by(date) |>
-  summarise(diff = sum(diff))
+  summarise(
+    deaths.x = sum(deaths.x),
+    deaths.y = sum(deaths.y),
+    diff = sum(diff)
+  )
 
 monthly_deaths2 |>
   mutate(date = year(date)) |>
