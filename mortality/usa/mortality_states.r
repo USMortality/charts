@@ -88,7 +88,7 @@ dd_us <- merge(
   as_tibble()
 
 # ASMR/Weekly
-std_pop <- get_esp2013_bins(c(
+std_pop <- get_who2015_bins(c(
   "0-24", "25-44", "45-64", "65-74", "75-84", "85+"
 ))
 

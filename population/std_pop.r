@@ -1,7 +1,6 @@
 source("lib/common.r")
 
 # Helper Functions:
-
 ## Splits an age group string by its start and end year.
 split_age_group <- function(age_group) {
   ages <- strsplit(age_group, "-")
@@ -25,10 +24,9 @@ get_weights <- function(df) {
   }
 }
 
-##
+## Split weights by age years
 get_std_pop_weights <- function(age_groups, std_pop) {
   result <- NULL
-  ag <- "90+"
   for (ag in age_groups) {
     if (!is.na(as.numeric(ag))) {
       result <- rbind(result, data.frame(
@@ -52,7 +50,6 @@ get_std_pop_weights <- function(age_groups, std_pop) {
   result
 }
 
-
 # ESP 2013 Std. Pop
 esp2013_5y <- read.csv("data_static/ESP2013.csv") |> as_tibble()
 esp2013 <- esp2013_5y |>
@@ -70,12 +67,19 @@ get_esp2013_bins <- function(age_groups) {
   get_std_pop_weights(age_groups, esp2013)
 }
 
-
 # WHO 2015 Std. Pop
-
 who2015_1 <- read_html("https://seer.cancer.gov/stdpopulations/world.who.html")
 who2015_2 <- html_nodes(who2015_1, "table")
-who2015 <- html_table(who2015_2[1], fill = TRUE)
+who2015_3 <- html_table(who2015_2[1], fill = TRUE)
+who2015 <- who2015_3[[1]][, 1:2] |>
+  setNames(c("age_group", "weight")) |>
+  mutate(key = age_group) |>
+  nest(data = c(age_group, weight)) |>
+  mutate(data = lapply(data, get_weights)) |>
+  unnest(cols = c(data)) |>
+  select(2, 3) |>
+  setNames(c("age", "weight")) |>
+  filter(!is.na(age_group))
 
 get_who2015_bins <- function(age_groups) {
   get_std_pop_weights(age_groups, who2015)

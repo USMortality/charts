@@ -2,7 +2,7 @@ source("lib/common.r")
 source("population/std_pop.r")
 
 deaths <- as_tibble(read.csv("./data/mortality_org.csv", skip = 2))
-std_pop <- get_esp2013_bins(c("0-14", "15-64", "65-74", "75-84", "85+"))
+std_pop <- get_who2015_bins(c("0-14", "15-64", "65-74", "75-84", "85+"))
 
 wd <- deaths |>
   filter(Sex == "b") |>
