@@ -2,7 +2,9 @@
 
 FILE=$1
 
-FILE_NEW=$(echo $FILE | sed 's/.txt//g' | sed 's/ /_/g' | sed 's/-/_/g'| sed 's/,//g')
+FILE_NEW=$(
+  echo $FILE | sed 's/.txt//g' | sed 's/ /_/g' | sed 's/-/_/g' | sed 's/,//g'
+)
 
 cp "$FILE" "$FILE_NEW.csv"
 

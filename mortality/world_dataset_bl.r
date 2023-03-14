@@ -64,7 +64,10 @@ calculateExcess <- function(data) {
       excess = round(!!mortality_col - baseline, digits = 1),
       excess_p = round((!!mortality_col - baseline) / baseline, digits = 3),
       sign_excess = round(!!mortality_col - baseline_upper, digits = 1),
-      sign_excess_p = round((!!mortality_col - baseline_upper) / baseline, digits = 3),
+      sign_excess_p = round(
+        (!!mortality_col - baseline_upper) / baseline,
+        digits = 3
+      ),
     ) |>
     mutate(
       sign_excess = ifelse(sign_excess >= 0, sign_excess, NA),

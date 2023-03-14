@@ -175,8 +175,10 @@ calculate_excess <- function(data, col_name) {
   col <- sym(col_name)
   data |> mutate(
     "{col_name}_excess" := !!col - !!sym(paste0(col_name, "_baseline")),
-    "{col_name}_excess_lower" := !!col - !!sym(paste0(col_name, "_baseline_lower")),
-    "{col_name}_excess_upper" := !!col - !!sym(paste0(col_name, "_baseline_upper"))
+    "{col_name}_excess_lower" :=
+      !!col - !!sym(paste0(col_name, "_baseline_lower")),
+    "{col_name}_excess_upper" :=
+      !!col - !!sym(paste0(col_name, "_baseline_upper"))
   )
 }
 
@@ -282,12 +284,18 @@ calculate_baseline <- function(data, col_name, chart_type) {
 round_x <- function(data, col_name, digits = 0) {
   data |>
     mutate(
-      "{col_name}_baseline" := round(!!sym(paste0(col_name, "_baseline")), digits),
-      "{col_name}_baseline_lower" := round(!!sym(paste0(col_name, "_baseline_lower")), digits),
-      "{col_name}_baseline_upper" := round(!!sym(paste0(col_name, "_baseline_upper")), digits),
-      "{col_name}_excess" := round(!!sym(paste0(col_name, "_excess")), digits),
-      "{col_name}_excess_lower" := round(!!sym(paste0(col_name, "_excess_lower")), digits),
-      "{col_name}_excess_upper" := round(!!sym(paste0(col_name, "_excess_upper")), digits)
+      "{col_name}_baseline" :=
+        round(!!sym(paste0(col_name, "_baseline")), digits),
+      "{col_name}_baseline_lower" :=
+        round(!!sym(paste0(col_name, "_baseline_lower")), digits),
+      "{col_name}_baseline_upper" :=
+        round(!!sym(paste0(col_name, "_baseline_upper")), digits),
+      "{col_name}_excess" :=
+        round(!!sym(paste0(col_name, "_excess")), digits),
+      "{col_name}_excess_lower" :=
+        round(!!sym(paste0(col_name, "_excess_lower")), digits),
+      "{col_name}_excess_upper" :=
+        round(!!sym(paste0(col_name, "_excess_upper")), digits)
     )
 }
 

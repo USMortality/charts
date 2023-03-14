@@ -26,7 +26,10 @@ tweet <- function(name, max) {
   url <- paste0(
     "https://www.mortality.watch/?q=%7B%22c%22%3A%5B%22",
     URLencode(name),
-    "%22%5D%2C%22cs%22%3A0%2C%22ct%22%3A0%2C%22t%22%3A2%2C%22df%22%3A%222009+W47%22%2C%22dt%22%3A%222022+W46%22%2C%22m%22%3A0%7D"
+    paste0(
+      "%22%5D%2C%22cs%22%3A0%2C%22ct%22%3A0%2C%22t%22%3A2%2C%22df%22%3A%222009",
+      "+W47%22%2C%22dt%22%3A%222022+W46%22%2C%22m%22%3A0%7D"
+    )
   )
   post_tweet(
     paste0(

@@ -3,7 +3,8 @@ source("population/std_pop.r")
 
 # CMR
 md_usa <- get_usa_deaths("./data_static/usa_all.csv") # USA 1999/1 - 2020/12
-us_cmr_1 <- as_tibble(read.csv("./data_static/usa_states_1999_2020.csv")) # US States 1999/1 - 2020/12
+# US States 1999/1 - 2020/12
+us_cmr_1 <- as_tibble(read.csv("./data_static/usa_states_1999_2020.csv"))
 us_cmr_2 <- as_tibble(read.csv("./data/usa_states_age_cause_weekly.csv"))
 us_states_iso3c <- as_tibble(read.csv("./data_static/usa_states_iso3c.csv")) |>
   add_row(iso3c = "US-NYC", state = "New York City") |>
@@ -135,7 +136,9 @@ deaths <- rbind(deaths |> filter(iso3c != "US-NY"), deaths_ny)
 
 # Calculate Mortality
 usa_pop <- read_remote("population/usa/six_age_bands.csv") |>
-  setNames(c("iso3c", "state", "age_group", "year", "population", "is_projection"))
+  setNames(c(
+    "iso3c", "state", "age_group", "year", "population", "is_projection"
+  ))
 
 # Calculate ASMR
 dd_asmr_us_states <- deaths |>
