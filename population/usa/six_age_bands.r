@@ -1,7 +1,7 @@
 source("lib/common.r")
 
-us_states_iso3c <- as_tibble(read.csv("./data_static/usa_states_iso3c.csv")) %>%
-  add_row(iso3c = "US-NYC", state = "New York City") %>%
+us_states_iso3c <- as_tibble(read.csv("./data_static/usa_states_iso3c.csv")) |>
+  add_row(iso3c = "US-NYC", state = "New York City") |>
   add_row(iso3c = "USA", state = "United States")
 
 # Download data
@@ -19,48 +19,48 @@ data5 <- as_tibble(
 )
 
 # Transform data
-a <- data0 %>%
-  filter(SEX == 0) %>%
+a <- data0 |>
+  filter(SEX == 0) |>
   select(
     NAME, AGE,
     POPESTIMATE2000, POPESTIMATE2001, POPESTIMATE2002,
     POPESTIMATE2003, POPESTIMATE2004, POPESTIMATE2005,
     POPESTIMATE2006, POPESTIMATE2007, POPESTIMATE2008,
     POPESTIMATE2009
-  ) %>%
+  ) |>
   pivot_longer(
     cols = starts_with("POPEST"), names_to = "year", values_to = "population"
-  ) %>%
-  transform(year = right(year, 4)) %>%
+  ) |>
+  transform(year = right(year, 4)) |>
   setNames(c("jurisdiction", "age", "year", "population"))
 
-b <- data1 %>%
-  filter(SEX == 0) %>%
+b <- data1 |>
+  filter(SEX == 0) |>
   select(
     NAME, AGE,
     POPEST2010_CIV, POPEST2011_CIV, POPEST2012_CIV, POPEST2013_CIV,
     POPEST2014_CIV, POPEST2015_CIV, POPEST2016_CIV, POPEST2017_CIV,
     POPEST2018_CIV, POPEST2019_CIV
-  ) %>%
+  ) |>
   pivot_longer(
     cols = starts_with("POPEST"), names_to = "year", values_to = "population"
-  ) %>%
-  transform(year = str_sub(year, 7, 10)) %>%
+  ) |>
+  transform(year = str_sub(year, 7, 10)) |>
   setNames(c("jurisdiction", "age", "year", "population"))
 
-c <- data2 %>%
-  filter(SEX == 0) %>%
+c <- data2 |>
+  filter(SEX == 0) |>
   select(
     NAME, AGE, POPEST2020_CIV, POPEST2021_CIV
-  ) %>%
+  ) |>
   pivot_longer(
     cols = starts_with("POPEST"), names_to = "year", values_to = "population"
-  ) %>%
-  transform(year = str_sub(year, 7, 10)) %>%
+  ) |>
+  transform(year = str_sub(year, 7, 10)) |>
   setNames(c("jurisdiction", "age", "year", "population"))
 
 # Create 6 age bands
-population_grouped <- bind_rows(list(a, b, c)) %>%
+population_grouped <- bind_rows(list(a, b, c)) |>
   mutate(
     # Create categories
     age_group = case_when(
@@ -77,29 +77,29 @@ population_grouped <- bind_rows(list(a, b, c)) %>%
       age_group,
       level = c("all", "0-24", "25-44", "45-64", "65-74", "75-84", "85+")
     )
-  ) %>%
-  group_by(jurisdiction, year, age_group) %>%
-  summarise(population = sum(population)) %>%
-  mutate(year = as.integer(year)) %>%
+  ) |>
+  group_by(jurisdiction, year, age_group) |>
+  summarise(population = sum(population)) |>
+  mutate(year = as.integer(year)) |>
   ungroup()
 
 # NYC Data
-ny0 <- data3 %>%
-  filter(SEX == 0) %>%
+ny0 <- data3 |>
+  filter(SEX == 0) |>
   select(
     CTYNAME, AGEGRP,
     POPESTIMATE2000, POPESTIMATE2001, POPESTIMATE2002,
     POPESTIMATE2003, POPESTIMATE2004, POPESTIMATE2005,
     POPESTIMATE2006, POPESTIMATE2007, POPESTIMATE2008,
     POPESTIMATE2009
-  ) %>%
+  ) |>
   pivot_longer(
     cols = starts_with("POPEST"), names_to = "YEAR", values_to = "TOT_POP"
-  ) %>%
-  transform(YEAR = as.numeric(right(YEAR, 4))) %>%
+  ) |>
+  transform(YEAR = as.numeric(right(YEAR, 4))) |>
   as_tibble()
 
-ny1 <- data4 %>%
+ny1 <- data4 |>
   mutate(
     YEAR = case_when(
       YEAR == 3 ~ 2010,
@@ -113,24 +113,24 @@ ny1 <- data4 %>%
       YEAR == 11 ~ 2018,
       YEAR == 12 ~ 2019
     )
-  ) %>%
-  filter(!is.na(YEAR)) %>%
-  select(CTYNAME, AGEGRP, YEAR, TOT_POP) %>%
+  ) |>
+  filter(!is.na(YEAR)) |>
+  select(CTYNAME, AGEGRP, YEAR, TOT_POP) |>
   as_tibble()
 
-ny2 <- data5 %>%
-  mutate(YEAR = case_when(YEAR == 2 ~ 2020, YEAR == 3 ~ 2021)) %>%
-  filter(!is.na(YEAR)) %>%
-  select(CTYNAME, AGEGRP, YEAR, TOT_POP) %>%
+ny2 <- data5 |>
+  mutate(YEAR = case_when(YEAR == 2 ~ 2020, YEAR == 3 ~ 2021)) |>
+  filter(!is.na(YEAR)) |>
+  select(CTYNAME, AGEGRP, YEAR, TOT_POP) |>
   as_tibble()
 
-nyc <- bind_rows(list(ny0, ny1, ny2)) %>%
+nyc <- bind_rows(list(ny0, ny1, ny2)) |>
   filter(CTYNAME %in% c(
     "Bronx County", "Kings County", "New York County", "Queens County",
     "Richmond County"
-  )) %>%
-  select(YEAR, AGEGRP, TOT_POP) %>%
-  setNames(c("year", "age_group", "population")) %>%
+  )) |>
+  select(YEAR, AGEGRP, TOT_POP) |>
+  setNames(c("year", "age_group", "population")) |>
   mutate(
     # Translate years
     age_group = case_when(
@@ -142,30 +142,30 @@ nyc <- bind_rows(list(ny0, ny1, ny2)) %>%
       age_group >= 16 & age_group <= 17 ~ "75-84",
       age_group == 18 ~ "85"
     )
-  ) %>%
-  filter(!is.na(age_group)) %>%
-  select(year, age_group, population) %>%
-  mutate(year = as.integer(year)) %>%
-  group_by(year, age_group) %>%
-  summarise(population = sum(population)) %>%
-  ungroup() %>%
+  ) |>
+  filter(!is.na(age_group)) |>
+  select(year, age_group, population) |>
+  mutate(year = as.integer(year)) |>
+  group_by(year, age_group) |>
+  summarise(population = sum(population)) |>
+  ungroup() |>
   mutate(jurisdiction = "New York City", .before = "year")
 
-population_grouped <- bind_rows(list(population_grouped, nyc)) %>%
+population_grouped <- bind_rows(list(population_grouped, nyc)) |>
   inner_join(us_states_iso3c, by = c("jurisdiction" = "state"))
 
-population_grouped_forecasted <- population_grouped %>%
-  nest(data = c("year", "population")) %>%
-  mutate(data = lapply(data, forecast_population)) %>%
-  unnest(cols = "data") %>%
-  filter(!is.na(jurisdiction)) %>%
+population_grouped_forecasted <- population_grouped |>
+  nest(data = c("year", "population")) |>
+  mutate(data = lapply(data, forecast_population)) |>
+  unnest(cols = "data") |>
+  filter(!is.na(jurisdiction)) |>
   relocate(iso3c, jurisdiction, age_group)
 
 save_csv(population_grouped_forecasted, "population/usa/six_age_bands")
 
 for (j in unique(population_grouped_forecasted$jurisdiction)) {
-  data <- population_grouped_forecasted %>%
-    filter(jurisdiction == j) %>%
+  data <- population_grouped_forecasted |>
+    filter(jurisdiction == j) |>
     filter(age_group != "all")
   chart <-
     ggplot(data, aes(x = year, y = population)) +

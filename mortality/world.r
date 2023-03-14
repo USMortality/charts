@@ -8,7 +8,7 @@ data_ytd <- read_remote("mortality/world_ytd.csv")
 data_fluseason <- read_remote("mortality/world_fluseason.csv")
 
 types <- c("cmr", "asmr")
-asmr_data <- data_weekly %>% filter(!is.na(asmr))
+asmr_data <- data_weekly |> filter(!is.na(asmr))
 
 for (type in types) {
   countries <- if (type == "cmr") {
@@ -27,10 +27,10 @@ for (type in types) {
   for (country in countries) {
     print(country)
     print("1) Weekly")
-    df <- data_weekly %>%
-      filter(jurisdiction == country) %>%
-      mutate(yearweek = yearweek(date)) %>%
-      mutate(date = date(yearweek)) %>%
+    df <- data_weekly |>
+      filter(jurisdiction == country) |>
+      mutate(yearweek = yearweek(date)) |>
+      mutate(date = date(yearweek)) |>
       as_tsibble(index = date)
 
     chart1 <-
@@ -39,7 +39,7 @@ for (type in types) {
         title = paste0("Weekly ", mortality_title, " [", country, "]"),
         subtitle = paste0(
           "Data until: ",
-          tail(df %>% filter(!is.na(!!mortality_col)), n = 1)$yearweek,
+          tail(df |> filter(!is.na(!!mortality_col)), n = 1)$yearweek,
           "; Source: www.mortality.watch"
         ),
         y = "Deaths/100k",
@@ -55,9 +55,9 @@ for (type in types) {
     ))
 
     print("2) Monthly")
-    df <- data_monthly %>%
-      filter(jurisdiction == country) %>%
-      mutate(date = yearmonth(date)) %>%
+    df <- data_monthly |>
+      filter(jurisdiction == country) |>
+      mutate(date = yearmonth(date)) |>
       as_tsibble(index = date)
 
     chart2 <-
@@ -66,7 +66,7 @@ for (type in types) {
         title = paste0("Monthly ", mortality_title, " [", country, "]"),
         subtitle = paste0(
           "Data until: ",
-          tail(df %>% filter(!is.na(!!mortality_col)), n = 1)$date,
+          tail(df |> filter(!is.na(!!mortality_col)), n = 1)$date,
           "; Source: www.mortality.watch"
         ),
         y = "Deaths/100k",
@@ -82,9 +82,9 @@ for (type in types) {
     ))
 
     print("3) Quarterly")
-    df <- data_quarterly %>%
-      filter(jurisdiction == country) %>%
-      mutate(date = yearquarter(date)) %>%
+    df <- data_quarterly |>
+      filter(jurisdiction == country) |>
+      mutate(date = yearquarter(date)) |>
       as_tsibble(index = date)
 
     chart3 <-
@@ -93,7 +93,7 @@ for (type in types) {
         title = paste0("Quarterly ", mortality_title, " [", country, "]"),
         subtitle = paste0(
           "Data until: ",
-          tail(df %>% filter(!is.na(!!mortality_col)), n = 1)$date,
+          tail(df |> filter(!is.na(!!mortality_col)), n = 1)$date,
           "; Source: www.mortality.watch"
         ),
         y = "Deaths/100k",
@@ -109,9 +109,9 @@ for (type in types) {
     ))
 
     print("4) Yearly")
-    df <- data_yearly %>%
-      filter(jurisdiction == country) %>%
-      mutate(date = ymd(date, truncated = 2L)) %>%
+    df <- data_yearly |>
+      filter(jurisdiction == country) |>
+      mutate(date = ymd(date, truncated = 2L)) |>
       as_tsibble(index = date)
 
     chart4 <-
@@ -133,9 +133,9 @@ for (type in types) {
     ))
 
     print("5) YTD")
-    df <- data_ytd %>%
-      filter(jurisdiction == country) %>%
-      mutate(date = ymd(date, truncated = 2L)) %>%
+    df <- data_ytd |>
+      filter(jurisdiction == country) |>
+      mutate(date = ymd(date, truncated = 2L)) |>
       as_tsibble(index = date)
 
     chart5 <-
@@ -160,10 +160,10 @@ for (type in types) {
     save_chart(chart5, paste("mortality", type, country, "ytd_line", sep = "/"))
 
     print("6) Flu Season")
-    df <- data_fluseason %>%
+    df <- data_fluseason |>
       filter(jurisdiction == country)
-    df <- df %>%
-      mutate(index = seq(1:length(df$date))) %>%
+    df <- df |>
+      mutate(index = seq(1:length(df$date))) |>
       mutate(date = paste0(mid(date, 3, 2), "/", right(date, 2)))
     chart6 <-
       ggplot(df, aes(x = index, y = !!mortality_col)) +
@@ -184,16 +184,16 @@ for (type in types) {
     ))
 
     print("7) STL Decomposition")
-    df <- data_weekly %>%
-      filter(jurisdiction == country) %>%
-      filter(!is.na(!!mortality_col)) %>%
-      mutate(yearweek = yearweek(date)) %>%
-      mutate(date = date(yearweek)) %>%
-      as_tsibble(index = date) %>%
-      group_by_key() %>%
-      fill_gaps() %>%
-      fill(!!mortality_col, .direction = "down") %>%
-      model(STL(!!mortality_col)) %>%
+    df <- data_weekly |>
+      filter(jurisdiction == country) |>
+      filter(!is.na(!!mortality_col)) |>
+      mutate(yearweek = yearweek(date)) |>
+      mutate(date = date(yearweek)) |>
+      as_tsibble(index = date) |>
+      group_by_key() |>
+      fill_gaps() |>
+      fill(!!mortality_col, .direction = "down") |>
+      model(STL(!!mortality_col)) |>
       components()
     chart7 <-
       autoplot(df, .vars = !!mortality_col) +
@@ -203,7 +203,7 @@ for (type in types) {
         ),
         subtitle = paste0(
           "Data until: ",
-          tail(df %>% filter(!is.na(!!mortality_col)), n = 1)$date,
+          tail(df |> filter(!is.na(!!mortality_col)), n = 1)$date,
           "; Source: www.mortality.watch"
         ),
         y = "Deaths/100k",
@@ -216,8 +216,8 @@ for (type in types) {
     save_chart(chart7, paste("mortality", type, country, "stl_line", sep = "/"))
 
     print("8) Yearly (Bar)")
-    df <- data_yearly %>%
-      filter(jurisdiction == country) %>%
+    df <- data_yearly |>
+      filter(jurisdiction == country) |>
       as_tsibble(index = date)
 
     chart8 <-
@@ -244,8 +244,8 @@ for (type in types) {
     ))
 
     print("9) YTD (Bar)")
-    df <- data_ytd %>%
-      filter(jurisdiction == country) %>%
+    df <- data_ytd |>
+      filter(jurisdiction == country) |>
       as_tsibble(index = date)
 
     chart9 <-
@@ -275,10 +275,10 @@ for (type in types) {
     save_chart(chart9, paste("mortality", type, country, "ytd_bar", sep = "/"))
 
     print("10) Flu Season (Bar)")
-    df <- data_fluseason %>%
+    df <- data_fluseason |>
       filter(jurisdiction == country)
-    df <- df %>%
-      mutate(index = seq(1:length(df$date))) %>%
+    df <- df |>
+      mutate(index = seq(1:length(df$date))) |>
       mutate(date = paste0(mid(date, 3, 2), "/", right(date, 2)))
     chart10 <-
       ggplot(df, aes(x = index, y = !!mortality_col)) +
@@ -303,13 +303,13 @@ for (type in types) {
     ))
 
     print("11) Weekly (52W SMA)")
-    df <- data_weekly %>%
-      filter(jurisdiction == country) %>%
-      filter(!is.na(!!mortality_col)) %>%
-      mutate(yearweek = yearweek(date)) %>%
-      mutate(date = date(yearweek)) %>%
-      as_tsibble(index = date) %>%
-      mutate(sma = SMA(!!mortality_col, n = 52)) %>%
+    df <- data_weekly |>
+      filter(jurisdiction == country) |>
+      filter(!is.na(!!mortality_col)) |>
+      mutate(yearweek = yearweek(date)) |>
+      mutate(date = date(yearweek)) |>
+      as_tsibble(index = date) |>
+      mutate(sma = SMA(!!mortality_col, n = 52)) |>
       filter(!is.na(sma))
 
     chart11 <-
@@ -320,7 +320,7 @@ for (type in types) {
         ),
         subtitle = paste0(
           "Data until: ",
-          tail(df %>% filter(!is.na(!!mortality_col)), n = 1)$yearweek,
+          tail(df |> filter(!is.na(!!mortality_col)), n = 1)$yearweek,
           "; Source: www.mortality.watch"
         ),
         y = "Deaths/100k",

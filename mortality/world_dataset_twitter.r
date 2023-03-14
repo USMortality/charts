@@ -12,8 +12,8 @@ auth_as(my_app)
 world_max_date_old <- read_remote("mortality/world_max_date.csv")
 data_ytd <- read_remote("mortality/world_ytd.csv")
 
-df <- data_ytd %>%
-  group_by(iso3c, jurisdiction) %>%
+df <- data_ytd |>
+  group_by(iso3c, jurisdiction) |>
   summarise(max = max(max_date_cmr))
 
 downloadImage <- function(name, type) {
@@ -44,7 +44,7 @@ for (n in seq_len(nrow(df))) {
   val <- df[n, ]
   if (left(val$jurisdiction, 6) != "USA - " &&
     left(val$jurisdiction, 6) != "DEU - ") {
-    val_old <- world_max_date_old %>% filter(iso3c == val$iso3c)
+    val_old <- world_max_date_old |> filter(iso3c == val$iso3c)
     if (length(val_old$iso3c) == 0 || val$max != val_old$max) {
       print(paste(val$jurisdiction, "changed"))
       tweet(val$jurisdiction, val$max)

@@ -68,5 +68,5 @@ Each cronicle job is setup like this:
 cd charts
 git fetch
 git reset origin/master --hard
-Rscript test.r
+Rscript script.r
 ```

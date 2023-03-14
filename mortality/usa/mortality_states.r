@@ -5,37 +5,37 @@ source("population/std_pop.r")
 md_usa <- get_usa_deaths("./data_static/usa_all.csv") # USA 1999/1 - 2020/12
 us_cmr_1 <- as_tibble(read.csv("./data_static/usa_states_1999_2020.csv")) # US States 1999/1 - 2020/12
 us_cmr_2 <- as_tibble(read.csv("./data/usa_states_age_cause_weekly.csv"))
-us_states_iso3c <- as_tibble(read.csv("./data_static/usa_states_iso3c.csv")) %>%
-  add_row(iso3c = "US-NYC", state = "New York City") %>%
+us_states_iso3c <- as_tibble(read.csv("./data_static/usa_states_iso3c.csv")) |>
+  add_row(iso3c = "US-NYC", state = "New York City") |>
   add_row(iso3c = "USA", state = "United States")
 
 # Format: iso3c, country_name, year, time, time_unit, deaths
-md_us_states <- us_cmr_1 %>%
+md_us_states <- us_cmr_1 |>
   mutate(
     state = State,
     year = as.numeric(left(Month.Code, 4)),
     time = as.numeric(right(Month.Code, 2)),
     time_unit = "monthly"
-  ) %>%
+  ) |>
   left_join(
     us_states_iso3c,
     by = "state"
-  ) %>%
-  select(13, 2, 10, 11, 12, 6) %>%
+  ) |>
+  select(13, 2, 10, 11, 12, 6) |>
   setNames(
     c("iso3c", "country_name", "year", "time", "time_unit", "deaths")
-  ) %>%
+  ) |>
   filter(!is.na(year))
 
 md_us_states <- rbind(md_usa, md_us_states)
 
-wd_us_states <- us_cmr_2 %>%
-  select(2, 3, 4, 6) %>%
-  setNames(c("country_name", "year", "time", "deaths")) %>%
+wd_us_states <- us_cmr_2 |>
+  select(2, 3, 4, 6) |>
+  setNames(c("country_name", "year", "time", "deaths")) |>
   left_join(
-    us_states_iso3c %>% mutate(country_name = state),
+    us_states_iso3c |> mutate(country_name = state),
     by = "country_name"
-  ) %>%
+  ) |>
   mutate(
     time_unit = "weekly",
     country_name = ifelse(
@@ -44,36 +44,36 @@ wd_us_states <- us_cmr_2 %>%
       paste0("USA - ", country_name)
     ),
     deaths = ifelse(deaths == 0, NA, deaths)
-  ) %>%
+  ) |>
   select(5, 1, 2, 3, 7, 4) |>
   filter(!is.na(deaths))
 
 # Combine NY/NYC
-wd_us_states_ny <- wd_us_states %>%
-  filter(country_name %in% c("USA - New York", "USA - New York City")) %>%
-  group_by(year, time, time_unit) %>%
-  summarise(deaths = sum(deaths)) %>%
+wd_us_states_ny <- wd_us_states |>
+  filter(country_name %in% c("USA - New York", "USA - New York City")) |>
+  group_by(year, time, time_unit) |>
+  summarise(deaths = sum(deaths)) |>
   ungroup()
 wd_us_states_ny$iso3c <- "US-NY"
 wd_us_states_ny$country_name <- "USA - New York"
-wd_us_states_ny <- wd_us_states_ny %>% relocate(iso3c, country_name)
+wd_us_states_ny <- wd_us_states_ny |> relocate(iso3c, country_name)
 
 wd_us_states <- rbind(
-  wd_us_states %>% filter(iso3c != "US-NY"),
+  wd_us_states |> filter(iso3c != "US-NY"),
   wd_us_states_ny
 )
 
-mdd_us <- md_us_states %>%
-  mutate(date = make_yearmonth(year = year, month = time)) %>%
-  filter(!is.na(year)) %>%
-  getDailyFromMonthly("deaths") %>%
-  select(iso3c, date, deaths) %>%
+mdd_us <- md_us_states |>
+  mutate(date = make_yearmonth(year = year, month = time)) |>
+  filter(!is.na(year)) |>
+  getDailyFromMonthly("deaths") |>
+  select(iso3c, date, deaths) |>
   distinct(iso3c, date, .keep_all = TRUE)
 
-wdd_us <- wd_us_states %>%
-  mutate(date = make_yearweek(year = year, week = time)) %>%
-  getDailyFromWeekly("deaths") %>%
-  select(iso3c, date, deaths) %>%
+wdd_us <- wd_us_states |>
+  mutate(date = make_yearweek(year = year, week = time)) |>
+  getDailyFromWeekly("deaths") |>
+  select(iso3c, date, deaths) |>
   distinct(iso3c, date, .keep_all = TRUE)
 
 # Merge Final DF, use weekly if available, otherwise monthly.
@@ -81,9 +81,9 @@ dd_us <- merge(
   x = mdd_us,
   y = wdd_us,
   by = c("iso3c", "date"), all.x = TRUE, all.y = TRUE
-) %>%
-  mutate(deaths = ifelse(!is.na(deaths.y), deaths.y, deaths.x)) %>%
-  select(iso3c, date, deaths) %>%
+) |>
+  mutate(deaths = ifelse(!is.na(deaths.y), deaths.y, deaths.x)) |>
+  select(iso3c, date, deaths) |>
   as_tibble()
 
 # ASMR/Weekly
@@ -91,21 +91,21 @@ std_pop <- get_esp2013_bins(c(
   "0-24", "25-44", "45-64", "65-74", "75-84", "85+"
 ))
 
-deaths <- as_tibble(read.csv("./data/usa_states_age_weekly.csv")) %>%
-  filter(Type == "Predicted (weighted)") %>%
-  select(Jurisdiction, Year, Week, Age.Group, Number.of.Deaths) %>%
+deaths <- as_tibble(read.csv("./data/usa_states_age_weekly.csv")) |>
+  filter(Type == "Predicted (weighted)") |>
+  select(Jurisdiction, Year, Week, Age.Group, Number.of.Deaths) |>
   mutate(
     state = Jurisdiction,
     year = as.numeric(Year),
     time = as.numeric(Week),
     age_group = Age.Group,
     deaths = Number.of.Deaths
-  ) %>%
+  ) |>
   left_join(
     us_states_iso3c,
     by = "state"
-  ) %>%
-  select(iso3c, state, year, time, age_group, deaths) %>%
+  ) |>
+  select(iso3c, state, year, time, age_group, deaths) |>
   mutate(age_group = case_when(
     age_group == "Under 25 years" ~ "0-24",
     age_group == "25-44 years" ~ "25-44",
@@ -116,58 +116,58 @@ deaths <- as_tibble(read.csv("./data/usa_states_age_weekly.csv")) %>%
   ))
 
 # Filter Incomplete
-n_ <- length((deaths %>% filter(state == "United States"))$state)
-complete_states <- deaths %>%
-  count(state) %>%
+n_ <- length((deaths |> filter(state == "United States"))$state)
+complete_states <- deaths |>
+  count(state) |>
   filter(n >= n_ * .99)
-deaths <- deaths %>% filter(state %in% complete_states$state)
+deaths <- deaths |> filter(state %in% complete_states$state)
 
 # Combine NY/NYC
-deaths_ny <- deaths %>%
-  filter(state %in% c("New York", "New York City")) %>%
-  group_by(year, time, age_group) %>%
-  summarise(deaths = sum(deaths)) %>%
+deaths_ny <- deaths |>
+  filter(state %in% c("New York", "New York City")) |>
+  group_by(year, time, age_group) |>
+  summarise(deaths = sum(deaths)) |>
   ungroup()
 deaths_ny$iso3c <- "US-NY"
 deaths_ny$state <- "New York"
-deaths_ny <- deaths_ny %>% relocate(iso3c, state)
-deaths <- rbind(deaths %>% filter(iso3c != "US-NY"), deaths_ny)
+deaths_ny <- deaths_ny |> relocate(iso3c, state)
+deaths <- rbind(deaths |> filter(iso3c != "US-NY"), deaths_ny)
 
 # Calculate Mortality
-usa_pop <- read_remote("population/usa/six_age_bands.csv") %>%
+usa_pop <- read_remote("population/usa/six_age_bands.csv") |>
   setNames(c("iso3c", "state", "age_group", "year", "population", "is_projection"))
 
 # Calculate ASMR
-dd_asmr_us_states <- deaths %>%
-  inner_join(usa_pop, by = c("state", "year", "age_group")) %>%
-  mutate(mortality = deaths / population * 100000) %>%
-  inner_join(std_pop, by = "age_group") %>%
-  mutate(date = make_yearweek(year = year, week = time)) %>%
-  mutate(asmr = mortality * percentage) %>%
-  select(iso3c.x, date, asmr) %>%
-  setNames(c("iso3c", "date", "asmr")) %>%
-  group_by(iso3c, date) %>%
-  summarise(asmr = sum(asmr)) %>%
-  mutate(asmr = asmr) %>%
-  ungroup() %>%
-  filter(iso3c != "USA") %>%
+dd_asmr_us_states <- deaths |>
+  inner_join(usa_pop, by = c("state", "year", "age_group")) |>
+  mutate(mortality = deaths / population * 100000) |>
+  inner_join(std_pop, by = "age_group") |>
+  mutate(date = make_yearweek(year = year, week = time)) |>
+  mutate(asmr = mortality * percentage) |>
+  select(iso3c.x, date, asmr) |>
+  setNames(c("iso3c", "date", "asmr")) |>
+  group_by(iso3c, date) |>
+  summarise(asmr = sum(asmr)) |>
+  mutate(asmr = asmr) |>
+  ungroup() |>
+  filter(iso3c != "USA") |>
   getDailyFromWeekly("asmr")
 
 # ASMR Yearly
 getAgeData <- function(age_group) {
   a <- as_tibble(read.csv(paste0(
     "./data_static/us_states_1999-2017/", age_group, ".csv"
-  ))) %>%
-    select(2, 4, 6) %>%
-    setNames(c("state", "year", "deaths")) %>%
-    filter(!is.na(date), !is.na(year)) %>%
+  ))) |>
+    select(2, 4, 6) |>
+    setNames(c("state", "year", "deaths")) |>
+    filter(!is.na(date), !is.na(year)) |>
     mutate(age_group = gsub("_", "-", age_group), .after = year)
   b <- as_tibble(read.csv(paste0(
     "./data_static/us_states_2018+/", age_group, ".csv"
-  ))) %>%
-    select(2, 5, 6) %>%
-    setNames(c("state", "year", "deaths")) %>%
-    filter(!is.na(date), !is.na(year)) %>%
+  ))) |>
+    select(2, 5, 6) |>
+    setNames(c("state", "year", "deaths")) |>
+    filter(!is.na(date), !is.na(year)) |>
     mutate(age_group = gsub("_", "-", age_group), .after = year)
   rbind(a, b)
 }
@@ -181,18 +181,18 @@ df <- rbind(
   getAgeData("85+")
 )
 
-df <- df %>%
-  inner_join(usa_pop, by = c("state", "year", "age_group")) %>%
-  mutate(mortality = deaths / population * 100000) %>%
-  inner_join(std_pop, by = "age_group") %>%
-  mutate(date = ymd(paste0(year, "01-01"))) %>%
-  mutate(asmr = mortality * percentage) %>%
-  select(iso3c, date, asmr) %>%
-  setNames(c("iso3c", "date", "asmr")) %>%
-  group_by(iso3c, date) %>%
-  summarise(asmr = sum(asmr)) %>%
-  mutate(asmr = asmr) %>%
-  ungroup() %>%
+df <- df |>
+  inner_join(usa_pop, by = c("state", "year", "age_group")) |>
+  mutate(mortality = deaths / population * 100000) |>
+  inner_join(std_pop, by = "age_group") |>
+  mutate(date = ymd(paste0(year, "01-01"))) |>
+  mutate(asmr = mortality * percentage) |>
+  select(iso3c, date, asmr) |>
+  setNames(c("iso3c", "date", "asmr")) |>
+  group_by(iso3c, date) |>
+  summarise(asmr = sum(asmr)) |>
+  mutate(asmr = asmr) |>
+  ungroup() |>
   getDailyFromYearly("asmr")
 
 # Merge Final DF, use weekly if available, otherwise yearly.
@@ -200,6 +200,6 @@ dd_asmr_us_states <- merge(
   x = dd_asmr_us_states,
   y = df,
   by = c("iso3c", "date"), all.y = TRUE
-) %>%
-  mutate(asmr = ifelse(is.na(asmr.x), asmr.y, asmr.x)) %>%
+) |>
+  mutate(asmr = ifelse(is.na(asmr.x), asmr.y, asmr.x)) |>
   select(iso3c, date, asmr)

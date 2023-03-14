@@ -4,39 +4,39 @@ data1 <- as_tibble(read.csv("./data_static/usa_deaths_causes_2014_2019.csv"))
 data2 <- as_tibble(read.csv("./data/usa_deaths_causes_2020_n.csv"))
 population <- read_remote("population/usa/six_age_bands.csv")
 
-a <- data1 %>%
-  filter(Jurisdiction.of.Occurrence == "United States") %>%
-  select(Week.Ending.Date, Malignant.neoplasms..C00.C97.) %>%
+a <- data1 |>
+  filter(Jurisdiction.of.Occurrence == "United States") |>
+  select(Week.Ending.Date, Malignant.neoplasms..C00.C97.) |>
   mutate(date = lubridate::mdy(Week.Ending.Date))
 
-b <- data2 %>%
-  filter(Jurisdiction.of.Occurrence == "United States") %>%
-  select(Week.Ending.Date, Malignant.neoplasms..C00.C97.) %>%
+b <- data2 |>
+  filter(Jurisdiction.of.Occurrence == "United States") |>
+  select(Week.Ending.Date, Malignant.neoplasms..C00.C97.) |>
   mutate(date = lubridate::ymd(Week.Ending.Date))
 
-us_population <- population %>%
-  filter(jurisdiction == "United States") %>%
+us_population <- population |>
+  filter(jurisdiction == "United States") |>
   filter(age_group == "all")
 
-data <- rbind(a, b) %>%
-  mutate(date = date(date)) %>%
-  mutate(year = year(date)) %>%
-  mutate(deaths = as.integer(gsub(",", "", Malignant.neoplasms..C00.C97.))) %>%
-  head(-4) %>% # Exclude last 4 weeks, b/c of reporting delay.
-  left_join(us_population, by = "year") %>%
-  getDailyFromWeekly("deaths") %>%
-  mutate(mortality = deaths / population * 100000) %>%
-  select(date, year, deaths, mortality) %>%
+data <- rbind(a, b) |>
+  mutate(date = date(date)) |>
+  mutate(year = year(date)) |>
+  mutate(deaths = as.integer(gsub(",", "", Malignant.neoplasms..C00.C97.))) |>
+  head(-4) |> # Exclude last 4 weeks, b/c of reporting delay.
+  left_join(us_population, by = "year") |>
+  getDailyFromWeekly("deaths") |>
+  mutate(mortality = deaths / population * 100000) |>
+  select(date, year, deaths, mortality) |>
   as_tsibble(index = date)
 
 save_csv(data, paste("mortality", "usa", "cancer", sep = "/"))
 
 # Weekly
-w_data <- data %>%
-  index_by(yearweek(date)) %>%
-  summarise(sum(mortality)) %>%
-  head(-1) %>%
-  tail(-1) %>%
+w_data <- data |>
+  index_by(yearweek(date)) |>
+  summarise(sum(mortality)) |>
+  head(-1) |>
+  tail(-1) |>
   setNames(c("date", "mortality"))
 chart1 <-
   ggplot(w_data, aes(x = date, y = mortality)) +
@@ -54,9 +54,9 @@ chart1 <-
 
 # STL
 chart2 <-
-  w_data %>%
-  model(STL(mortality)) %>%
-  components() %>%
+  w_data |>
+  model(STL(mortality)) |>
+  components() |>
   autoplot() +
   labs(
     title = "Weekly Cancer Mortality - STL Decomposition [USA]",
@@ -66,15 +66,15 @@ chart2 <-
   scale_x_yearweek(date_breaks = "1 year", date_labels = "%Y")
 
 # Monthly
-m_data <- data %>%
-  index_by(yearmonth(date)) %>%
-  summarise(sum(mortality)) %>%
-  ungroup() %>%
-  head(-1) %>%
+m_data <- data |>
+  index_by(yearmonth(date)) |>
+  summarise(sum(mortality)) |>
+  ungroup() |>
+  head(-1) |>
   setNames(c("date", "mortality"))
 
 chart3 <-
-  m_data %>%
+  m_data |>
   ggplot(aes(x = date, y = mortality)) +
   labs(
     title = paste0("Monthly Cancer Mortality [USA]"),
@@ -87,7 +87,7 @@ chart3 <-
   scale_x_yearmonth(date_breaks = "1 year", date_labels = "%Y") +
   watermark(df$yearmonth, df$value_p) +
   geom_smooth(
-    data = m_data %>% filter(year(date) %in% seq(2015, 2020)),
+    data = m_data |> filter(year(date) %in% seq(2015, 2020)),
     method = "lm_right",
     fullrange = TRUE,
     col = "#249C31"
@@ -99,15 +99,15 @@ chart3 <-
   )
 
 # Quarterly
-q_data <- data %>%
-  index_by(yearquarter(date)) %>%
-  summarise(sum(mortality)) %>%
+q_data <- data |>
+  index_by(yearquarter(date)) |>
+  summarise(sum(mortality)) |>
   setNames(c("date", "mortality"))
 
-chart4 <- q_data %>%
-  setNames(c("date", "mortality")) %>%
-  head(-1) %>%
-  tail(-1) %>%
+chart4 <- q_data |>
+  setNames(c("date", "mortality")) |>
+  head(-1) |>
+  tail(-1) |>
   ggplot(aes(x = date, y = mortality)) +
   labs(
     title = paste0("Quarterly Cancer Mortality [USA]"),
@@ -120,7 +120,7 @@ chart4 <- q_data %>%
   scale_x_yearquarter(date_breaks = "1 year", date_labels = "%Y") +
   watermark(df$yearmonth, df$value_p) +
   geom_smooth(
-    data = q_data %>% filter(year(date) %in% seq(2015, 2020)),
+    data = q_data |> filter(year(date) %in% seq(2015, 2020)),
     method = "lm_right",
     fullrange = TRUE,
     col = "#249C31"

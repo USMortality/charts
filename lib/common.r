@@ -156,18 +156,18 @@ getCountriesForType <- function(mortality_type, data_yearly, asmr_data) {
 }
 
 get_usa_deaths <- function(file) {
-  deaths_usa <- as_tibble(read.csv(file)) %>%
-    mutate(year = left(Month.Code, 4), time = right(Month.Code, 2)) %>%
+  deaths_usa <- as_tibble(read.csv(file)) |>
+    mutate(year = left(Month.Code, 4), time = right(Month.Code, 2)) |>
     select(7, 8, 4)
   deaths_usa$iso3c <- "USA"
   deaths_usa$country_name <- "United States"
   deaths_usa$time_unit <- "monthly"
 
-  deaths_usa %>%
+  deaths_usa |>
     setNames(
       c("year", "time", "deaths", "iso3c", "country_name", "time_unit")
-    ) %>%
-    relocate(4, 5, 1, 2, 6, 3) %>%
+    ) |>
+    relocate(4, 5, 1, 2, 6, 3) |>
     mutate(
       year = as.numeric(year),
       time = as.numeric(time)
@@ -175,8 +175,8 @@ get_usa_deaths <- function(file) {
 }
 
 get_usa_population <- function(file) {
-  as_tibble(read.csv(file)) %>%
-    select(2, 5) %>%
+  as_tibble(read.csv(file)) |>
+    select(2, 5) |>
     setNames(c("year", "population"))
 }
 
@@ -186,22 +186,22 @@ get_usa_mortality <- function(age_group) {
   )
   deaths_usa <- get_usa_deaths(
     paste0("./data_static/usa_", age_group, ".csv")
-  ) %>%
-    inner_join(pop_usa, by = "year") %>%
+  ) |>
+    inner_join(pop_usa, by = "year") |>
     mutate(mortality = deaths / population * 100000)
   deaths_usa$age_group <- str_replace(age_group, "_", "-")
 
-  deaths_usa %>% select(3, 4, 9, 8)
+  deaths_usa |> select(3, 4, 9, 8)
 }
 
 getDailyFromN <- function(wd, column_name, fun) {
   col <- sym(column_name)
-  df <- wd %>%
-    uncount(fun(date), .id = "day") %>%
-    mutate(date = date(date)) %>%
-    mutate(date = date + days(day - 1)) %>%
+  df <- wd |>
+    uncount(fun(date), .id = "day") |>
+    mutate(date = date(date)) |>
+    mutate(date = date + days(day - 1)) |>
     mutate("{column_name}" := !!col / fun(date))
-  df %>% select(-ncol(df))
+  df |> select(-ncol(df))
 }
 
 getDailyFromWeekly <- function(wd, column_name) {
@@ -226,19 +226,19 @@ getDailyFromYearly <- function(wd, column_name) {
 
 # Forecast n+3
 forecast_population <- function(data) {
-  y <- data %>%
-    as_tsibble(index = year) %>%
-    model(NAIVE(population ~ drift())) %>%
+  y <- data |>
+    as_tsibble(index = year) |>
+    model(NAIVE(population ~ drift())) |>
     forecast(h = 3)
 
   last_available_year <- data$year[length(data$year)]
   data$is_projection <- FALSE
-  data %>%
+  data |>
     add_row(
       year = as.integer(last_available_year + 1),
       population = as.integer(y$.mean[1]),
       is_projection = TRUE
-    ) %>%
+    ) |>
     add_row(
       year = as.integer(last_available_year + 2),
       population = as.integer(y$.mean[2]),

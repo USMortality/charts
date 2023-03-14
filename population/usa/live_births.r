@@ -2,12 +2,12 @@ source("lib/common.r")
 
 data <- read.csv("./data/covid19_usa_live_births.csv")
 
-df <- as_tibble(data) %>%
-  filter(State == "UNITED STATES") %>%
-  filter(Indicator == "Number of Live Births") %>%
-  filter(Period == "Monthly") %>%
-  mutate(yearmonth = yearmonth(paste0(Year, "-", Month))) %>%
-  select(yearmonth, Data.Value) %>%
+df <- as_tibble(data) |>
+  filter(State == "UNITED STATES") |>
+  filter(Indicator == "Number of Live Births") |>
+  filter(Period == "Monthly") |>
+  mutate(yearmonth = yearmonth(paste0(Year, "-", Month))) |>
+  select(yearmonth, Data.Value) |>
   setNames(c("yearmonth", "births"))
 
 save_csv(df, "population/usa/live_births")

@@ -4,68 +4,68 @@ data_yearly <- read_remote("mortality/world_yearly.csv")
 data_baseline <- read_remote("mortality/world_baseline.csv")
 
 types <- c("cmr", "asmr")
-asmr_data <- data_yearly %>% filter(!is.na(asmr))
+asmr_data <- data_yearly |> filter(!is.na(asmr))
 
 calculate_baseline <- function(table, forecast_interval = 1) {
-  r <- table %>%
-    filter(!!mortality_col > 0) %>%
-    filter(!is.na(!!mortality_col)) %>%
-    model(TSLM(!!mortality_col ~ trend())) %>%
+  r <- table |>
+    filter(!!mortality_col > 0) |>
+    filter(!is.na(!!mortality_col)) |>
+    model(TSLM(!!mortality_col ~ trend())) |>
     forecast(h = forecast_interval)
-  hl <- hilo(r, 99.99) %>% unpack_hilo(cols = `99.99%`)
+  hl <- hilo(r, 99.99) |> unpack_hilo(cols = `99.99%`)
   data.frame(
     date = r$date,
     mean = round(r$.mean, digits = 1),
     lower = round(hl$`99.99%_lower`, digits = 1),
     upper = round(hl$`99.99%_upper`, digits = 1)
-  ) %>% as_tibble()
+  ) |> as_tibble()
 }
 
 getData <- function(df, bl_size, mortality_col) {
-  training_data <- df %>%
-    filter(date < 2020) %>%
-    as_tsibble(index = date) %>%
-    slide_tsibble(.size = bl_size) %>%
+  training_data <- df |>
+    filter(date < 2020) |>
+    as_tsibble(index = date) |>
+    slide_tsibble(.size = bl_size) |>
     nest(data = !.id)
 
-  last_n_years <- training_data %>%
-    mutate(data = lapply(data, calculate_baseline)) %>%
-    unnest(cols = c(data)) %>%
+  last_n_years <- training_data |>
+    mutate(data = lapply(data, calculate_baseline)) |>
+    unnest(cols = c(data)) |>
     select(!.id)
   last_n_years$fc_type <- rep("1 year", length(last_n_years$date))
 
   # First n years
-  first_n_years <- training_data$data[[1]] %>%
-    filter(!is.na(!!mortality_col)) %>%
-    model(TSLM(!!mortality_col ~ trend())) %>%
-    augment() %>%
-    select(2, 4) %>%
-    setNames(c("date", "mean")) %>%
+  first_n_years <- training_data$data[[1]] |>
+    filter(!is.na(!!mortality_col)) |>
+    model(TSLM(!!mortality_col ~ trend())) |>
+    augment() |>
+    select(2, 4) |>
+    setNames(c("date", "mean")) |>
     as_tibble()
 
   fc <- calculate_baseline(training_data$data[[length(training_data$data)]], 3)
   fc$fc_type <- rep("3 year", 3)
 
-  bind_rows(first_n_years, last_n_years, fc) %>%
+  bind_rows(first_n_years, last_n_years, fc) |>
     setNames(c(
       "date", "baseline", "baseline_lower", "baseline_upper", "fc_type"
-    )) %>%
+    )) |>
     mutate(
       iso3c = df$iso3c[1],
       jurisdiction = df$jurisdiction[1],
       baseline = round(baseline, digits = 1)
-    ) %>%
+    ) |>
     relocate(iso3c, jurisdiction)
 }
 
 calculateExcess <- function(data) {
-  data %>%
+  data |>
     mutate(
       excess = round(!!mortality_col - baseline, digits = 1),
       excess_p = round((!!mortality_col - baseline) / baseline, digits = 3),
       sign_excess = round(!!mortality_col - baseline_upper, digits = 1),
       sign_excess_p = round((!!mortality_col - baseline_upper) / baseline, digits = 3),
-    ) %>%
+    ) |>
     mutate(
       sign_excess = ifelse(sign_excess >= 0, sign_excess, NA),
       sign_excess_p = ifelse(sign_excess_p >= 0, sign_excess_p, NA),
@@ -73,12 +73,12 @@ calculateExcess <- function(data) {
 }
 
 country <- "Germany"
-df <- data_yearly %>% filter(jurisdiction == country)
+df <- data_yearly |> filter(jurisdiction == country)
 mortality_type <- "cmr"
 mortality_col <- sym(mortality_type)
 bl_size <- 4
-data <- df %>%
-  select(iso3c, jurisdiction, date, !!mortality_col) %>%
+data <- df |>
+  select(iso3c, jurisdiction, date, !!mortality_col) |>
   right_join(
     getData(df, bl_size, mortality_col),
     by = c("iso3c", "jurisdiction", "date")
@@ -105,13 +105,13 @@ for (mortality_type in types) {
   for (country in countries) {
     print(country)
 
-    bl_size <- (data_baseline %>%
-      filter(name == country) %>%
+    bl_size <- (data_baseline |>
+      filter(name == country) |>
       filter(type == mortality_type))$window
-    df <- data_yearly %>% filter(name == country)
-    if (nrow(df %>% filter(date < 2020)) < 3) next
-    data <- df %>%
-      select(iso3c, name, date, !!mortality_col) %>%
+    df <- data_yearly |> filter(name == country)
+    if (nrow(df |> filter(date < 2020)) < 3) next
+    data <- df |>
+      select(iso3c, name, date, !!mortality_col) |>
       right_join(
         getData(df, bl_size, mortality_col),
         by = c("iso3c", "name", "date")
@@ -137,7 +137,7 @@ for (mortality_type in types) {
         linewidth = 1
       ) +
       geom_ribbon(
-        data = data %>% filter(fc_type == "1 year"),
+        data = data |> filter(fc_type == "1 year"),
         aes(
           ymin = baseline_lower,
           ymax = baseline_upper,
@@ -148,7 +148,7 @@ for (mortality_type in types) {
         color = "#5ED62B"
       ) +
       geom_ribbon(
-        data = data %>% filter(fc_type != "1 year"),
+        data = data |> filter(fc_type != "1 year"),
         aes(
           ymin = baseline_lower,
           ymax = baseline_upper,

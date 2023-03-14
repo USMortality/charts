@@ -7,10 +7,10 @@ sp500 <- getSymbols("^GSPC", from = sdate, to = edate, auto.assign = F)
 df <- as.data.frame(sp500)
 df$date <- row.names(df)
 
-df <- df %>%
-  select(date, GSPC.Close) %>%
-  mutate(close = GSPC.Close) %>%
-  select(date, close) %>%
+df <- df |>
+  select(date, GSPC.Close) |>
+  mutate(close = GSPC.Close) |>
+  select(date, close) |>
   mutate(date = as.Date(date))
 
 save_csv(df, "finance/usa/sp500")

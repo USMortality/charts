@@ -6,17 +6,17 @@ req <- POST("https://api.bls.gov/publicAPI/v2/timeseries/data/",
   body = '{"seriesid": ["CUUR0000SA0"], "startyear":"2013", "endyear":"2022"}'
 )
 stop_for_status(req)
-data <- content(req, "text") %>% fromJSON()
+data <- content(req, "text") |> fromJSON()
 
 # Transform
-df <- as_tibble(data$Results$series$data[[1]]) %>%
-  mutate(year = as.integer(year)) %>%
-  mutate(period = as.integer(right(period, 2))) %>%
-  mutate(value = as.double(value)) %>%
-  mutate(yearmonth = yearmonth(paste0(year, "-", period))) %>%
-  mutate(value_ref = lead(value, 12)) %>%
-  mutate(value_p = value / value_ref - 1) %>%
-  filter(!is.na(value_ref)) %>%
+df <- as_tibble(data$Results$series$data[[1]]) |>
+  mutate(year = as.integer(year)) |>
+  mutate(period = as.integer(right(period, 2))) |>
+  mutate(value = as.double(value)) |>
+  mutate(yearmonth = yearmonth(paste0(year, "-", period))) |>
+  mutate(value_ref = lead(value, 12)) |>
+  mutate(value_p = value / value_ref - 1) |>
+  filter(!is.na(value_ref)) |>
   select(yearmonth, value_p)
 
 save_csv(df, "economy/usa/inflation")

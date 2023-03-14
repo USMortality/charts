@@ -6,13 +6,13 @@ req <- POST("https://api.bls.gov/publicAPI/v2/timeseries/data/",
   body = '{"seriesid": ["LNS14000000"], "startyear":"2013", "endyear":"2022"}'
 )
 stop_for_status(req)
-data <- content(req, "text") %>% fromJSON()
+data <- content(req, "text") |> fromJSON()
 
 # Transform
-df <- as_tibble(data$Results$series$data[[1]]) %>%
-  mutate(year = as.integer(year)) %>%
-  mutate(value_p = as.double(value) / 100) %>%
-  mutate(yearmonth = yearmonth(paste0(year, "-", right(period, 2)))) %>%
+df <- as_tibble(data$Results$series$data[[1]]) |>
+  mutate(year = as.integer(year)) |>
+  mutate(value_p = as.double(value) / 100) |>
+  mutate(yearmonth = yearmonth(paste0(year, "-", right(period, 2)))) |>
   select(yearmonth, value_p)
 
 save_csv(df, "economy/usa/unemployment")

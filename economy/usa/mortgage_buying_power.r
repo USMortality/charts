@@ -16,9 +16,9 @@ calculateAmount <- function(rate) {
   monthly_payment / (monthly_rate * (r + 1) / r)
 }
 
-data <- df %>%
-  setNames(c("date", "rate")) %>%
-  mutate(date = ymd(date), possible_price = calculateAmount(rate)) %>%
+data <- df |>
+  setNames(c("date", "rate")) |>
+  mutate(date = ymd(date), possible_price = calculateAmount(rate)) |>
   as_tsibble(index = date)
 
 chart <- ggplot(data, aes(x = date)) +

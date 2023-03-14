@@ -80,17 +80,3 @@ who2015 <- html_table(who2015_2[1], fill = TRUE)
 get_who2015_bins <- function(age_groups) {
   get_std_pop_weights(age_groups, who2015)
 }
-
-# pop_5
-get_esp2013_bins(c("0-14", "15-64", "65-74", "75-84", "85+"))
-
-# pop_6
-get_esp2013_bins(c("0-24", "25-44", "45-64", "65-74", "75-84", "85+"))
-
-# pop_4
-get_esp2013_bins(c("0-64", "65-74", "75-84", "85+"))
-
-# pop_9
-get_esp2013_bins(c(
-  "0-9", "10-19", "20-29", "30-39", "40-49", "50-59", "60-69", "70-79", "80+"
-))
