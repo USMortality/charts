@@ -1,4 +1,5 @@
 source("lib/common.r")
+source("population/std_pop.r")
 
 # CMR
 md_usa <- get_usa_deaths("./data_static/usa_all.csv") # USA 1999/1 - 2020/12
@@ -86,7 +87,9 @@ dd_us <- merge(
   as_tibble()
 
 # ASMR/Weekly
-std_pop <- read_remote("population/who_std_pop_2.csv")
+std_pop <- get_esp2013_bins(c(
+  "0-24", "25-44", "45-64", "65-74", "75-84", "85+"
+))
 
 deaths <- as_tibble(read.csv("./data/usa_states_age_weekly.csv")) %>%
   filter(Type == "Predicted (weighted)") %>%

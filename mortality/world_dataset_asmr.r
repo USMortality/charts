@@ -1,9 +1,8 @@
 source("lib/common.r")
+source("population/std_pop.r")
 
 deaths <- as_tibble(read.csv("./data/mortality_org.csv", skip = 2))
-std_pop <- as_tibble(
-  read.csv("https://s3.mortality.watch/data/population/who_std_pop.csv")
-)
+std_pop <- get_esp2013_bins(c("0-14", "15-64", "65-74", "75-84", "85+"))
 
 wd <- deaths %>%
   filter(Sex == "b") %>%

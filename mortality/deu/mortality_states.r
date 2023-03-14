@@ -1,4 +1,5 @@
 source("lib/common.r")
+source("population/std_pop.r")
 
 de_states <- as_tibble(read.csv("./data_static/deu_states_iso3c.csv"))
 df <- read_remote("mortality/deu/deaths.csv") %>%
@@ -16,7 +17,7 @@ dd_de <- df %>%
   arrange(iso3c, date)
 
 # ASMR
-std_pop <- read_remote("population/who_std_pop_3.csv")
+std_pop <- get_esp2013_bins(c("0-64", "65-74", "75-84", "85+"))
 source("population/deu/deu.r")
 
 dd_asmr_de_states <- df %>%
