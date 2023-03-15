@@ -19,7 +19,7 @@ wd <- deaths |>
     values_to = "mortality"
   ) |>
   inner_join(std_pop, by = "age_group") |>
-  mutate(asmr = mortality / 52 * percentage) |>
+  mutate(asmr = mortality / 52 * weight) |>
   select(-5, -7) |>
   group_by(iso3c, year, week, date) |>
   summarise(asmr = sum(asmr)) |>
@@ -47,7 +47,7 @@ mortality_usa <- rbind(
 
 md_usa <- mortality_usa |>
   inner_join(std_pop, by = "age_group") |>
-  mutate(asmr = mortality * percentage) |>
+  mutate(asmr = mortality * weight) |>
   select(-3, -4, -5) |>
   group_by(year, time) |>
   summarise(asmr = sum(asmr)) |>

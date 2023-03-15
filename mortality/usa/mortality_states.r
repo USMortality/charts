@@ -146,7 +146,7 @@ dd_asmr_us_states <- deaths |>
   mutate(mortality = deaths / population * 100000) |>
   inner_join(std_pop, by = "age_group") |>
   mutate(date = make_yearweek(year = year, week = time)) |>
-  mutate(asmr = mortality * percentage) |>
+  mutate(asmr = mortality * weight) |>
   select(iso3c.x, date, asmr) |>
   setNames(c("iso3c", "date", "asmr")) |>
   group_by(iso3c, date) |>
@@ -189,7 +189,7 @@ df <- df |>
   mutate(mortality = deaths / population * 100000) |>
   inner_join(std_pop, by = "age_group") |>
   mutate(date = ymd(paste0(year, "01-01"))) |>
-  mutate(asmr = mortality * percentage) |>
+  mutate(asmr = mortality * weight) |>
   select(iso3c, date, asmr) |>
   setNames(c("iso3c", "date", "asmr")) |>
   group_by(iso3c, date) |>

@@ -31,7 +31,7 @@ dd_asmr_de_states <- df |>
   inner_join(de_population_age, by = c("iso3c", "year", "age_group")) |>
   mutate(mortality = deaths / population * 100000) |>
   inner_join(std_pop, by = "age_group") |>
-  mutate(asmr = mortality * percentage) |>
+  mutate(asmr = mortality * weight) |>
   select(iso3c, year, week, asmr) |>
   setNames(c("iso3c", "year", "week", "asmr")) |>
   group_by(iso3c, year, week) |>
