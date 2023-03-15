@@ -60,9 +60,6 @@ esp2013 <- esp2013_5y |>
   select(2, 3) |>
   setNames(c("age", "weight"))
 
-ggplot(esp2013, aes(x = age, y = weight)) +
-  geom_line()
-
 get_esp2013_bins <- function(age_groups) {
   get_std_pop_weights(age_groups, esp2013)
 }
@@ -73,13 +70,14 @@ who2015_2 <- html_nodes(who2015_1, "table")
 who2015_3 <- html_table(who2015_2[1], fill = TRUE)
 who2015 <- who2015_3[[1]][, 1:2] |>
   setNames(c("age_group", "weight")) |>
-  mutate(key = age_group) |>
+  filter(age_group != "Total") |>
+  mutate(key = age_group, weight = weight / 100) |>
   nest(data = c(age_group, weight)) |>
   mutate(data = lapply(data, get_weights)) |>
   unnest(cols = c(data)) |>
   select(2, 3) |>
   setNames(c("age", "weight")) |>
-  filter(!is.na(age_group))
+  filter(!is.infinite(weight))
 
 get_who2015_bins <- function(age_groups) {
   get_std_pop_weights(age_groups, who2015)
