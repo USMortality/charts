@@ -228,6 +228,7 @@ getDailyFromYearly <- function(wd, column_name) {
 forecast_population <- function(data) {
   y <- data |>
     as_tsibble(index = year) |>
+    tail(n = 5) |>
     model(NAIVE(population ~ drift())) |>
     forecast(h = 3)
 
