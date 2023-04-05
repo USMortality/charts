@@ -219,7 +219,7 @@ getDailyFromMonthly <- function(wd, column_name) {
 getDailyFromYearly <- function(wd, column_name) {
   getDailyFromN(wd, column_name, function(date) {
     y <- year(date)
-    x <- interval(paste0(y, "-01-01"), paste0(y, "-12-31"))
+    x <- lubridate::interval(paste0(y, "-01-01"), paste0(y, "-12-31"))
     x %/% days(1) + 1
   })
 }
