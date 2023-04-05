@@ -2,7 +2,7 @@ FROM eddelbuettel/r2u:22.04
 
 RUN echo "Updating deps..."
 RUN apt-get update
-RUN apt-get install -y nodejs npm tini curl git libssl-dev bash jq mariadb-server
+RUN apt-get install -y nodejs npm tini curl git libssl-dev bash jq mariadb-server vim
 
 RUN curl -s https://raw.githubusercontent.com/jhuckaby/Cronicle/master/bin/install.js | node
 WORKDIR /opt/cronicle
@@ -30,6 +30,7 @@ ENV CRONICLE_Storage__AWS__credentials__secretAccessKey=${S3_SECRET}
 ENV CRONICLE_Storage__AWS__credentials__accessKeyId=minio
 ENV CRONICLE_mail_options__auth__user=${SENDINBLUE_USER}
 ENV CRONICLE_mail_options__auth__pass=${SENDINBLUE_PASS}
+ENV CRONICLE_client__custom_live_log_socket_url="https://cron.mortality.watch"
 
 WORKDIR /opt/cronicle/
 ADD entrypoint.sh .
