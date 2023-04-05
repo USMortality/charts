@@ -43,4 +43,8 @@ df <- rbind(result1, result2) |>
   filter(!is.na(deaths)) |>
   arrange(year, jurisdiction, age_group, week)
 
-save_csv(df, "mortality/deu/deaths")
+date <- now() %m-% weeks(2)
+year <- year(date)
+week <- week(date)
+
+save_csv(df, paste0("deaths/deu/Tote_", year, "_", week))

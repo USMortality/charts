@@ -46,6 +46,7 @@ ENV OPENSSL_CONF=/opt/cronicle/openssl.cnf
 
 # Start Maria DB
 RUN service mariadb start
+RUN mysql -e "set password = password('');"
 
 # Install MinIO Client
 RUN curl https://dl.min.io/client/mc/release/linux-amd64/mc --create-dirs -o $HOME/minio-binaries/mc
