@@ -47,6 +47,12 @@ ENV OPENSSL_CONF=/opt/cronicle/openssl.cnf
 # Start Maria DB
 RUN service mariadb start
 
+# Install MinIO Client
+RUN curl https://dl.min.io/client/mc/release/linux-amd64/mc --create-dirs -o $HOME/minio-binaries/mc
+RUN chmod +x $HOME/minio-binaries/mc
+RUN export PATH=$PATH:$HOME/minio-binaries/
+RUN $HOME/minio-binaries/mc alias set minio https://s3.mortality.watch minio $S3_SECRET
+
 EXPOSE 3012
 ENTRYPOINT ["/bin/tini", "--"]
 CMD ["sh", "/opt/cronicle/entrypoint.sh"]
