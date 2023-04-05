@@ -2,7 +2,7 @@ FROM eddelbuettel/r2u:22.04
 
 RUN echo "Updating deps..."
 RUN apt-get update
-RUN apt-get install -y nodejs npm tini curl git libssl-dev bash jq mariadb-server vim
+RUN apt-get install -y nodejs npm tini curl git libssl-dev bash jq mariadb-server vim csvkit
 
 RUN curl -s https://raw.githubusercontent.com/jhuckaby/Cronicle/master/bin/install.js | node
 WORKDIR /opt/cronicle
