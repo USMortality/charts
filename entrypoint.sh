@@ -8,5 +8,8 @@ if [ ! -f /opt/cronicle/.setup_done ]; then
   touch /opt/cronicle/.setup_done
 fi
 
+service mariadb start
+mysql -e "set password = password('');"
+
 # Run cronicle
 node /opt/cronicle/lib/main.js
