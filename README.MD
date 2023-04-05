@@ -18,6 +18,11 @@ See https://www.mortality.watch/ for the frontend.
 # Configuration
 
 ## MinIO/S3
+Set build args:
+```
+dokku docker-options:add cronicle build '--build-arg S3_SECRET=XXX --build-arg SENDINBLUE_USER=XXX --build-arg SENDINBLUE_PASS=XXX'
+```
+
 ```
 dokku config:set minio \
   MINIO_SERVER_URL=https://s3.mortality.watch \
