@@ -2,7 +2,7 @@ FROM eddelbuettel/r2u:22.04
 
 RUN echo "Updating deps..."
 RUN apt-get update
-RUN apt-get install -y nodejs npm tini curl git libssl-dev bash jq
+RUN apt-get install -y nodejs npm tini curl git libssl-dev bash jq mariadb-server
 
 RUN curl -s https://raw.githubusercontent.com/jhuckaby/Cronicle/master/bin/install.js | node
 WORKDIR /opt/cronicle
@@ -43,6 +43,9 @@ RUN /opt/cronicle/install_r_deps.sh
 # Configure SSL version for R downloader
 ADD openssl.cnf .
 ENV OPENSSL_CONF=/opt/cronicle/openssl.cnf
+
+# Start Maria DB
+RUN service mariadb start
 
 EXPOSE 3012
 ENTRYPOINT ["/bin/tini", "--"]
