@@ -32,7 +32,6 @@ ENV CRONICLE_mail_options__auth__user=${SENDINBLUE_USER}
 ENV CRONICLE_mail_options__auth__pass=${SENDINBLUE_PASS}
 ENV CRONICLE_client__custom_live_log_socket_url="https://cron.mortality.watch"
 
-WORKDIR /opt/cronicle/
 ADD entrypoint.sh .
 ADD config.json .
 
@@ -46,10 +45,10 @@ ADD openssl.cnf .
 ENV OPENSSL_CONF=/opt/cronicle/openssl.cnf
 
 # Install MinIO Client
-RUN curl https://dl.min.io/client/mc/release/linux-amd64/mc --create-dirs -o $HOME/minio-binaries/mc
-RUN chmod +x $HOME/minio-binaries/mc
-RUN echo "export PATH=$PATH:$HOME/minio-binaries/" >> ~/.bashrc
-RUN $HOME/minio-binaries/mc alias set minio https://s3.mortality.watch minio $S3_SECRET
+RUN curl https://dl.min.io/client/mc/release/linux-amd64/mc --create-dirs -o minio-binaries/mc
+RUN chmod +x minio-binaries/mc
+RUN echo "export PATH=$PATH:$(pwd)/minio-binaries/" >> ~/.bashrc
+RUN minio-binaries/mc alias set minio https://s3.mortality.watch minio $S3_SECRET
 
 EXPOSE 3012
 ENTRYPOINT ["/bin/tini", "--"]
