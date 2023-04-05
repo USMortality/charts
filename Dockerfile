@@ -1,5 +1,6 @@
 FROM eddelbuettel/r2u:22.04
 
+RUN echo "Updating deps..."
 RUN apt-get update
 RUN apt-get install -y nodejs npm tini curl git libssl-dev bash jq
 
@@ -14,7 +15,10 @@ ENV LANG="en_US.UTF-8"
 ENV LANGUAGE="en_US.UTF-8"
 ENV LC_ALL="en_US.UTF-8"
 
+RUN echo "Setting env vars.."
 ARG S3_SECRET
+ARG SENDINBLUE_USER
+ARG SENDINBLUE_PASS
 ENV CRONICLE_manager 1
 ENV CRONICLE_secret_key=
 ENV CRONICLE_Storage__engine=S3
@@ -24,9 +28,12 @@ ENV CRONICLE_Storage__AWS__forcePathStyle=true
 ENV CRONICLE_Storage__AWS__region=us-east-1
 ENV CRONICLE_Storage__AWS__credentials__secretAccessKey=${S3_SECRET}
 ENV CRONICLE_Storage__AWS__credentials__accessKeyId=minio
+ENV CRONICLE_mail_options__auth__user=${SENDINBLUE_USER}
+ENV CRONICLE_mail_options__auth__pass=${SENDINBLUE_PASS}
 
 WORKDIR /opt/cronicle/
 ADD entrypoint.sh .
+ADD config.json .
 
 # R deps
 ADD dependencies.txt .
@@ -36,10 +43,6 @@ RUN /opt/cronicle/install_r_deps.sh
 # Configure SSL version for R downloader
 ADD openssl.cnf .
 ENV OPENSSL_CONF=/opt/cronicle/openssl.cnf
-
-# Bump Job Memory Limit to 2G
-RUN cd /opt/cronicle/conf/
-RUN jq '.job_memory_max |= 2147483648' config.json >config_new.json && rm config.json && mv config_new.json config.json
 
 EXPOSE 3012
 ENTRYPOINT ["/bin/tini", "--"]
