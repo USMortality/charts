@@ -42,8 +42,7 @@ save_csv <- function(df, name, upload = TRUE) {
     put_object(
       file = local_file_name,
       object = file_name,
-      bucket = data_bucket,
-      multipart = TRUE
+      bucket = data_bucket
     )
   }
 }
