@@ -2,7 +2,7 @@ source("lib/common.r")
 source("population/std_pop.r")
 
 de_states <- as_tibble(read.csv("./data_static/deu_states_iso3c.csv"))
-df <- read_remote("mortality/deu/deaths.csv") |>
+df <- read_remote("deaths/deu/deaths.csv") |>
   inner_join(de_states, by = "jurisdiction")
 
 # Format: iso3c, date, deaths
