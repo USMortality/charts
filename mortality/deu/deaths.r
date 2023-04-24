@@ -44,7 +44,14 @@ df <- rbind(result1, result2) |>
   arrange(year, jurisdiction, age_group, week)
 
 date <- now() %m-% weeks(2)
-year <- year(date)
-week <- week(date)
+y <- year(date)
+w <- week(date)
 
-save_csv(df, paste0("deaths/deu/Tote_", year, "_", week))
+len <- nrow(df |> filter(
+  jurisdiction == "Deutschland",
+  year == y,
+  week == w
+))
+
+if (len < 1) stop(paste("latest data for week", w, "missing"))
+save_csv(df, paste0("deaths/deu/Tote_", y, "_", w))
