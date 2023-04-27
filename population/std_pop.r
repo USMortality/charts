@@ -50,35 +50,72 @@ get_std_pop_weights <- function(age_groups, std_pop) {
   result
 }
 
-# ESP 2013 Std. Pop
-esp2013_5y <- read.csv("data_static/ESP2013.csv") |> as_tibble()
-esp2013 <- esp2013_5y |>
-  mutate(key = age_group) |>
-  nest(data = c(age_group, weight)) |>
-  mutate(data = lapply(data, get_weights)) |>
-  unnest(cols = c(data)) |>
-  select(2, 3) |>
-  setNames(c("age", "weight"))
+parse_seer_std_table <- function(table_n, column_name) {
+  df_2 <- html_nodes(tables, "table")
+  df_3 <- html_table(df_2[table_n], fill = TRUE)
+  df_4 <- df_3[[1]] |>
+    select("Age", column_name) |>
+    setNames(c("age_group", "weight")) |>
+    mutate(across("age_group", \(x) str_replace(x, " years", "")))
+  n_last <- nrow(df_4)
+  total <- df_4[n_last, ]$weight |>
+    str_replace_all(",", "") |>
+    as.numeric()
+  df_4[1:n_last - 1, ] |>
+    filter(age_group != "Total") |>
+    mutate(
+      key = age_group,
+      weight = as.numeric(str_replace_all(weight, ",", "")) / total
+    ) |>
+    nest(data = c(age_group, weight)) |>
+    mutate(data = lapply(data, get_weights)) |>
+    unnest(cols = c(data)) |>
+    select(2, 3) |>
+    setNames(c("age", "weight")) |>
+    filter(!is.infinite(weight))
+}
+
+tables <- read_html("https://seer.cancer.gov/stdpopulations/stdpop.19ages.html")
+
+who2015 <- parse_seer_std_table(2, "World (WHO 2000-2025) Standard2")
+usa2000 <- parse_seer_std_table(1, "2000 U.S. Standard Million")
+esp2013 <- parse_seer_std_table(
+  2,
+  "European (EU-27 plus EFTA 2011-2030) Std Million"
+)
 
 get_esp2013_bins <- function(age_groups) {
   get_std_pop_weights(age_groups, esp2013)
 }
 
-# WHO 2015 Std. Pop
-who2015_1 <- read_html("https://seer.cancer.gov/stdpopulations/world.who.html")
-who2015_2 <- html_nodes(who2015_1, "table")
-who2015_3 <- html_table(who2015_2[1], fill = TRUE)
-who2015 <- who2015_3[[1]][, 1:2] |>
-  setNames(c("age_group", "weight")) |>
-  filter(age_group != "Total") |>
-  mutate(key = age_group, weight = weight / 100) |>
-  nest(data = c(age_group, weight)) |>
-  mutate(data = lapply(data, get_weights)) |>
-  unnest(cols = c(data)) |>
-  select(2, 3) |>
-  setNames(c("age", "weight")) |>
-  filter(!is.infinite(weight))
+get_usa2000_bins <- function(age_groups) {
+  get_std_pop_weights(age_groups, usa2000)
+}
 
 get_who2015_bins <- function(age_groups) {
   get_std_pop_weights(age_groups, who2015)
+}
+
+get_country2020_bins <- function(df) {
+  data1 <- df |>
+    filter(date == as.Date("2020-01-01"))
+  if (nrow(data1) == 0) stop("No data for 2020 available.")
+
+  data <- data1 |>
+    select(age_group, population) |>
+    mutate(
+      key = age_group,
+      weight = population / sum(population)
+    ) |>
+    select(-population) |>
+    nest(data = c(age_group, weight)) |>
+    mutate(data = lapply(data, get_weights)) |>
+    unnest(cols = c(data)) |>
+    select(2, 3) |>
+    setNames(c("age", "weight")) |>
+    filter(!is.infinite(weight))
+  if (sum(data$weight) < 0.999) {
+    stop("Weights do not sum up to 1.")
+  }
+  get_std_pop_weights(unique(df$age_group), data)
 }

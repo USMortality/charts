@@ -1,8 +1,6 @@
 source("lib/common.r")
 
-us_states_iso3c <- as_tibble(read.csv("./data_static/usa_states_iso3c.csv")) |>
-  add_row(iso3c = "US-NYC", state = "New York City") |>
-  add_row(iso3c = "USA", state = "United States")
+us_states_iso3c <- as_tibble(read.csv("./data_static/usa_states_iso3c.csv"))
 
 # Download data
 data0 <- as_tibble(read.csv("./data_static/population_usa_2000-2010.csv"))
@@ -152,7 +150,7 @@ nyc <- bind_rows(list(ny0, ny1, ny2)) |>
   mutate(jurisdiction = "New York City", .before = "year")
 
 population_grouped <- bind_rows(list(population_grouped, nyc)) |>
-  inner_join(us_states_iso3c, by = c("jurisdiction" = "state"))
+  inner_join(us_states_iso3c, by = c("jurisdiction"))
 
 population_grouped_forecasted <- population_grouped |>
   nest(data = c("year", "population")) |>

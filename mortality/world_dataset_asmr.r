@@ -1,8 +1,7 @@
 source("lib/common.r")
-source("population/std_pop.r")
+source("lib/asmr.r")
 
 deaths <- as_tibble(read.csv("./data/mortality_org.csv", skip = 2))
-std_pop <- get_who2015_bins(c("0-14", "15-64", "65-74", "75-84", "85+"))
 
 wd <- deaths |>
   filter(Sex == "b") |>
@@ -18,70 +17,38 @@ wd <- deaths |>
     names_to = "age_group",
     values_to = "mortality"
   ) |>
-  inner_join(std_pop, by = "age_group") |>
-  mutate(asmr = mortality / 52 * weight) |>
-  select(-5, -7) |>
-  group_by(iso3c, year, week, date) |>
-  summarise(asmr = sum(asmr)) |>
-  mutate(asmr = asmr * 100000) |>
-  ungroup()
+  dplyr::mutate(mortality := mortality / 52 * 100000)
+
+wd$iso3c[wd$iso3c == "DEUTNP"] <- "DEU"
+wd$iso3c[wd$iso3c == "FRATNP"] <- "FRA"
+wd$iso3c[wd$iso3c == "NZL_NP"] <- "NZL"
+wd$iso3c[wd$iso3c == "GBR_NP"] <- "GBR"
 
 dd_asmr <- wd |>
-  getDailyFromWeekly("asmr") |>
-  select(iso3c, date, asmr) |>
-  distinct(iso3c, date, .keep_all = TRUE)
-
-dd_asmr$iso3c[dd_asmr$iso3c == "DEUTNP"] <- "DEU"
-dd_asmr$iso3c[dd_asmr$iso3c == "FRATNP"] <- "FRA"
-dd_asmr$iso3c[dd_asmr$iso3c == "NZL_NP"] <- "NZL"
-dd_asmr$iso3c[dd_asmr$iso3c == "GBR_NP"] <- "GBR"
+  calculate_asmr_variants() |>
+  getDailyFromWeekly(c("asmr", "asmr_esp"))
 
 # USA < 2015
-mortality_usa <- rbind(
+dd_usa_asmr <- rbind(
   get_usa_mortality("0_14"),
   get_usa_mortality("15_64"),
   get_usa_mortality("65_74"),
   get_usa_mortality("75_84"),
   get_usa_mortality("85+")
-)
+) |>
+  mutate(date = make_yearmonth(year = year, month = time), iso3c = "USA") |>
+  calculate_asmr_variants() |>
+  getDailyFromMonthly(c("asmr", "asmr_esp"))
 
-md_usa <- mortality_usa |>
-  inner_join(std_pop, by = "age_group") |>
-  mutate(asmr = mortality * weight) |>
-  select(-3, -4, -5) |>
-  group_by(year, time) |>
-  summarise(asmr = sum(asmr)) |>
-  ungroup() |>
-  setNames(c("year", "month", "asmr")) |>
-  mutate(date = make_yearmonth(year = year, month = month)) |>
-  getDailyFromMonthly("asmr") |>
-  select(4, 3) |>
-  setNames(c("date", "asmr"))
-
-md_usa$iso3c <- "USA"
-md_usa <- md_usa |> relocate(iso3c, date, asmr)
-
+# Combined DS
 dd_asmr <- rbind(
   dd_asmr |> filter(iso3c != "USA"),
-  md_usa |> filter(date < as.Date("2015-01-05")),
+  dd_usa_asmr |> filter(date < as.Date("2015-01-05")),
   dd_asmr |> filter(iso3c == "USA")
-)
-
-maybe_impute_gaps <- function(data) {
-  ts <- data |> as_tsibble(index = date, validate = FALSE)
-  if (has_gaps(ts)$.gaps == FALSE) {
-    return(data)
-  }
-  result <- ts |>
-    fill_gaps(.full = start()) |>
-    tidyr::fill(iso3c)
-  result$asmr <- na_ma(result$asmr)
-  result |> as_tibble()
-}
-
-dd_asmr <- dd_asmr |>
+) |>
   mutate(iso3c_g = iso3c) |>
   nest(data = c(iso3c, date, asmr)) |>
   mutate(data = lapply(data, maybe_impute_gaps)) |>
   unnest(cols = c(data)) |>
-  select(-iso3c_g)
+  select(-iso3c_g) |>
+  relocate(c("iso3c", "date", "asmr", "asmr_esp"))

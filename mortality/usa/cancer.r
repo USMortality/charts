@@ -24,7 +24,7 @@ data <- rbind(a, b) |>
   mutate(deaths = as.integer(gsub(",", "", Malignant.neoplasms..C00.C97.))) |>
   head(-4) |> # Exclude last 4 weeks, b/c of reporting delay.
   left_join(us_population, by = "year") |>
-  getDailyFromWeekly("deaths") |>
+  getDailyFromWeekly(c("deaths")) |>
   mutate(mortality = deaths / population * 100000) |>
   select(date, year, deaths, mortality) |>
   as_tsibble(index = date)

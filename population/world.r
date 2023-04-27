@@ -35,6 +35,10 @@ population <- world_population |>
   unnest(cols = "data") |>
   setNames(c("iso3c", "jurisdiction", "year", "population", "is_projection"))
 
-population <- rbind(population, us_population, de_population)
+population <- rbind(
+  population,
+  us_population,
+  de_population |> filter(age_group == "all") |> select(-age_group)
+) |> distinct(iso3c, year, .keep_all = TRUE)
 
 save_csv(population, "population/world")

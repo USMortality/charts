@@ -106,20 +106,9 @@ predictdf.lm_right <- function(model, xseq, se, level) {
   ggplot2:::predictdf.default(model, xseq, se, level)
 }
 
-fluseason_ <- function(date) {
-  x <- date
-  month(x) <- 10
-  day(x) <- 1
-  if (date >= x) {
-    paste0(year(date), "-", year(date) + 1)
-  } else {
-    paste0(year(date) - 1, "-", year(date))
-  }
-}
-
-fluseason2_ <- function(date) {
+midyear_ <- function(date, month) {
   y <- year(date)
-  if (month(date) <= 9) {
+  if (month(date) <= month) {
     paste0(y - 1, "-", y)
   } else {
     paste0(y, "-", y + 1)
@@ -128,9 +117,17 @@ fluseason2_ <- function(date) {
 
 fluseason <- function(data) {
   if (length(data) > 1) {
-    sapply(data, fluseason2_)
+    sapply(data, midyear_, 9)
   } else {
-    fluseason2_(data)
+    midyear_(data, 9)
+  }
+}
+
+midyear <- function(data) {
+  if (length(data) > 1) {
+    sapply(data, midyear_, 6)
+  } else {
+    midyear_(data, 6)
   }
 }
 
@@ -193,55 +190,110 @@ get_usa_mortality <- function(age_group) {
   deaths_usa |> select(3, 4, 9, 8)
 }
 
-getDailyFromN <- function(wd, column_name, fun) {
-  col <- sym(column_name)
+getDailyFromN <- function(wd, column_names, fun) {
   df <- wd |>
     uncount(fun(date), .id = "day") |>
     mutate(date = date(date)) |>
-    mutate(date = date + days(day - 1)) |>
-    mutate("{column_name}" := !!col / fun(date))
+    mutate(date = date + days(day - 1))
+
+  for (column_name in column_names) {
+    col <- sym(column_name)
+    df <- df |> mutate("{column_name}" := !!col / fun(date))
+  }
+
   df |> select(-ncol(df))
 }
 
-getDailyFromWeekly <- function(wd, column_name) {
-  getDailyFromN(wd, column_name, function(date) {
+getDailyFromWeekly <- function(wd, column_names) {
+  getDailyFromN(wd, column_names, function(date) {
     7
   })
 }
 
-getDailyFromMonthly <- function(wd, column_name) {
-  getDailyFromN(wd, column_name, function(date) {
+getDailyFromMonthly <- function(wd, column_names) {
+  getDailyFromN(wd, column_names, function(date) {
     days_in_month(date)
   })
 }
 
-getDailyFromYearly <- function(wd, column_name) {
-  getDailyFromN(wd, column_name, function(date) {
+getDailyFromYearly <- function(wd, column_names) {
+  getDailyFromN(wd, column_names, function(date) {
     y <- year(date)
     x <- lubridate::interval(paste0(y, "-01-01"), paste0(y, "-12-31"))
     x %/% days(1) + 1
   })
 }
 
-# Forecast n+3
+# Forecast n+5
 forecast_population <- function(data) {
+  fc_n <- 5
   y <- data |>
     as_tsibble(index = year) |>
     tail(n = 5) |>
     model(NAIVE(population ~ drift())) |>
-    forecast(h = 3)
+    forecast(h = fc_n)
 
   last_available_year <- data$year[length(data$year)]
   data$is_projection <- FALSE
-  data |>
-    add_row(
-      year = as.integer(last_available_year + 1),
-      population = as.integer(y$.mean[1]),
-      is_projection = TRUE
-    ) |>
-    add_row(
-      year = as.integer(last_available_year + 2),
-      population = as.integer(y$.mean[2]),
+  for (i in 1:fc_n) {
+    data <- data |> add_row(
+      year = as.integer(last_available_year + i),
+      population = as.integer(y$.mean[i]),
       is_projection = TRUE
     )
+  }
+
+  data
+}
+
+maybe_impute_gaps <- function(data) {
+  ts <- data |> as_tsibble(index = date, validate = FALSE)
+  if (has_gaps(ts)$.gaps == FALSE) {
+    return(data)
+  }
+  result <- ts |>
+    fill_gaps(.full = start()) |>
+    tidyr::fill(iso3c)
+  result$asmr <- na_ma(result$asmr)
+  result |> as_tibble()
+}
+
+interpolate_population <- function(df) {
+  df |>
+    as_tsibble(index = date) |>
+    fill_gaps() |>
+    mutate(population = zoo::na.approx(population)) |>
+    as_tibble()
+}
+
+check_duplicates <- function(df) {
+  for (code in unique(df$iso3c)) {
+    df_country <- df |> filter(df$iso3c == code)
+    for (ag in unique(df_country$age_group)) {
+      df_age <- df_country |> filter(df_country$age_group == ag)
+      duplicated <- is_duplicated(df_age, index = date)
+      if (duplicated) {
+        print(
+          paste0(
+            "iso3c: ", code,
+            " | age_group: ", ag,
+            " | Duplicates: ", duplicated
+          )
+        )
+        print(duplicates(df_age, index = date))
+      }
+      ts <- df_age |> as_tsibble(index = date)
+    }
+  }
+}
+
+print_info <- function(df) {
+  for (code in unique(df$iso3c)) {
+    df_country <- df |> filter(df$iso3c == code)
+    print(paste0(
+      code, " | dates: ",
+      min(df_country$date), " to ", max(df_country$date), " | age_groups: ",
+      paste(unique(df_country$age_group), collapse = ", ")
+    ))
+  }
 }
