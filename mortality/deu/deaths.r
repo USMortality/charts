@@ -45,7 +45,7 @@ df <- rbind(result1, result2) |>
 
 date <- now() %m-% weeks(2)
 y <- year(date)
-w <- week(date) -1
+w <- week(date)
 
 len <- nrow(df |> filter(
   jurisdiction == "Deutschland",
