@@ -9,6 +9,8 @@ de_population <- de_population |>
   inner_join(de_states, by = "jurisdiction") |>
   select(iso3c, jurisdiction, year, age_group, population) |>
   group_by(iso3c, jurisdiction, year, age_group) |>
-  summarise(population = sum(population))
-
-de_population$is_projection <- FALSE
+  summarise(population = sum(population)) |>
+  ungroup() |>
+  nest(data = c("year", "population")) |>
+  mutate(data = lapply(data, forecast_population)) |>
+  unnest(cols = "data")
