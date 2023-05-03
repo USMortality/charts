@@ -7,8 +7,8 @@ data_yearly <- read_remote("mortality/world_yearly.csv")
 data_ytd <- read_remote("mortality/world_ytd.csv")
 data_fluseason <- read_remote("mortality/world_fluseason.csv")
 
-types <- c("cmr", "asmr")
-asmr_data <- data_weekly |> filter(!is.na(asmr))
+types <- c("cmr", "asmr_who")
+asmr_data <- data_weekly |> filter(!is.na(asmr_who))
 
 for (type in types) {
   countries <- if (type == "cmr") {
