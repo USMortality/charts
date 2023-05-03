@@ -66,4 +66,10 @@ fluseason <- data |>
   get_baseline_size() |>
   mutate(chart_type = "fluseason", .after = "jurisdiction")
 
-save_csv(rbind(yearly, fluseason), "mortality/world_baseline")
+data <- read_remote("mortality/world_midyear.csv")
+midyear <- data |>
+  mutate(date = as.integer(left(date, 4))) |>
+  get_baseline_size() |>
+  mutate(chart_type = "midyear", .after = "jurisdiction")
+
+save_csv(rbind(yearly, fluseason, midyear), "mortality/world_baseline")
