@@ -1,7 +1,7 @@
 source("lib/common.r")
 
 sdate <- as.Date("1900-01-01")
-edate <- as.Date("2022-12-31")
+edate <- Sys.Date()
 
 sp500 <- getSymbols("^SP500TR", from = sdate, to = edate, auto.assign = F)
 df <- as.data.frame(sp500)
@@ -11,12 +11,12 @@ df <- df |>
   select(date, SP500TR.Close) |>
   mutate(close = SP500TR.Close) |>
   select(date, close) |>
-  mutate(date = as.Date(date))
-
+  mutate(date = as.Date(date)) |>
+  as_tsibble(index = date)
 save_csv(df, "finance/usa/sp500tr")
 
 chart <-
-  ggplot(as_tsibble(df, index = date), aes(x = date, y = close)) +
+  ggplot(df, aes(x = date, y = close)) +
   scale_x_date(date_breaks = "2 year", date_labels = "%Y") +
   scale_y_continuous(trans = "log2") +
   labs(
