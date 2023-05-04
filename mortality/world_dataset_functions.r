@@ -127,7 +127,7 @@ calculate_excess <- function(data, col_name) {
 }
 
 get_period_multiplier <- function(chart_type) {
-  if (chart_type %in% c("yearly", "fluseason", "ytd")) {
+  if (chart_type %in% c("yearly", "fluseason", "ytd", "midyear")) {
     return(1)
   } else if (chart_type == "quarterly") {
     return(4)
