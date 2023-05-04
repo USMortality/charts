@@ -32,7 +32,6 @@ for (type in types) {
       mutate(yearweek = yearweek(date)) |>
       mutate(date = date(yearweek)) |>
       as_tsibble(index = date)
-
     chart1 <-
       ggplot(df, aes(x = date, y = !!mortality_col)) +
       labs(
@@ -49,17 +48,17 @@ for (type in types) {
       twitter_theme() +
       scale_x_date(date_labels = "%Y", breaks = "1 year") +
       theme(axis.text.x = element_text(angle = 30, hjust = 0.5, vjust = 0.5))
-    save_chart(chart1, paste(
-      "mortality", type, country, "weekly_line",
-      sep = "/"
-    ))
+    save_chart(
+      chart1,
+      paste("mortality", type, country, "weekly_line", sep = "/"),
+      upload = TRUE
+    )
 
     print("2) Monthly")
     df <- data_monthly |>
       filter(jurisdiction == country) |>
       mutate(date = yearmonth(date)) |>
       as_tsibble(index = date)
-
     chart2 <-
       ggplot(df, aes(x = date, y = !!mortality_col)) +
       labs(
@@ -76,17 +75,17 @@ for (type in types) {
       twitter_theme() +
       scale_x_yearmonth(date_breaks = "1 year", date_labels = "%Y") +
       theme(axis.text.x = element_text(angle = 30, hjust = 0.5, vjust = 0.5))
-    save_chart(chart2, paste(
-      "mortality", type, country, "monthly_line",
-      sep = "/"
-    ))
+    save_chart(
+      chart2,
+      paste("mortality", type, country, "monthly_line", sep = "/"),
+      upload = TRUE
+    )
 
     print("3) Quarterly")
     df <- data_quarterly |>
       filter(jurisdiction == country) |>
       mutate(date = yearquarter(date)) |>
       as_tsibble(index = date)
-
     chart3 <-
       ggplot(df, aes(x = date, y = !!mortality_col)) +
       labs(
@@ -103,17 +102,17 @@ for (type in types) {
       twitter_theme() +
       scale_x_yearquarter(date_breaks = "1 year", date_labels = "%Y") +
       theme(axis.text.x = element_text(angle = 30, hjust = 0.5, vjust = 0.5))
-    save_chart(chart3, paste(
-      "mortality", type, country, "quarterly_line",
-      sep = "/"
-    ))
+    save_chart(
+      chart3,
+      paste("mortality", type, country, "quarterly_line", sep = "/"),
+      upload = TRUE
+    )
 
     print("4) Yearly")
     df <- data_yearly |>
       filter(jurisdiction == country) |>
       mutate(date = ymd(date, truncated = 2L)) |>
       as_tsibble(index = date)
-
     chart4 <-
       ggplot(df, aes(x = date, y = !!mortality_col)) +
       labs(
@@ -127,17 +126,17 @@ for (type in types) {
       twitter_theme() +
       scale_x_date(date_breaks = "1 year", date_labels = "%Y") +
       theme(axis.text.x = element_text(angle = 30, hjust = 0.5, vjust = 0.5))
-    save_chart(chart4, paste(
-      "mortality", type, country, "yearly_line",
-      sep = "/"
-    ))
+    save_chart(
+      chart4,
+      paste("mortality", type, country, "yearly_line", sep = "/"),
+      upload = TRUE
+    )
 
     print("5) YTD")
     df <- data_ytd |>
       filter(jurisdiction == country) |>
       mutate(date = ymd(date, truncated = 2L)) |>
       as_tsibble(index = date)
-
     chart5 <-
       ggplot(df, aes(x = date, y = !!mortality_col)) +
       labs(
@@ -157,7 +156,11 @@ for (type in types) {
       twitter_theme() +
       scale_x_date(date_breaks = "1 year", date_labels = "%Y") +
       theme(axis.text.x = element_text(angle = 30, hjust = 0.5, vjust = 0.5))
-    save_chart(chart5, paste("mortality", type, country, "ytd_line", sep = "/"))
+    save_chart(
+      chart5,
+      paste("mortality", type, country, "ytd_line", sep = "/"),
+      upload = TRUE
+    )
 
     print("6) Flu Season")
     df <- data_fluseason |>
@@ -178,10 +181,11 @@ for (type in types) {
       scale_y_continuous(labels = comma_format(decimal.mark = ",")) +
       twitter_theme() +
       theme(axis.text.x = element_text(angle = 30, hjust = 0.5, vjust = 0.5))
-    save_chart(chart6, paste(
-      "mortality", type, country, "fluseason_line",
-      sep = "/"
-    ))
+    save_chart(
+      chart6,
+      paste("mortality", type, country, "fluseason_line", sep = "/"),
+      upload = TRUE
+    )
 
     print("7) STL Decomposition")
     df <- data_weekly |>
@@ -212,14 +216,16 @@ for (type in types) {
       scale_x_date(date_labels = "%Y", breaks = "1 year") +
       twitter_theme() +
       theme(axis.text.x = element_text(angle = 30, hjust = 0.5, vjust = 0.5))
-
-    save_chart(chart7, paste("mortality", type, country, "stl_line", sep = "/"))
+    save_chart(
+      chart7,
+      paste("mortality", type, country, "stl_line", sep = "/"),
+      upload = TRUE
+    )
 
     print("8) Yearly (Bar)")
     df <- data_yearly |>
       filter(jurisdiction == country) |>
       as_tsibble(index = date)
-
     chart8 <-
       ggplot(df, aes(x = date, y = !!mortality_col)) +
       labs(
@@ -237,17 +243,16 @@ for (type in types) {
       scale_x_continuous(breaks = df$date) +
       theme(axis.text.x = element_text(angle = 30, hjust = 0.5, vjust = 0.5)) +
       scale_y_continuous(labels = comma_format(decimal.mark = ","))
-
-    save_chart(chart8, paste(
-      "mortality", type, country, "yearly_bar",
-      sep = "/"
-    ))
+    save_chart(
+      chart8,
+      paste("mortality", type, country, "yearly_bar", sep = "/"),
+      upload = TRUE
+    )
 
     print("9) YTD (Bar)")
     df <- data_ytd |>
       filter(jurisdiction == country) |>
       as_tsibble(index = date)
-
     chart9 <-
       ggplot(df, aes(x = date, y = !!mortality_col)) +
       labs(
@@ -271,8 +276,11 @@ for (type in types) {
       scale_x_continuous(breaks = df$date) +
       theme(axis.text.x = element_text(angle = 30, hjust = 0.5, vjust = 0.5)) +
       scale_y_continuous(labels = comma_format(decimal.mark = ","))
-
-    save_chart(chart9, paste("mortality", type, country, "ytd_bar", sep = "/"))
+    save_chart(
+      chart9,
+      paste("mortality", type, country, "ytd_bar", sep = "/"),
+      upload = TRUE
+    )
 
     print("10) Flu Season (Bar)")
     df <- data_fluseason |>
@@ -297,10 +305,11 @@ for (type in types) {
       scale_x_continuous(breaks = 1:length(df$date), labels = df$date) +
       theme(axis.text.x = element_text(angle = 30, hjust = 0.5, vjust = 0.5)) +
       scale_y_continuous(labels = comma_format(decimal.mark = ","))
-    save_chart(chart10, paste(
-      "mortality", type, country, "fluseason_bar",
-      sep = "/"
-    ))
+    save_chart(
+      chart10,
+      paste("mortality", type, country, "fluseason_bar", sep = "/"),
+      upload = TRUE
+    )
 
     print("11) Weekly (52W SMA)")
     df <- data_weekly |>
@@ -308,10 +317,10 @@ for (type in types) {
       filter(!is.na(!!mortality_col)) |>
       mutate(yearweek = yearweek(date)) |>
       mutate(date = date(yearweek)) |>
-      as_tsibble(index = date) |>
-      mutate(sma = SMA(!!mortality_col, n = 52)) |>
+      as_tsibble(index = date)
+    df <- df |>
+      mutate(sma = SMA(!!mortality_col, n = min(nrow(df), 52))) |>
       filter(!is.na(sma))
-
     chart11 <-
       ggplot(df, aes(x = date, y = sma)) +
       labs(
@@ -332,7 +341,8 @@ for (type in types) {
       theme(axis.text.x = element_text(angle = 30, hjust = 0.5, vjust = 0.5))
     save_chart(
       chart11,
-      paste("mortality", type, country, "weekly_52w_sma_line", sep = "/")
+      paste("mortality", type, country, "weekly_52w_sma_line", sep = "/"),
+      upload = TRUE
     )
 
     save_collage(
