@@ -28,7 +28,8 @@ get_baseline_size <- function(data) {
     data.frame(matrix(ncol = 4, nrow = 0)),
     c("iso3c", "jurisdiction", "type", "window")
   )
-  types <- c("deaths", "cmr", "asmr")
+  asmr_types <- c("asmr_who", "asmr_esp", "asmr_usa", "asmr_country")
+  types <- c("deaths", "cmr", asmr_types)
   for (mortality_type in types) {
     mortality_col <- sym(mortality_type)
     for (country in unique(data$jurisdiction)) {
