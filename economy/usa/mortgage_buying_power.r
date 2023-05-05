@@ -29,19 +29,29 @@ data <- df |>
   mutate(date = ymd(date), possible_price = calculateAmount(rate)) |>
   as_tsibble(index = date)
 
-chart <- ggplot(data, aes(x = date)) +
+chart <-
+  ggplot(data, aes(x = date, y = possible_price)) +
+  scale_x_date(date_breaks = "4 year", date_labels = "%Y") +
   geom_line(aes(y = possible_price)) +
   scale_y_continuous(
+    trans = "log2",
     labels = scales::dollar_format(prefix = "$", suffix = "")
   ) +
   labs(
-    title = paste0("How much 'house' does $3,000 buy you?"),
+    title = "How much 'house' does $3,000 buy you?",
+    subtitle = "Source: Federal Reserve Bank of St. Louis",
     y = "Mortgage Value",
     x = "Week of Year"
   ) +
+  geom_smooth(
+    method = "lm",
+    formula = y ~ x,
+    color = "black",
+    linetype = "dashed"
+  ) +
   twitter_theme()
 
-save_chart(chart, "economy/usa/mortgage_buying_power.png")
+save_chart(chart, "economy/usa/mortgage_buying_power")
 
 # Median Home Prices
 df <- read.csv(
@@ -61,8 +71,9 @@ data <- df |>
   mutate(date = yearquarter(ymd(date))) |>
   as_tsibble(index = date)
 
-chart <- ggplot(data, aes(x = date, y = price)) +
-  # scale_x_date(date_breaks = "2 year", date_labels = "%Y") +
+chart <-
+  ggplot(data, aes(x = date, y = price)) +
+  scale_x_yearquarter(date_breaks = "8 year") +
   scale_y_continuous(
     trans = "log2",
     labels = scales::dollar_format(prefix = "$", suffix = "")
@@ -70,6 +81,7 @@ chart <- ggplot(data, aes(x = date, y = price)) +
   geom_line(aes(y = price)) +
   labs(
     title = "Median Sales Price of Houses Sold [USA]",
+    subtitle = "Source: Federal Reserve Bank of St. Louis",
     y = "US Dollars",
     x = "Quarter of Year"
   ) +
