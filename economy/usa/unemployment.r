@@ -3,7 +3,13 @@ source("lib/common.r")
 #  Load Data
 req <- POST("https://api.bls.gov/publicAPI/v2/timeseries/data/",
   add_headers("Content-Type" = "application/json"),
-  body = '{"seriesid": ["LNS14000000"], "startyear":"2013", "endyear":"2022"}'
+  body = paste0(
+    '{"seriesid": ["LNS14000000"], "startyear":"',
+    year(Sys.Date()) - 9,
+    '", "endyear":"',
+    year(Sys.Date()),
+    '"}'
+  )
 )
 stop_for_status(req)
 data <- content(req, "text") |> fromJSON()
