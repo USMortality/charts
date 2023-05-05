@@ -246,18 +246,6 @@ forecast_population <- function(data) {
   data
 }
 
-maybe_impute_gaps <- function(data) {
-  ts <- data |> as_tsibble(index = date, validate = FALSE)
-  if (has_gaps(ts)$.gaps == FALSE) {
-    return(data)
-  }
-  result <- ts |>
-    fill_gaps(.full = start()) |>
-    tidyr::fill(iso3c)
-  result$asmr <- na_ma(result$asmr)
-  result |> as_tibble()
-}
-
 interpolate_population <- function(df) {
   df |>
     as_tsibble(index = date) |>
