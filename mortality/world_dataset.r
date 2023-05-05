@@ -50,7 +50,7 @@ weekly <- weekly_nested |>
   mutate(data = lapply(data, calculate_baseline_excess, "weekly")) |>
   unnest(cols = c(data)) |>
   select(-iso)
-save_csv(weekly, "mortality/world_weekly", upload = FALSE)
+save_csv(weekly, "mortality/world_weekly", upload = TRUE)
 
 print('Calculating "Weekly 104W SMA" dataset')
 weekly104wsma <- weekly_nested |>
@@ -62,7 +62,7 @@ weekly104wsma <- weekly_nested |>
   group_by(iso3c) |>
   filter(!is.na(deaths)) |>
   ungroup()
-save_csv(weekly104wsma, "mortality/world_weekly_104w_sma", upload = FALSE)
+save_csv(weekly104wsma, "mortality/world_weekly_104w_sma", upload = TRUE)
 
 print('Calculating "Weekly 52W SMA" dataset')
 weekly52wsma <- weekly_nested |>
@@ -74,7 +74,7 @@ weekly52wsma <- weekly_nested |>
   group_by(iso3c) |>
   filter(!is.na(deaths)) |>
   ungroup()
-save_csv(weekly52wsma, "mortality/world_weekly_52w_sma", upload = FALSE)
+save_csv(weekly52wsma, "mortality/world_weekly_52w_sma", upload = TRUE)
 
 print('Calculating "Weekly 26W SMA" dataset')
 weekly26wsma <- weekly_nested |>
@@ -86,7 +86,7 @@ weekly26wsma <- weekly_nested |>
   group_by(iso3c) |>
   filter(!is.na(deaths)) |>
   ungroup()
-save_csv(weekly26wsma, "mortality/world_weekly_26w_sma", upload = FALSE)
+save_csv(weekly26wsma, "mortality/world_weekly_26w_sma", upload = TRUE)
 
 print('Calculating "Weekly 13W SMA" dataset')
 weekly13wsma <- weekly_nested |>
@@ -98,28 +98,28 @@ weekly13wsma <- weekly_nested |>
   group_by(iso3c) |>
   filter(!is.na(deaths)) |>
   ungroup()
-save_csv(weekly13wsma, "mortality/world_weekly_13w_sma", upload = FALSE)
+save_csv(weekly13wsma, "mortality/world_weekly_13w_sma", upload = TRUE)
 
 print('Calculating "Monthly" dataset')
 monthly <- get_nested_data_by_time(dd_asmr, dd_all, "yearmonth") |>
   mutate(data = lapply(data, calculate_baseline_excess, "monthly")) |>
   unnest(cols = c(data)) |>
   select(-iso)
-save_csv(monthly, "mortality/world_monthly", upload = FALSE)
+save_csv(monthly, "mortality/world_monthly", upload = TRUE)
 
 print('Calculating "Quarterly" dataset')
 quarterly <- get_nested_data_by_time(dd_asmr, dd_all, "yearquarter") |>
   mutate(data = lapply(data, calculate_baseline_excess, "quarterly")) |>
   unnest(cols = c(data)) |>
   select(-iso)
-save_csv(quarterly, "mortality/world_quarterly", upload = FALSE)
+save_csv(quarterly, "mortality/world_quarterly", upload = TRUE)
 
 print('Calculating "Yearly" dataset')
 yearly <- get_nested_data_by_time(dd_asmr, dd_all, "year") |>
   mutate(data = lapply(data, calculate_baseline_excess, "yearly")) |>
   unnest(cols = c(data)) |>
   select(-iso)
-save_csv(yearly, "mortality/world_yearly", upload = FALSE)
+save_csv(yearly, "mortality/world_yearly", upload = TRUE)
 
 print('Calculating "YTD" dataset')
 daily_nested_ytd <- dd_all |>
@@ -137,20 +137,20 @@ ytd <- daily_nested_ytd |>
   mutate(data = lapply(data, calculate_baseline_excess, "yearly")) |>
   unnest(cols = c(data)) |>
   select(-iso)
-save_csv(ytd, "mortality/world_ytd", upload = FALSE)
+save_csv(ytd, "mortality/world_ytd", upload = TRUE)
 
 print('Calculating "Fluseason" dataset')
 fluseason <- get_nested_data_by_time(dd_asmr, dd_all, "fluseason") |>
   mutate(data = lapply(data, calculate_baseline_excess, "fluseason")) |>
   unnest(cols = c(data)) |>
   select(-iso)
-save_csv(fluseason, "mortality/world_fluseason", upload = FALSE)
+save_csv(fluseason, "mortality/world_fluseason", upload = TRUE)
 
 print('Calculating "Midyear" dataset')
 midyear <- get_nested_data_by_time(dd_asmr, dd_all, "midyear") |>
   mutate(data = lapply(data, calculate_baseline_excess, "midyear")) |>
   unnest(cols = c(data)) |>
   select(-iso)
-save_csv(midyear, "mortality/world_midyear", upload = FALSE)
+save_csv(midyear, "mortality/world_midyear", upload = TRUE)
 
 print("Finished.")

@@ -151,7 +151,7 @@ apply_model <- function(data, col, chart_type) {
 }
 
 get_baseline_length <- function(iso, ct, cn) {
-  if (ct != "fluseason") ct <- "yearly"
+  if (!ct %in% c("fluseason", "midyear")) ct <- "yearly"
   baseline <- baseline_size |>
     filter(iso3c == iso & chart_type == ct & type == cn)
   ifelse(nrow(baseline) == 0, 5, baseline$window)
