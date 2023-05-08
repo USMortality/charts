@@ -79,5 +79,5 @@ population <- de_population |>
 
 deu_mortality_states <- rbind(df_all, df_age_d, df_age_states) |>
   inner_join(population, by = c("iso3c", "date", "age_group")) |>
-  unique() |>
-  arrange(iso3c, date, age_group)
+  arrange(iso3c, date, age_group) |>
+  distinct(iso3c, date, age_group, .keep_all = TRUE)

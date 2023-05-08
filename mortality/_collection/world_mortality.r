@@ -25,7 +25,7 @@ wd <- deaths |>
 md <- deaths |>
   filter(time_unit == "monthly") |>
   mutate(
-    date = make_yearweek(year = year, week = time),
+    date = make_yearmonth(year = year, month = time),
     age_group = "all"
   ) |>
   select(iso3c, date, age_group, deaths) |>
@@ -33,5 +33,5 @@ md <- deaths |>
 
 world_mortality <- rbind(wd, md) |>
   inner_join(population, by = c("iso3c", "date")) |>
-  unique() |>
-  arrange(iso3c, date, age_group)
+  arrange(iso3c, date, age_group) |>
+  distinct(iso3c, date, age_group, .keep_all = TRUE)

@@ -223,5 +223,5 @@ usa_mortality_states <- rbind(dd_us, dd_us_age) |>
     population,
     by = c("iso3c", "date", "age_group")
   ) |>
-  unique() |>
-  arrange(iso3c, date, age_group)
+  arrange(iso3c, date, age_group) |>
+  distinct(iso3c, date, age_group, .keep_all = TRUE)

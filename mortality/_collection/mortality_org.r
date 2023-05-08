@@ -64,5 +64,5 @@ mortality_org <- df |>
   ) |>
   getDailyFromWeekly(c("deaths")) |>
   inner_join(population, by = c("iso3c", "date", "age_group")) |>
-  unique() |>
-  arrange(iso3c, date, age_group)
+  arrange(iso3c, date, age_group) |>
+  distinct(iso3c, date, age_group, .keep_all = TRUE)
