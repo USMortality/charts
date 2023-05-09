@@ -23,9 +23,8 @@ md_us_states <- us_cmr_1 |>
   setNames(
     c("iso3c", "country_name", "year", "time", "time_unit", "deaths")
   ) |>
-  filter(!is.na(year))
-
-md_us_states <- rbind(md_usa, md_us_states)
+  filter(!is.na(year)) |>
+  rbind(md_usa)
 
 wd_us_states <- us_cmr_2 |>
   select(2, 3, 4, 6) |>
@@ -53,12 +52,12 @@ wd_us_states_ny <- wd_us_states |>
   group_by(year, time, time_unit) |>
   summarise(deaths = sum(deaths)) |>
   ungroup()
-wd_us_states_ny$iso3c <- "USA-NY-NYC"
+wd_us_states_ny$iso3c <- "USA-NY"
 wd_us_states_ny$country_name <- "USA - New York"
 wd_us_states_ny <- wd_us_states_ny |> relocate(iso3c, country_name)
 
 wd_us_states <- rbind(
-  wd_us_states |> filter(iso3c != "USA-NY-NYC"),
+  wd_us_states |> filter(iso3c != "USA-NY"),
   wd_us_states_ny
 )
 
@@ -149,10 +148,10 @@ deaths_ny <- deaths |>
   group_by(year, time, age_group) |>
   summarise(deaths = sum(deaths)) |>
   ungroup()
-deaths_ny$iso3c <- "USA-NY-NYC"
+deaths_ny$iso3c <- "USA-NY"
 deaths_ny$jurisdiction <- "New York"
 deaths_ny <- deaths_ny |> relocate(iso3c, jurisdiction)
-deaths <- rbind(deaths |> filter(iso3c != "USA-NY-NYC"), deaths_ny) |>
+deaths <- rbind(deaths |> filter(iso3c != "USA-NY"), deaths_ny) |>
   mutate(date = make_yearweek(year = year, week = time)) |>
   select(iso3c, date, age_group, deaths) |>
   getDailyFromWeekly(c("deaths"))
