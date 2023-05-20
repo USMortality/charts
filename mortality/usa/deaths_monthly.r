@@ -74,4 +74,4 @@ result <- rbind(totals, totals_ag) |>
   distinct(iso3c, date, age_group, .keep_all = TRUE) |>
   complete(iso3c, date, age_group)
 
-save_csv(result, "us_states_age_1999_n", upload = FALSE)
+save_csv(result, "deaths/usa/monthly_10y", upload = TRUE)

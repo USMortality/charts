@@ -1,4 +1,4 @@
-libs <- read.table("dependencies.txt")
+libs <- read.table("dependencies_r.txt")
 for (lib in libs$V1) {
   library(lib, character.only = TRUE, quietly = TRUE)
 }

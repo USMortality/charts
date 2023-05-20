@@ -2,7 +2,12 @@ FROM eddelbuettel/r2u:22.04
 
 RUN echo "Updating deps..."
 RUN apt-get update
-RUN apt-get install -y nodejs npm tini curl git libssl-dev bash jq mariadb-server vim csvkit
+ADD dependencies.txt .
+RUN apt-get install -y `cat dependencies.txt`
+
+# Install NodeJS 18
+RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
+RUN apt-get install -y nodejs
 
 RUN curl -s https://raw.githubusercontent.com/jhuckaby/Cronicle/master/bin/install.js | node
 WORKDIR /opt/cronicle
@@ -35,11 +40,6 @@ ENV CRONICLE_client__custom_live_log_socket_url="https://cron.mortality.watch"
 ADD entrypoint.sh .
 ADD config.json .
 
-# R deps
-ADD dependencies.txt .
-ADD install_r_deps.sh .
-RUN /opt/cronicle/install_r_deps.sh
-
 # Configure SSL version for R downloader
 ADD openssl.cnf .
 ENV OPENSSL_CONF=/opt/cronicle/openssl.cnf
@@ -47,8 +47,13 @@ ENV OPENSSL_CONF=/opt/cronicle/openssl.cnf
 # Install MinIO Client
 RUN curl https://dl.min.io/client/mc/release/linux-amd64/mc --create-dirs -o minio-binaries/mc
 RUN chmod +x minio-binaries/mc
-RUN echo "export PATH=$PATH:$(pwd)/minio-binaries/" >> ~/.bashrc
+RUN echo "export PATH=$PATH:$(pwd)/minio-binaries/" >>~/.bashrc
 RUN minio-binaries/mc alias set minio https://s3.mortality.watch minio $S3_SECRET
+
+# R deps
+ADD dependencies_r.txt .
+ADD install_r_deps.sh .
+RUN /opt/cronicle/install_r_deps.sh
 
 EXPOSE 3012
 ENTRYPOINT ["/bin/tini", "--"]
