@@ -3,7 +3,7 @@ source("lib/common.r")
 us_states_iso3c <- as_tibble(read.csv("./data_static/usa_states_iso3c.csv"))
 
 data1 <- read.csv("../wonder_dl/out/yearly/us_states_1999_2020_all.csv")
-data2 <- read.csv("../wonder_dl/out/yearly/us_states_2020_n_all.csv")
+data2 <- read.csv("../wonder_dl/out/yearly/us_states_2021_n_all.csv")
 
 parseData <- function(df, jurisdiction_column, age_group) {
   df |>
@@ -39,7 +39,7 @@ processAgeGroups <- function(age_groups, ag) {
   ag2 <- data.frame()
   for (age_group in age_groups) {
     data <- read.csv(paste0(
-      "../wonder_dl/out/yearly/us_states_2020_n_",
+      "../wonder_dl/out/yearly/us_states_2021_n_",
       age_group,
       ".csv"
     ))
