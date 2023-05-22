@@ -5,24 +5,7 @@ us_states_iso3c <- as_tibble(read.csv("./data_static/usa_states_iso3c.csv"))
 data1 <- read.csv("../wonder_dl/out/yearly/us_states_1999_2020_all.csv")
 data2 <- read.csv("../wonder_dl/out/yearly/us_states_2021_n_all.csv")
 
-imputeSingleNA <- function(df) {
-  # Count NAs
-  n <- sum(is.na(df$deaths))
-
-  # No need for imputation or too many.
-  if (n != 1) {
-    return(df)
-  }
-
-  # Find sum target
-  target <- df$deaths[df$age_group == "all"] -
-    sum(df$deaths[df$age_group != "all"], na.rm = TRUE)
-
-  df$deaths[is.na(df$deaths)] <- target
-  return(df)
-}
-
-parseData <- function(df, jurisdiction_column, age_group) {
+parse_data <- function(df, jurisdiction_column, age_group) {
   df |>
     select(!!jurisdiction_column, Year.Code, Deaths) |>
     setNames(c("jurisdiction", "date", "deaths")) |>
@@ -33,14 +16,14 @@ parseData <- function(df, jurisdiction_column, age_group) {
 }
 
 totals <- rbind(
-  parseData(data1, "State", "all"),
-  parseData(data2, "Residence.State", "all")
+  parse_data(data1, "State", "all"),
+  parse_data(data2, "Residence.State", "all")
 ) |>
   as_tibble() |>
   arrange(iso3c, date) |>
   distinct(iso3c, date, .keep_all = TRUE)
 
-processAgeGroups <- function(age_groups, ag) {
+process_age_groups <- function(age_groups) {
   # 1999-2020
   ag1 <- data.frame()
   for (age_group in age_groups) {
@@ -49,7 +32,7 @@ processAgeGroups <- function(age_groups, ag) {
       age_group,
       ".csv"
     ))
-    ag1 <- rbind(ag1, parseData(data, "State", age_group))
+    ag1 <- rbind(ag1, parse_data(data, "State", age_group))
   }
 
   # 2020+
@@ -60,7 +43,7 @@ processAgeGroups <- function(age_groups, ag) {
       age_group,
       ".csv"
     ))
-    ag2 <- rbind(ag2, parseData(data, "Residence.State", age_group))
+    ag2 <- rbind(ag2, parse_data(data, "Residence.State", age_group))
   }
 
   totals_ag <- rbind(ag1, ag2) |>
@@ -72,23 +55,6 @@ processAgeGroups <- function(age_groups, ag) {
     arrange(iso3c, date, age_group) |>
     distinct(iso3c, date, age_group, .keep_all = TRUE) |>
     complete(iso3c, date, age_group)
-}
-
-imputeFromAggregate <- function(df1, df2, aggregate_group, groups) {
-  df <- df1 |> filter(age_group %in% groups)
-  if (sum(is.na(df$deaths)) == 0) df1[3:4]
-  if (sum(is.na(df$deaths)) > 2) stop("more than 1 NA")
-  sum_groups <- sum(df$deaths, na.rm = TRUE)
-  sum_aggregate <- (df2 |> filter(
-    iso3c == unique(df1$iso3c),
-    date == unique(df1$date),
-    age_group == aggregate_group
-  ))$deaths
-  target <- sum_aggregate - sum_groups
-  if (target > 9) stop("imputed value is >9")
-
-  df1$deaths[df1$age_group %in% df$age_group & is.na(df1$deaths)] <- target
-  df1[3:4]
 }
 
 # By 10y age group
@@ -105,7 +71,8 @@ age_groups <- c(
   "90_100",
   "NS"
 )
-result_10y <- processAgeGroups(age_groups, "10y")
+result_10y <- process_age_groups(age_groups) |>
+  mutate(age_group = ifelse(age_group == "90-100", "90+", age_group))
 save_csv(result_10y, "deaths/usa/yearly_10y", upload = TRUE)
 
 # Impute NA's
@@ -140,7 +107,8 @@ age_groups <- c(
   "95_100",
   "NS"
 )
-result_5y <- processAgeGroups(age_groups, "5y")
+result_5y <- process_age_groups(age_groups) |>
+  mutate(age_group = ifelse(age_group == "95-100", "95+", age_group))
 save_csv(result_5y, "deaths/usa/yearly_5y", upload = TRUE)
 
 # Use NS from 10y
