@@ -26,27 +26,27 @@ result <- cmr |>
   inner_join(asmr, by = c("iso3c", "date")) |>
   select(-age_group)
 
-save_csv(result, "mortality/usa/yearly.csv")
+save_csv(result, "mortality/usa/yearly")
 
 # Chart
-# jurisdiction <- "USA-VT"
-# ts <- result |>
-#   filter(iso3c == jurisdiction) |>
-#   as_tsibble(index = date)
+jurisdiction <- "USA-VT"
+ts <- result |>
+  filter(iso3c == jurisdiction) |>
+  as_tsibble(index = date)
 # chart1 <-
-#   ggplot(ts, aes(x = date)) +
-#   labs(
-#     title = paste0("Weekly Mortality [", jurisdiction, "]"),
-#     subtitle = paste0(
-#       "Source: CDC | Mortality.watch"
-#     ),
-#     y = "Deaths/100k",
-#     x = "Year"
-#   ) +
-#   geom_line(aes(y = cmr, colour = "cmr"), linewidth = 1) +
-#   geom_line(aes(y = asmr_who, colour = "asmr_who"), linewidth = 1) +
-#   geom_line(aes(y = asmr_esp, colour = "asmr_esp"), linewidth = 1) +
-#   geom_line(aes(y = asmr_usa, colour = "asmr_usa"), linewidth = 1) +
-#   geom_line(aes(y = asmr_country, colour = "asmr_country"), linewidth = 1) +
-#   twitter_theme() +
-#   theme(axis.text.x = element_text(angle = 30, hjust = 0.5, vjust = 0.5))
+ggplot(ts, aes(x = date)) +
+  labs(
+    title = paste0("Yearly Mortality [", jurisdiction, "]"),
+    subtitle = paste0(
+      "Source: CDC | Mortality.watch"
+    ),
+    y = "Deaths/100k",
+    x = "Year"
+  ) +
+  geom_line(aes(y = cmr, colour = "cmr"), linewidth = 1) +
+  geom_line(aes(y = asmr_who, colour = "asmr_who"), linewidth = 1) +
+  geom_line(aes(y = asmr_esp, colour = "asmr_esp"), linewidth = 1) +
+  geom_line(aes(y = asmr_usa, colour = "asmr_usa"), linewidth = 1) +
+  geom_line(aes(y = asmr_country, colour = "asmr_country"), linewidth = 1) +
+  twitter_theme() +
+  theme(axis.text.x = element_text(angle = 30, hjust = 0.5, vjust = 0.5))
