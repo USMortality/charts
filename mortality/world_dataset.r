@@ -39,7 +39,8 @@ dd_asmr <- dd |>
   group_by(iso3c) |>
   group_modify(~ calculate_asmr_variants(.x), .keep = TRUE) |>
   ungroup() |>
-  inner_join(iso3c_jurisdiction, by = c("iso3c"))
+  inner_join(iso3c_jurisdiction, by = c("iso3c")) |>
+  mutate(iso = iso3c)
 
 # Weekly data
 weekly_nested <- get_nested_data_by_time(dd_asmr, dd_all, "yearweek")
