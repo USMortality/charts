@@ -305,8 +305,12 @@ imputeSingleNA <- function(df) {
 
 imputeFromAggregate <- function(df1, df2, aggregate_group, groups) {
   df <- df1 |> filter(age_group %in% groups)
-  if (sum(is.na(df$deaths)) == 0) return(df1[3:4]) # No NA
-  if (sum(is.na(df$deaths)) > 1) return(df1[3:4]) # More than 1 NA
+  if (sum(is.na(df$deaths)) == 0) {
+    return(df1[3:4])
+  } # No NA
+  if (sum(is.na(df$deaths)) > 1) {
+    return(df1[3:4])
+  } # More than 1 NA
   sum_groups <- sum(df$deaths, na.rm = TRUE)
   sum_aggregate <- (df2 |> filter(
     iso3c == unique(df1$iso3c),

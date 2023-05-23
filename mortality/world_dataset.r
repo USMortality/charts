@@ -36,10 +36,9 @@ dd_all <- dd |>
 
 dd_asmr <- dd |>
   filter(age_group != "all") |>
-  mutate(iso = iso3c) |>
-  nest(data = !iso) |>
-  mutate(data = lapply(data, calculate_asmr_variants)) |>
-  unnest(cols = c(data)) |>
+  group_by(iso3c) |>
+  group_modify(~ calculate_asmr_variants(.x), .keep = TRUE) |>
+  ungroup() |>
   inner_join(iso3c_jurisdiction, by = c("iso3c"))
 
 # Weekly data
