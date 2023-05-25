@@ -76,12 +76,20 @@ age_groups <- c(
   "NS"
 )
 result_10y <- processAgeGroups(age_groups)
-save_csv(result_10y, "deaths/usa/monthly_10y", upload = TRUE)
+save_csv(
+  result_10y |> mutate(year = year(date), month = month(date)),
+  "deaths/usa/monthly_10y",
+  upload = TRUE
+)
 result_10y_imputed <- result_10y |>
   group_by(iso3c, date) |>
   group_modify(~ imputeSingleNA(.x)) |>
   ungroup()
-save_csv(result_10y, "deaths/usa/monthly_10y_imputed", upload = TRUE)
+save_csv(
+  result_10y_imputed |> mutate(year = year(date), month = month(date)),
+  "deaths/usa/monthly_10y_imputed",
+  upload = TRUE
+)
 
 # By 5y age group
 age_groups <- c(
@@ -108,7 +116,11 @@ age_groups <- c(
   "NS"
 )
 result_5y <- processAgeGroups(age_groups)
-save_csv(result_5y, "deaths/usa/monthly_5y", upload = TRUE)
+save_csv(
+  result_5y |> mutate(year = year(date), month = month(date)),
+  "deaths/usa/monthly_5y",
+  upload = TRUE
+)
 result_5y_imputed <- result_5y |>
   group_by(iso3c, date) |>
   group_modify(~ imputeSingleNA(.x)) |>
@@ -128,6 +140,8 @@ result_5y_imputed <- result_5y |>
     .x, result_10y_imputed, "40-49", c("40-44", "45-49")
   ), .keep = TRUE) |>
   ungroup()
-save_csv(result_5y, "deaths/usa/monthly_5y_imputed", upload = TRUE)
-
-count(result_5y_imputed |> filter(is.na(deaths))) / count(result_5y)
+save_csv(
+  result_5y_imputed |> mutate(year = year(date), month = month(date)),
+  "deaths/usa/monthly_5y_imputed",
+  upload = TRUE
+)
