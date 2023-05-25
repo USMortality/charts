@@ -2,6 +2,35 @@ source("lib/common.r")
 
 us_states_iso3c <- as_tibble(read.csv("./data_static/usa_states_iso3c.csv"))
 
+usa_10y <- read_remote("deaths/usa/monthly_10y.csv") |>
+  filter(iso3c == "USA") |>
+  group_by(iso3c, year, age_group) |>
+  summarise(deaths = sum(deaths)) |>
+  ungroup() |>
+  mutate(date = year) |>
+  select(-year)
+usa_10y_complete <- read_remote("deaths/usa/monthly_10y_complete.csv") |>
+  filter(iso3c == "USA") |>
+  group_by(iso3c, year, age_group) |>
+  summarise(deaths = sum(deaths)) |>
+  ungroup() |>
+  mutate(date = year) |>
+  select(-year)
+usa_5y <- read_remote("deaths/usa/monthly_5y.csv") |>
+  filter(iso3c == "USA") |>
+  group_by(iso3c, year, age_group) |>
+  summarise(deaths = sum(deaths)) |>
+  ungroup() |>
+  mutate(date = year) |>
+  select(-year)
+usa_5y_complete <- read_remote("deaths/usa/monthly_5y_complete.csv") |>
+  filter(iso3c == "USA") |>
+  group_by(iso3c, year, age_group) |>
+  summarise(deaths = sum(deaths)) |>
+  ungroup() |>
+  mutate(date = year) |>
+  select(-year)
+
 data1 <- read.csv("../wonder_dl/out/yearly/us_states_1999_2020_all.csv")
 data2 <- read.csv("../wonder_dl/out/yearly/us_states_2021_n_all.csv")
 
@@ -73,15 +102,13 @@ age_groups <- c(
 )
 result_10y <- process_age_groups(age_groups) |>
   mutate(age_group = ifelse(age_group == "90-100", "90+", age_group))
-save_csv(result_10y, "deaths/usa/yearly_10y", upload = TRUE)
 
 # Impute NA's
-result_10y_imputed <- result_10y |>
+result_10y_complete <- result_10y |>
   filter(date <= 2022) |>
   group_by(iso3c, date) |>
   group_modify(~ imputeSingleNA(.x)) |>
   ungroup()
-save_csv(result_10y_imputed, "deaths/usa/yearly_10y_imputed", upload = TRUE)
 
 # By 5y age group
 age_groups <- c(
@@ -109,25 +136,39 @@ age_groups <- c(
 )
 result_5y <- process_age_groups(age_groups) |>
   mutate(age_group = ifelse(age_group == "95-100", "95+", age_group))
-save_csv(result_5y, "deaths/usa/yearly_5y", upload = TRUE)
 
 # Use NS from 10y
-result_5y_imputed <- rbind(
-  result_10y_imputed |> filter(age_group == "NS"),
+result_5y_complete <- rbind(
+  result_10y_complete |> filter(age_group == "NS"),
   result_5y |> filter(age_group != "NS")
 ) |> arrange(iso3c, date, age_group)
 
 # Impute NA's
-result_5y_imputed <- result_5y_imputed |>
+result_5y_complete <- result_5y_complete |>
   filter(date <= 2022) |>
   group_by(iso3c, date) |>
   group_modify(~ imputeSingleNA(.x)) |>
   group_modify(~ imputeFromAggregate(
-    .x, result_10y_imputed, "0-9", c("0-4", "5-9")
+    .x, result_10y_complete, "0-9", c("0-4", "5-9")
   ), .keep = TRUE) |>
   group_modify(~ imputeFromAggregate(
-    .x, result_10y_imputed, "10-19", c("10-14", "15-19")
+    .x, result_10y_complete, "10-19", c("10-14", "15-19")
   ), .keep = TRUE) |>
   ungroup()
 
-save_csv(result_5y_imputed, "deaths/usa/yearly_5y_imputed", upload = TRUE)
+save_csv(rbind(usa_10y, result_10y),
+  "deaths/usa/yearly_10y",
+  upload = TRUE
+)
+save_csv(rbind(usa_10y_complete, result_10y_complete),
+  "deaths/usa/yearly_10y_complete",
+  upload = TRUE
+)
+save_csv(rbind(usa_5y, result_5y),
+  "deaths/usa/yearly_5y",
+  upload = TRUE
+)
+save_csv(rbind(usa_5y_complete, result_5y_complete),
+  "deaths/usa/yearly_5y_complete",
+  upload = TRUE
+)

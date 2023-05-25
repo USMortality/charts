@@ -27,7 +27,7 @@ urls <- list(
   ),
   c(
     "https://data.cdc.gov/api/views/muzy-jte6/rows.csv?accessType=DOWNLOAD",
-    "usa_states_age_cause_weekly.csv"
+    "usa_states_cause_weekly.csv"
   ),
   c(
     "https://www.destatis.de/DE/Themen/Gesellschaft-Umwelt/Bevoelkerung/Sterbefaelle-Lebenserwartung/Tabellen/sonderauswertung-sterbefaelle.xlsx?__blob=publicationFile",
