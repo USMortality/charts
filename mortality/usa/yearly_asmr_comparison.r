@@ -1,7 +1,7 @@
 source("lib/common.r")
 source("lib/asmr.r")
 
-deaths <- read_remote("deaths/usa/yearly_5y_imputed.csv") |>
+deaths <- read_remote("deaths/usa/yearly_5y_complete.csv") |>
   mutate(age_group = ifelse(
     age_group %in% c("85-89", "90-94", "95+"), "85+", age_group
   )) |>
@@ -91,7 +91,7 @@ ts_diff <- result |>
     select(iso3c, date, asmr_country), by = c("iso3c", "date"))
 
 # Chart
-jurisdiction <- "USA-VT"
+jurisdiction <- "USA-CA"
 # chart1 <-
 ggplot(
   ts_diff |> filter(iso3c == jurisdiction) |> as_tsibble(index = date),
