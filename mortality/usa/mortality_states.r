@@ -27,8 +27,8 @@ dd_us$age_group <- "all"
 
 # ASMR
 ## Monthly
-n_ <- nrow(md_usa_10y |> filter(iso3c == "USA-CA"))
-# Use Most popoulus state (CA) as reference for completeness.
+n_ <- nrow(md_usa_10y |> filter(iso3c == "USA"))
+# Use USA national data as reference for completeness.
 complete_states <- md_usa_10y |>
   filter(!is.na(deaths)) |>
   group_by(iso3c) |>

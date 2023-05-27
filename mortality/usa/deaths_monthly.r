@@ -141,7 +141,8 @@ age_groups <- c(
 result_5y <- rbind(
   processAgeGroups("", age_groups), # USA
   processAgeGroups("states_", age_groups) # States
-)
+) |>
+  mutate(age_group = ifelse(age_group == "95-100", "95+", age_group))
 
 result_5y_complete <- result_5y |>
   group_by(iso3c, date) |>
@@ -177,7 +178,7 @@ aggregate10y <- function(df) {
         age_group %in% c("50-54", "55-59") ~ "50-59",
         age_group %in% c("60-64", "65-69") ~ "60-69",
         age_group %in% c("70-74", "75-79") ~ "70-79",
-        age_group %in% c("80-84", "85+") ~ "80+",
+        age_group %in% c("80-84", "85-89", "90-94", "95+") ~ "80+",
         age_group %in% c("NS") ~ "NS",
         age_group %in% c("all") ~ "all"
       )
