@@ -19,16 +19,20 @@ asmr_types <- c("asmr_who", "asmr_esp", "asmr_usa", "asmr_country")
 dd <- rbind(
   deu_mortality_states,
   usa_mortality_states |> filter(
-    !iso3c == "USA" | (iso3c == "USA" & date < as.Date("2015-01-05"))
+    !iso3c == "USA" |
+      (iso3c == "USA" & age_group != "all" & date < as.Date("2015-01-05")) |
+      (iso3c == "USA" & age_group == "all" & date < as.Date("2014-12-29"))
   ),
-  world_mortality |> filter(!iso3c %in% c("USA", "DEU")),
-  mortality_org |> filter(!iso3c %in% c("DEU"))
+  world_mortality |> filter(!iso3c %in% c("DEU")),
+  mortality_org |> filter(
+    !iso3c %in% c("DEU") & !(iso3c == "USA" & age_group == "all")
+  )
 ) |>
   distinct(iso3c, date, age_group, .keep_all = TRUE) |>
   arrange(iso3c, date, age_group) |>
   mutate(cmr = deaths / population * 100000)
 
-print_info(dd)
+# print_info(dd)
 
 dd_all <- dd |>
   filter(age_group == "all") |>
