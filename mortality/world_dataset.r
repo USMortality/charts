@@ -14,14 +14,15 @@ source("mortality/world_iso.r")
 baseline_size <- read_remote("mortality/world_baseline.csv")
 
 asmr_types <- c("asmr_who", "asmr_esp", "asmr_usa", "asmr_country")
-excluded_iso3c <- c("USA", "DEU")
 
 # For duplicates: first values take precedence.
 dd <- rbind(
   deu_mortality_states,
-  usa_mortality_states,
-  world_mortality |> filter(!iso3c %in% excluded_iso3c),
-  mortality_org |> filter(!iso3c %in% excluded_iso3c)
+  usa_mortality_states |> filter(
+    !iso3c == "USA" | (iso3c == "USA" & date < as.Date("2015-01-05"))
+  ),
+  world_mortality |> filter(!iso3c %in% c("USA", "DEU")),
+  mortality_org |> filter(!iso3c %in% c("DEU"))
 ) |>
   distinct(iso3c, date, age_group, .keep_all = TRUE) |>
   arrange(iso3c, date, age_group) |>
