@@ -91,10 +91,12 @@ ts_diff <- result |>
     select(iso3c, date, asmr_country), by = c("iso3c", "date"))
 
 # Chart
-jurisdiction <- "USA-CA"
+jurisdiction <- "USA"
 # chart1 <-
 ggplot(
-  ts_diff |> filter(iso3c == jurisdiction) |> as_tsibble(index = date),
+  ts_diff |>
+    filter(iso3c == jurisdiction, date < 2023) |>
+    as_tsibble(index = date),
   aes(x = date)
 ) +
   labs(
@@ -106,8 +108,17 @@ ggplot(
     x = "Year"
   ) +
   # geom_line(aes(y = cmr, colour = "cmr"), linewidth = 1) +
-  geom_line(aes(y = asmr_country.x, colour = "asmr_country.5y"), linewidth = 1) +
-  geom_line(aes(y = asmr_country.y, colour = "asmr_country.10y"), linewidth = 1) +
-  geom_line(aes(y = asmr_country, colour = "asmr_country.20y"), linewidth = 1) +
+  geom_line(
+    aes(y = asmr_country.x, colour = "asmr_country.5y"),
+    linewidth = 1
+  ) +
+  geom_line(
+    aes(y = asmr_country.y, colour = "asmr_country.10y"),
+    linewidth = 1
+  ) +
+  geom_line(
+    aes(y = asmr_country, colour = "asmr_country.20y"),
+    linewidth = 1
+  ) +
   twitter_theme() +
   theme(axis.text.x = element_text(angle = 30, hjust = 0.5, vjust = 0.5))
