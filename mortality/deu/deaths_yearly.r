@@ -286,3 +286,24 @@ ggplot(asmr |> filter(date >= START_YEAR), aes(x = date)) +
   watermark() +
   geom_line(aes(y = asmr_esp), color = "#5383EC", linewidth = 1) +
   twitter_theme()
+
+# 1990 log scale
+ggplot(asmr |> filter(date >= 1990), aes(x = date)) +
+  labs(
+    title = "Yearly All-Cause ASMR (Single Age Groups) [Germany] {LOG}",
+    subtitle = paste0(
+      c(
+        "Baseline: 2010-2019",
+        "95% CI",
+        "Std. Population: ESP2013",
+        "Source: destatis.de"
+      ),
+      collapse = " | "
+    ),
+    x = "Year",
+    y = "Deaths/100k"
+  ) +
+  watermark() +
+  scale_y_continuous(trans = "log2") +
+  geom_line(aes(y = asmr_esp), color = "#5383EC", linewidth = 1) +
+  twitter_theme()
