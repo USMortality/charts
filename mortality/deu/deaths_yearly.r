@@ -307,3 +307,122 @@ ggplot(asmr |> filter(date >= 1990), aes(x = date)) +
   scale_y_continuous(trans = "log2") +
   geom_line(aes(y = asmr_esp), color = "#5383EC", linewidth = 1) +
   twitter_theme()
+
+BL_LEN <- 10
+H_STEP_FORECAST <- 2
+
+calc_excess <- function(df) {
+  fc <- head(df, BL_LEN) |>
+    as_tsibble(index = date) |>
+    model(RW(asmr_esp ~ drift())) |>
+    forecast(h = H_STEP_FORECAST)
+
+  result <- tail(df, H_STEP_FORECAST)
+  result$expected <- fc$.mean
+  result$excess <- result$asmr_esp - result$expected
+  result$excess_p <- (result$asmr_esp - result$expected) / result$asmr_esp
+  result
+}
+
+data_excess <- asmr |>
+  select(-iso3c, -asmr_who) |>
+  as_tsibble(index = date) |>
+  slide_tsibble(.size = (BL_LEN + H_STEP_FORECAST)) |>
+  group_by(.id) |>
+  group_modify(~ calc_excess(.x)) |>
+  mutate(id = row_number()) |>
+  ungroup()
+
+ggplot(
+  data_excess |> filter(id == H_STEP_FORECAST) |> as_tsibble(index = date),
+  aes(x = date)
+) +
+  labs(
+    title = "Yearly All-Cause excess ASMR [Germany]",
+    subtitle = paste0(
+      c(
+        paste0(h, " year forecast"),
+        "Single Age Groups",
+        "Std. Population: ESP2013",
+        "Source: destatis.de"
+      ),
+      collapse = " | "
+    ),
+    x = "Forecast Year",
+    y = "Excess Deaths/100k"
+  ) +
+  watermark() +
+  geom_col(aes(y = excess), fill = "#5383EC") +
+  twitter_theme() +
+  scale_y_continuous(limits = c(-100, 100))
+
+ggplot(
+  data_excess |> filter(id == H_STEP_FORECAST) |> as_tsibble(index = date),
+  aes(x = date)
+) +
+  labs(
+    title = "Yearly All-Cause excess ASMR [Germany]",
+    subtitle = paste0(
+      c(
+        paste0(h, " year forecast"),
+        "Single Age Groups",
+        "Std. Population: ESP2013",
+        "Source: destatis.de"
+      ),
+      collapse = " | "
+    ),
+    x = "Forecast Year",
+    y = "Excess ASMR (%)"
+  ) +
+  watermark() +
+  geom_col(aes(y = excess_p), fill = "#5383EC") +
+  twitter_theme() +
+  scale_y_continuous(labels = scales::percent, limits = c(-0.1, .10))
+
+# Animate
+make_chart <- function(df) {
+  chart <- ggplot(df, aes(x = date)) +
+    labs(
+      title = "Yearly All-Cause ASMR (Single Age Groups) [Germany]",
+      subtitle = paste0(
+        c(
+          "95% CI",
+          "Std. Population: ESP2013",
+          "Source: destatis.de"
+        ),
+        collapse = " | "
+      ),
+      x = "Year",
+      y = "Deaths/100k"
+    ) +
+    geom_smooth(
+      mapping = aes(y = asmr_esp),
+      data = head(df, BL_LEN),
+      fullrange = TRUE,
+      color = "black",
+      linetype = 5,
+      size = 0.8,
+      method = "lm",
+      level = 0.95
+    ) +
+    watermark() +
+    geom_line(aes(y = asmr_esp), color = "#5383EC", linewidth = 1) +
+    scale_x_continuous(breaks = df$date) +
+    twitter_theme()
+  save_chart(
+    chart,
+    paste("mortality", "deu", paste0(
+      "forecast_", str_pad(unique(df$.id), 2, pad = "0")
+    ), sep = "/"),
+    upload = FALSE
+  )
+}
+
+asmr |>
+  select(-iso3c, -asmr_who) |>
+  as_tsibble(index = date) |>
+  slide_tsibble(.size = (BL_LEN + H_STEP_FORECAST)) |>
+  group_by(.id) |>
+  group_map(~ make_chart(.x), .keep = TRUE)
+
+# ffmpeg -hide_banner -loglevel error -r 1 -pattern_type glob -i '*.png' -c:v libx264 -vf "fps=1,format=yuv420p,scale=1200x670" _movie.mp4ffmpeg
