@@ -36,6 +36,14 @@ urls <- list(
   c(
     "https://covid.ourworldindata.org/data/owid-covid-data.csv",
     "owid.csv"
+  ),
+  c(
+    "https://data.cdc.gov/api/views/xkkf-xrst/rows.csv?accessType=DOWNLOAD",
+    "usa_states_excess_weekly.csv"
+  ),
+  c(
+    "https://data.cdc.gov/api/views/unsk-b7fc/rows.csv?accessType=DOWNLOAD",
+    "usa_states_vaccination.csv"
   )
 )
 
