@@ -21,6 +21,7 @@ wd <- deaths |>
   ) |>
   select(iso3c, date, age_group, deaths) |>
   getDailyFromWeekly(c("deaths"))
+wd$type <- "weekly"
 
 md <- deaths |>
   filter(time_unit == "monthly") |>
@@ -30,8 +31,10 @@ md <- deaths |>
   ) |>
   select(iso3c, date, age_group, deaths) |>
   getDailyFromMonthly(c("deaths"))
+md$type <- "monthly"
 
 world_mortality <- rbind(wd, md) |>
   inner_join(population, by = c("iso3c", "date")) |>
-  arrange(iso3c, date, age_group) |>
-  distinct(iso3c, date, age_group, .keep_all = TRUE)
+  arrange(iso3c, date, age_group, type) |>
+  distinct(iso3c, date, age_group, type, .keep_all = TRUE)
+world_mortality$source <- "world_mortality"

@@ -286,20 +286,29 @@ get_nested_data_by_time <- function(dd_asmr, dd_all, fun_name) {
   fun <- get(fun_name)
   weekly_asmr <- dd_asmr |>
     mutate(!!fun_name := fun(date), .after = date) |>
-    nest(data = !iso) |>
+    nest(data = !c("iso", "type")) |>
     mutate(data = lapply(data, aggregate_data, fun_name)) |>
     unnest(cols = c(data))
   weekly_all <- dd_all |>
     mutate(!!fun_name := fun(date), .after = date) |>
-    nest(data = !iso) |>
+    nest(data = !c("iso", "type")) |>
     mutate(data = lapply(data, aggregate_data, fun_name)) |>
     unnest(cols = c(data))
-  weekly_all |>
-    left_join(weekly_asmr, by = c("iso3c", "date")) |>
+  df <- weekly_all |>
+    left_join(weekly_asmr, by = c("iso3c", "date", "type")) |>
     select(-iso.y, -jurisdiction.y) |>
     setNames(c(
-      "iso", "iso3c", "jurisdiction", "date", "deaths", "population", "cmr",
-      asmr_types
-    )) |>
-    nest(data = !iso)
+      "type", "iso", "iso3c", "jurisdiction", "date", "deaths", "population",
+      "cmr", asmr_types
+    ))
+
+  rbind(
+    df |> filter(type == "weekly"),
+    df |> filter(type == "monthly"),
+    df |> filter(type == "yearly")
+  ) |>
+    arrange(iso3c, date) |>
+    distinct(iso3c, date, .keep_all = TRUE) |>
+    select(-type) |>
+    nest(data = !c("iso"))
 }

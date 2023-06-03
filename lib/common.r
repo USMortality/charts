@@ -277,12 +277,22 @@ check_duplicates <- function(df) {
 
 print_info <- function(df) {
   for (code in unique(df$iso3c)) {
-    df_country <- df |> filter(df$iso3c == code)
-    print(paste0(
-      code, " | dates: ",
-      min(df_country$date), " to ", max(df_country$date), " | age_groups: ",
-      paste(unique(df_country$age_group), collapse = ", ")
-    ))
+    df_country <- df |> filter(iso3c == code)
+    for (t in unique(df_country$type)) {
+      df_country_type <- df_country |> filter(type == t)
+      for (s in unique(df_country_type$source)) {
+        df_country_type_source <- df_country_type |> filter(source == s)
+        print(paste0(
+          code,
+          " | type: ", t,
+          " | source: ", s,
+          " | dates: ",
+          min(df_country_type_source$date), " to ",
+          max(df_country_type_source$date), " | age_groups: ",
+          paste(unique(df_country_type_source$age_group), collapse = ", ")
+        ))
+      }
+    }
   }
 }
 

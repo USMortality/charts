@@ -28,6 +28,7 @@ dd_us1 <- wd_usa |>
   getDailyFromWeekly(c("deaths")) |>
   select(iso3c, date, deaths)
 dd_us1$age_group <- "all"
+dd_us1$type <- "weekly"
 
 # CMR, Monthly
 dd_us2 <- md_usa_10y |>
@@ -35,13 +36,13 @@ dd_us2 <- md_usa_10y |>
   getDailyFromMonthly(c("deaths")) |>
   select(iso3c, date, deaths)
 dd_us2$age_group <- "all"
+dd_us2$type <- "monthly"
 
 dd_us <- rbind(dd_us1, dd_us2) |>
-  distinct(iso3c, date, .keep_all = TRUE) |>
-  arrange(iso3c, date, age_group)
+  distinct(iso3c, date, type, .keep_all = TRUE) |>
+  arrange(iso3c, date, age_group, type)
 
 # ASMR
-
 ## Weekly
 n_ <- nrow(wd_usa |> filter(!is.na(deaths) & iso3c == "USA"))
 complete_states_weekly <- wd_usa |>
@@ -54,6 +55,7 @@ deaths_weekly <- wd_usa |>
   group_by(iso3c, age_group) |>
   group_modify(~ getDailyFromWeekly(.x, c("deaths"))) |>
   ungroup()
+deaths_weekly$type <- "weekly"
 
 ## Monthly
 n_ <- nrow(md_usa_10y |> filter(iso3c == "USA"))
@@ -68,6 +70,7 @@ deaths_monthly <- md_usa_10y |>
   group_by(iso3c, age_group) |>
   group_modify(~ getDailyFromMonthly(.x, c("deaths"))) |>
   ungroup()
+deaths_monthly$type <- "monthly"
 
 ## Yearly
 deaths_yearly <- read_remote("deaths/usa/yearly_10y_complete.csv") |>
@@ -77,14 +80,14 @@ deaths_yearly <- read_remote("deaths/usa/yearly_10y_complete.csv") |>
   group_by(iso3c, age_group) |>
   group_modify(~ getDailyFromYearly(.x, c("deaths"))) |>
   ungroup()
+deaths_yearly$type <- "yearly"
 
 dd_us_age <- rbind(
   deaths_monthly,
   deaths_yearly
 ) |>
-  filter(!(iso3c %in% complete_states_weekly$iso3c) | (
-    iso3c %in% complete_states_weekly$iso3c & date < as.Date("2017-01-02")
-  )) |>
+  filter(!(iso3c %in% complete_states_weekly$iso3c) |
+    iso3c %in% complete_states_weekly$iso3c) |>
   rbind(deaths_weekly |> select(-year, -week)) |>
   relocate(iso3c, date, age_group, deaths) |>
   arrange(iso3c, date, age_group)
@@ -157,6 +160,9 @@ usa_mortality_states <- rbind(dd_us, dd_us_age) |>
     population =
       ifelse(is.na(population.x), population.y, population.x)
   ) |>
-  select(iso3c, date, age_group, deaths, population) |>
+  select(iso3c, date, age_group, deaths, population, type) |>
   arrange(iso3c, date, age_group) |>
-  distinct(iso3c, date, age_group, .keep_all = TRUE)
+  distinct(iso3c, date, age_group, type, .keep_all = TRUE) |>
+  filter(age_group != "NS", !is.na(population))
+
+usa_mortality_states$source <- "cdc"

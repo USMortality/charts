@@ -4,12 +4,26 @@ df <- read_remote("mortality/world_weekly.csv") |>
   filter(substr(iso3c, 0, 3) == "USA") |>
   mutate(date = yearweek(date))
 
+tail(df)
+
+# "Administered_Dose1_Pop_Pct"
+# "Administered_Dose1_Recip_18PlusPop_Pct"
+# "Administered_Dose1_Recip_65PlusPop_Pct"
+# "Series_Complete_Pop_Pct"
+# "Series_Complete_18PlusPop_Pct"
+# "Series_Complete_65PlusPop_Pct"
+# "Additional_Doses_Vax_Pct"
+# "Additional_Doses_18Plus_Vax_Pct"
+# "Additional_Doses_65Plus_Vax_Pct"
+# "Bivalent_Booster_18Plus_Pop_Pct"
+# "Bivalent_Booster_65Plus_Pop_Pct"
+
 data1 <- as_tibble(read.csv("./data/usa_states_vaccination.csv")) |>
-  select(Location, Administered_Dose1_Recip_18PlusPop_Pct) |>
-  setNames(c("iso3c", "dose1_pct")) |>
-  mutate(iso3c = paste0("USA-", iso3c), dose1_pct = dose1_pct / 100) |>
+  select(Location, Bivalent_Booster_18Plus_Pop_Pct) |>
+  setNames(c("iso3c", "dose_pct")) |>
+  mutate(iso3c = paste0("USA-", iso3c), dose_pct = dose_pct / 100) |>
   group_by(iso3c) |>
-  summarise(dose1_pct = max(dose1_pct))
+  summarise(dose_pct = max(dose_pct, na.rm = TRUE))
 
 pre_vaxx <- df |>
   filter(date >= make_yearweek(year = 2020, week = 11) &
@@ -37,19 +51,20 @@ result <- inner_join(
 
 ggscatter(
   result,
-  x = "dose1_pct",
+  x = "dose_pct",
   y = "diff",
   label = "name",
   add = "reg.line", # Add regression line
   add.params = list(color = "blue", fill = "lightgray"),
   conf.int = TRUE # Add confidence interval
-) + stat_cor(method = "pearson", label.x = 0.8, label.y = -3) +
+) +
+  stat_cor(color = "red", method = "pearson", label.x = 0.4, label.y = -3) +
   labs(
     title = "Diff. in Excess Mortality Before vs After COVID-19 Vaccination",
     subtitle =
       "Week 2020 W11 - W50 vs 2020 W51 - * | Source: www.mortality.watch",
     y = "Difference in Excess ASMR (Deaths/100k)",
-    x = "Share of population COVID-19 vaccinated (1st)"
+    x = "Share of population COVID-19 vaccinated (Bivalent booster)"
   ) +
   twitter_theme() +
   scale_x_continuous(

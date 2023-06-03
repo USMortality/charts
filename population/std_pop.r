@@ -111,9 +111,10 @@ get_country2020_bins <- function(df) {
     nest(data = c(age_group, weight)) |>
     mutate(data = lapply(data, get_weights)) |>
     unnest(cols = c(data)) |>
-    select(2, 3) |>
+    select(age_group, weight) |>
     setNames(c("age", "weight")) |>
     filter(!is.infinite(weight))
+
   if (sum(data$weight) < 0.999) {
     stop("Weights do not sum up to 1.")
   }

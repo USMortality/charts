@@ -18,30 +18,22 @@ asmr_types <- c("asmr_who", "asmr_esp", "asmr_usa", "asmr_country")
 # For duplicates: first values take precedence.
 dd <- rbind(
   deu_mortality_states,
-  usa_mortality_states |> filter(
-    !iso3c == "USA" |
-      (iso3c == "USA" & age_group != "all" & date < as.Date("2015-01-05")) |
-      (iso3c == "USA" & age_group == "all" & date < as.Date("2014-12-29"))
-  ),
-  world_mortality |> filter(!iso3c %in% c("DEU")),
-  mortality_org |> filter(
-    !iso3c %in% c("DEU") & !(iso3c == "USA" & age_group == "all")
-  )
+  usa_mortality_states,
+  world_mortality |> filter(!iso3c %in% c("DEU", "USA")),
+  mortality_org |> filter(!iso3c %in% c("DEU", "USA"))
 ) |>
-  distinct(iso3c, date, age_group, .keep_all = TRUE) |>
-  arrange(iso3c, date, age_group) |>
+  distinct(iso3c, date, age_group, type, .keep_all = TRUE) |>
+  arrange(iso3c, date, age_group, type) |>
   mutate(cmr = deaths / population * 100000)
-
-# print_info(dd)
 
 dd_all <- dd |>
   filter(age_group == "all") |>
-  mutate(iso = iso3c) |>
-  inner_join(iso3c_jurisdiction, by = c("iso3c"))
+  inner_join(iso3c_jurisdiction, by = c("iso3c")) |>
+  mutate(iso = iso3c)
 
 dd_asmr <- dd |>
   filter(age_group != "all") |>
-  group_by(iso3c) |>
+  group_by(iso3c, type) |>
   group_modify(~ calculate_asmr_variants(.x), .keep = TRUE) |>
   ungroup() |>
   inner_join(iso3c_jurisdiction, by = c("iso3c")) |>
@@ -128,13 +120,15 @@ save_csv(yearly, "mortality/world_yearly", upload = TRUE)
 
 print('Calculating "YTD" dataset')
 daily_nested_ytd <- dd_all |>
-  left_join(dd_asmr, by = c("iso3c", "date")) |>
+  left_join(dd_asmr, by = c("iso3c", "date", "type")) |>
   select(-iso.y, -jurisdiction.y, -age_group) |>
   setNames(c(
-    "iso3c", "date", "deaths", "population", "cmr", "iso", "jurisdiction",
-    asmr_types
+    "iso3c", "date", "deaths", "population", "type", "source", "cmr", "iso",
+    "jurisdiction", asmr_types
   )) |>
   mutate(year = year(date)) |>
+  arrange(iso3c, date) |>
+  distinct(iso3c, date, .keep_all = TRUE) |>
   nest(data = !iso) |>
   mutate(data = lapply(data, calc_ytd))
 ytd <- daily_nested_ytd |>
