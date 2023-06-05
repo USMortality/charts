@@ -296,6 +296,34 @@ print_info <- function(df) {
   }
 }
 
+save_info <- function(df) {
+  result <- tibble()
+  for (code in unique(df$iso3c)) {
+    df_country <- df |> filter(iso3c == code)
+    for (t in unique(df_country$type)) {
+      df_country_type <- df_country |> filter(type == t)
+      for (s in unique(df_country_type$source)) {
+        df_country_type_source <- df_country_type |> filter(source == s)
+        result <- rbind(
+          result,
+          tibble(
+            iso3c = code,
+            type = t,
+            source = s,
+            min_date = min(df_country_type_source$date),
+            max_date = max(df_country_type_source$date),
+            age_groups = paste(
+              unique(df_country_type_source$age_group),
+              collapse = ", "
+            )
+          )
+        )
+      }
+    }
+  }
+  save_csv(result, "mortality/world_meta", upload = TRUE)
+}
+
 imputeSingleNA <- function(df) {
   # Count NAs
   n <- sum(is.na(df$deaths))

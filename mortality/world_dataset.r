@@ -26,6 +26,8 @@ dd <- rbind(
   arrange(iso3c, date, age_group, type) |>
   mutate(cmr = deaths / population * 100000)
 
+save_info(dd)
+
 dd_all <- dd |>
   filter(age_group == "all") |>
   inner_join(iso3c_jurisdiction, by = c("iso3c")) |>
