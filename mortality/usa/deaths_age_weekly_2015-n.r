@@ -9,7 +9,7 @@ df1 <- data1 |>
   select(State, Week.Ending.Date, Year, Observed.Number) |>
   setNames(c("jurisdiction", "date", "year", "deaths")) |>
   mutate(
-    date = make_yearweek(year = year, week = isoweek(as.Date(date))),
+    date = yearweek(date),
     age_group = "all",
     deaths = as.integer(str_replace(deaths, ",", ""))
   ) |>
@@ -49,7 +49,7 @@ result <- df |>
   ungroup()
 
 save_csv(
-  result |> mutate(year = year(date), week = week(date)),
+  result |> mutate(year = isoyear(date), week = isoweek(date)),
   "deaths/usa/age_weekly_2015-n",
   upload = TRUE
 )
