@@ -14,6 +14,16 @@ df1 <- data1 |>
     deaths = as.integer(str_replace(deaths, ",", ""))
   ) |>
   select(-year)
+
+# Combine NY/NYC
+ny <- df1 |>
+  filter(jurisdiction %in% c("New York", "New York City")) |>
+  group_by(date, age_group) |>
+  summarise(deaths = sum(deaths)) |>
+  ungroup()
+ny$jurisdiction <- "New York"
+df1 <- rbind(df1 |> filter(jurisdiction != "New York"), ny)
+
 df2 <- data2 |>
   filter(Type == "Predicted (weighted)") |>
   select(Jurisdiction, Year, Week, Age.Group, Number.of.Deaths) |>
@@ -31,6 +41,15 @@ df2 <- data2 |>
     )
   ) |>
   select(-year, -week)
+
+# Combine NY/NYC
+ny <- df2 |>
+  filter(jurisdiction %in% c("New York", "New York City")) |>
+  group_by(date, age_group) |>
+  summarise(deaths = sum(deaths)) |>
+  ungroup()
+ny$jurisdiction <- "New York"
+df2 <- rbind(df2 |> filter(jurisdiction != "New York"), ny)
 
 df3 <- df2 |> filter(jurisdiction == "United States", age_group == "85+")
 df3$age_group <- "NS"
