@@ -294,21 +294,31 @@ get_nested_data_by_time <- function(dd_asmr, dd_all, fun_name) {
     nest(data = !c("iso", "type")) |>
     mutate(data = lapply(data, aggregate_data, fun_name)) |>
     unnest(cols = c(data))
-  df <- weekly_all |>
-    left_join(weekly_asmr, by = c("iso3c", "date", "type")) |>
-    select(-iso.y, -jurisdiction.y) |>
-    setNames(c(
-      "type", "iso", "iso3c", "jurisdiction", "date", "deaths", "population",
-      "cmr", asmr_types
-    ))
 
-  rbind(
-    df |> filter(type == "weekly"),
-    df |> filter(type == "monthly"),
-    df |> filter(type == "yearly")
+  asmr <- rbind(
+    weekly_asmr |> filter(type == "weekly"),
+    weekly_asmr |> filter(type == "monthly"),
+    weekly_asmr |> filter(type == "yearly")
   ) |>
     arrange(iso3c, date) |>
     distinct(iso3c, date, .keep_all = TRUE) |>
-    select(-type) |>
+    select(-type)
+
+  all <- rbind(
+    weekly_all |> filter(type == "weekly"),
+    weekly_all |> filter(type == "monthly"),
+    weekly_all |> filter(type == "yearly")
+  ) |>
+    arrange(iso3c, date) |>
+    distinct(iso3c, date, .keep_all = TRUE) |>
+    select(-type)
+
+  all |>
+    left_join(asmr, by = c("iso3c", "date")) |>
+    select(-iso.y, -jurisdiction.y) |>
+    setNames(c(
+      "iso", "iso3c", "jurisdiction", "date", "deaths", "population", "cmr",
+      asmr_types
+    )) |>
     nest(data = !c("iso"))
 }
