@@ -75,18 +75,6 @@ calculateExcess <- function(data) {
     )
 }
 
-country <- "Germany"
-df <- data_yearly |> filter(jurisdiction == country)
-mortality_type <- "cmr"
-mortality_col <- sym(mortality_type)
-bl_size <- 4
-data <- df |>
-  select(iso3c, jurisdiction, date, !!mortality_col) |>
-  right_join(
-    getData(df, bl_size, mortality_col),
-    by = c("iso3c", "jurisdiction", "date")
-  )
-
 for (mortality_type in types) {
   countries <- getCountriesForType(mortality_type, data_yearly, asmr_data)
   mortality_col <- sym(mortality_type)

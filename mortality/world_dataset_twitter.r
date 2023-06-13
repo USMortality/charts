@@ -16,29 +16,25 @@ df <- data_ytd |>
   group_by(iso3c, jurisdiction) |>
   summarise(max = max(max_date_cmr))
 
-downloadImage <- function(name, type) {
-  url <- paste0(url_base, name, type)
+downloadImage <- function(iso3c) {
+  url <- paste0(url_base, iso3c, ".png")
   download.file(URLencode(url), "/tmp/tweet.png", mode = "wb")
 }
 
-tweet <- function(name, max) {
-  downloadImage(name, "/weekly_52w_sma_line.png")
-  url <- paste0(
-    "https://www.mortality.watch/?q=%7B%22c%22%3A%5B%22",
-    URLencode(name),
-    paste0(
-      "%22%5D%2C%22cs%22%3A0%2C%22ct%22%3A0%2C%22t%22%3A2%2C%22df%22%3A%222009",
-      "+W47%22%2C%22dt%22%3A%222022+W46%22%2C%22m%22%3A0%7D"
-    )
-  )
+tweet <- function(iso3c, max) {
+  downloadImage(iso3c)
   post_tweet(
     paste0(
-      "Mortality Data for ", name,
-      " has been updated. Latest data now available through ",
-      max, ". ", url
+      "📊 Mortality Data for ", iso3c,
+      " has Been Updated! 🗺️\n",
+      ">> Latest data now available through ",
+      max, " <<\n",
+      "🔗 https://www.mortality.watch/explorer"
     ),
     media = paste0("/tmp/tweet.png"),
-    media_alt_text = paste("Weekly Mortality (52W SMA)", name)
+    media_alt_text = paste0(
+      "Mortality.Watch: Weekly Mortality (52W SMA) [", iso3c, "]"
+    )
   )
 }
 
