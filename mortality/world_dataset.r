@@ -125,8 +125,8 @@ daily_nested_ytd <- dd_all |>
   left_join(dd_asmr, by = c("iso3c", "date", "type")) |>
   select(-iso.y, -jurisdiction.y, -age_group) |>
   setNames(c(
-    "iso3c", "date", "deaths", "population", "type", "source", "cmr", "iso",
-    "jurisdiction", asmr_types
+    "iso3c", "date", "deaths", "population", "type", "source", "cmr",
+    "jurisdiction", "iso", asmr_types
   )) |>
   mutate(year = year(date)) |>
   arrange(iso3c, date) |>
