@@ -31,9 +31,9 @@ tweet <- function(iso3c, jurisdiction, max) {
       max, " <<\n",
       "🔗 ",
       paste0(
-        "https://www.mortality.watch/explorer/?q=%257B%2522c%2522%253A%255B%2522",
+        "https://www.mortality.watch/explorer/?q={%22c%22:[%22",
         jurisdiction,
-        "%2522%255D%252C%2522t%2522%253A%2522cmr%2522%252C%2522ct%2522%253A%2522weekly_52w_sma%2522%252C%2522df%2522%253A%25222015%2520W53%2522%252C%2522dt%2522%253A%25222023%2520W12%2522%252C%2522sp%2522%253A%2522country%2522%252C%2522v%2522%253A1%257D"
+        "%22],%22t%22:%22cmr%22,%22ct%22:%22weekly_52w_sma%22,%22v%22:1}"
       )
     ),
     media = paste0("/tmp/tweet.png"),
