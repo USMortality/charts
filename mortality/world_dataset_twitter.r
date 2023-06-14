@@ -30,11 +30,10 @@ tweet <- function(iso3c, jurisdiction, max) {
       ">> Latest data now available through ",
       max, " <<\n",
       "🔗 ",
-      URLencode(paste0(
-        'https://mortality.watch/?utm_source=twitter&q={"c":["',
-        jurisdiction,
-        '"],"t":"cmr","ct":"weekly_52w_sma","v":1}'
-      ))
+      paste0(
+        "https://mortality.watch/explorer/?t=cmr&ct=weekly_52w_sma&v=2&c=",
+        iso3c
+      )
     ),
     media = paste0("/tmp/tweet.png"),
     media_alt_text = paste0(
