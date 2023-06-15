@@ -322,3 +322,15 @@ get_nested_data_by_time <- function(dd_asmr, dd_all, fun_name) {
     )) |>
     nest(data = !c("iso"))
 }
+
+fill_gaps_na <- function(df) {
+  ts <- df |> as_tsibble(index = date)
+  if (!has_gaps(ts)) {
+    return(ts)
+  }
+  ts |>
+    fill_gaps() |>
+    fill(type, .direction = "down") |>
+    fill(population, .direction = "down") |>
+    fill(source, .direction = "down")
+}

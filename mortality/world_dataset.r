@@ -24,7 +24,10 @@ dd <- rbind(
 ) |>
   distinct(iso3c, date, age_group, type, .keep_all = TRUE) |>
   arrange(iso3c, date, age_group, type) |>
-  mutate(cmr = deaths / population * 100000)
+  mutate(cmr = deaths / population * 100000) |>
+  group_by(iso3c, age_group) |>
+  group_modify(~ fill_gaps_na(.x)) |>
+  ungroup()
 
 save_info(dd)
 
