@@ -25,7 +25,7 @@ dd <- rbind(
   distinct(iso3c, date, age_group, type, .keep_all = TRUE) |>
   arrange(iso3c, date, age_group, type) |>
   mutate(cmr = deaths / population * 100000) |>
-  group_by(iso3c, age_group) |>
+  group_by(iso3c, age_group, type) |>
   group_modify(~ fill_gaps_na(.x)) |>
   ungroup()
 
@@ -128,7 +128,7 @@ daily_nested_ytd <- dd_all |>
   left_join(dd_asmr, by = c("iso3c", "date", "type")) |>
   select(-iso.y, -jurisdiction.y, -age_group) |>
   setNames(c(
-    "iso3c", "date", "deaths", "population", "type", "source", "cmr",
+    "iso3c", "type", "date", "deaths", "population", "source", "cmr",
     "jurisdiction", "iso", asmr_types
   )) |>
   mutate(year = year(date)) |>

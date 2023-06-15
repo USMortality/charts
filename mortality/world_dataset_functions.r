@@ -330,7 +330,6 @@ fill_gaps_na <- function(df) {
   }
   ts |>
     fill_gaps() |>
-    fill(type, .direction = "down") |>
     fill(population, .direction = "down") |>
     fill(source, .direction = "down")
 }
