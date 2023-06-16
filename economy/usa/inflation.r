@@ -1,30 +1,45 @@
 source("lib/common.r")
 
-#  Load Data
-req <- POST("https://api.bls.gov/publicAPI/v2/timeseries/data/",
-  add_headers("Content-Type" = "application/json"),
-  body = paste0(
-    '{"seriesid": ["CUUR0000SA0"], "startyear":"',
-    year(Sys.Date()) - 9,
-    '", "endyear":"',
-    year(Sys.Date()),
-    '"}'
+getData <- function(from, to) {
+  req <- POST("https://api.bls.gov/publicAPI/v2/timeseries/data/",
+    add_headers("Content-Type" = "application/json"),
+    body = paste0(
+      '{"seriesid": ["CUUR0000SA0"], "startyear":"',
+      from,
+      '", "endyear":"',
+      to,
+      '"}'
+    )
   )
-)
-stop_for_status(req)
-data <- content(req, "text") |>
-  fromJSON()
+  stop_for_status(req)
+  data <- content(req, "text") |>
+    fromJSON()
 
-# Transform
-df <- as_tibble(data$Results$series$data[[1]]) |>
-  mutate(year = as.integer(year)) |>
-  mutate(period = as.integer(right(period, 2))) |>
-  mutate(value = as.double(value)) |>
-  mutate(yearmonth = yearmonth(paste0(year, "-", period))) |>
-  mutate(value_ref = lead(value, 12)) |>
-  mutate(value_p = value / value_ref - 1) |>
-  filter(!is.na(value_ref)) |>
-  select(yearmonth, value_p)
+  as_tibble(data$Results$series$data[[1]]) |>
+    mutate(year = as.integer(year)) |>
+    mutate(period = as.integer(right(period, 2))) |>
+    mutate(value = as.double(value)) |>
+    mutate(yearmonth = yearmonth(paste0(year, "-", period))) |>
+    mutate(value_ref = lead(value, 12)) |>
+    mutate(value_p = value / value_ref - 1) |>
+    filter(!is.na(value_ref)) |>
+    select(yearmonth, value_p)
+}
+
+currentYear <- year(Sys.Date())
+#  Load Data
+df <- rbind(
+  getData(currentYear - 9, currentYear),
+  getData(currentYear - 19, currentYear - 10),
+  getData(currentYear - 29, currentYear - 20),
+  getData(currentYear - 39, currentYear - 30),
+  getData(currentYear - 49, currentYear - 40),
+  getData(currentYear - 59, currentYear - 50),
+  getData(currentYear - 69, currentYear - 60),
+  getData(currentYear - 79, currentYear - 70),
+  getData(currentYear - 89, currentYear - 80),
+  getData(currentYear - 99, currentYear - 90)
+)
 
 save_csv(df, "economy/usa/inflation")
 
