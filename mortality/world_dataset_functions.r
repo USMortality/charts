@@ -19,15 +19,15 @@ filter_by_complete_temp_values <- function(data, col, n) {
     group_by(across(all_of(c("iso3c", "jurisdiction", col))))
 }
 
-aggregate_data <- function(data, fun) {
+aggregate_data <- function(data, fun_name) {
   # Filter ends
-  result <- switch(fun,
-    yearweek = filter_by_complete_temp_values(data, fun, 7),
-    yearmonth = filter_by_complete_temp_values(data, fun, 28),
-    yearquarter = filter_by_complete_temp_values(data, fun, 90),
-    year = filter_by_complete_temp_values(data, fun, 365),
-    fluseason = filter_by_complete_temp_values(data, fun, 365),
-    midyear = filter_by_complete_temp_values(data, fun, 365)
+  result <- switch(fun_name,
+    yearweek = filter_by_complete_temp_values(data, fun_name, 7),
+    yearmonth = filter_by_complete_temp_values(data, fun_name, 28),
+    yearquarter = filter_by_complete_temp_values(data, fun_name, 90),
+    year = filter_by_complete_temp_values(data, fun_name, 365),
+    fluseason = filter_by_complete_temp_values(data, fun_name, 365),
+    midyear = filter_by_complete_temp_values(data, fun_name, 365)
   )
   if ("cmr" %in% names(data)) {
     result <- result |>
@@ -49,7 +49,7 @@ aggregate_data <- function(data, fun) {
   result |>
     ungroup() |>
     as_tibble() |>
-    rename("date" = fun)
+    rename("date" = fun_name)
 }
 
 filter_ytd <- function(data, max_date_cmr, max_date_asmr) {
@@ -284,30 +284,30 @@ filter_n_rows <- function(df, n) {
 
 get_nested_data_by_time <- function(dd_asmr, dd_all, fun_name) {
   fun <- get(fun_name)
-  weekly_asmr <- dd_asmr |>
+  df_asmr <- dd_asmr |>
     mutate(!!fun_name := fun(date), .after = date) |>
     nest(data = !c("iso", "type")) |>
     mutate(data = lapply(data, aggregate_data, fun_name)) |>
     unnest(cols = c(data))
-  weekly_all <- dd_all |>
+  df_all <- dd_all |>
     mutate(!!fun_name := fun(date), .after = date) |>
     nest(data = !c("iso", "type")) |>
     mutate(data = lapply(data, aggregate_data, fun_name)) |>
     unnest(cols = c(data))
 
   asmr <- rbind(
-    weekly_asmr |> filter(type == "weekly"),
-    weekly_asmr |> filter(type == "monthly"),
-    weekly_asmr |> filter(type == "yearly")
+    df_asmr |> filter(type == "weekly"),
+    df_asmr |> filter(type == "monthly"),
+    df_asmr |> filter(type == "yearly")
   ) |>
     arrange(iso3c, date) |>
     distinct(iso3c, date, .keep_all = TRUE) |>
     select(-type)
 
   all <- rbind(
-    weekly_all |> filter(type == "weekly"),
-    weekly_all |> filter(type == "monthly"),
-    weekly_all |> filter(type == "yearly")
+    df_all |> filter(type == "weekly"),
+    df_all |> filter(type == "monthly"),
+    df_all |> filter(type == "yearly")
   ) |>
     arrange(iso3c, date) |>
     distinct(iso3c, date, .keep_all = TRUE) |>
@@ -321,6 +321,26 @@ get_nested_data_by_time <- function(dd_asmr, dd_all, fun_name) {
       asmr_types
     )) |>
     nest(data = !c("iso"))
+}
+
+get_nested_data_by_time_age <- function(dd_age, fun_name) {
+  fun <- get(fun_name)
+  df_all <- dd_age |>
+    mutate(!!fun_name := fun(date), .after = date) |>
+    nest(data = !c("iso", "type", "age_group")) |>
+    mutate(data = lapply(data, aggregate_data, fun_name)) |>
+    unnest(cols = c(data))
+
+  all <- rbind(
+    df_all |> filter(type == "weekly"),
+    df_all |> filter(type == "monthly"),
+    df_all |> filter(type == "yearly")
+  ) |>
+    arrange(iso3c, date, age_group) |>
+    distinct(iso3c, date, age_group, .keep_all = TRUE) |>
+    select(-type)
+
+  all |> nest(data = !c("iso", "age_group"))
 }
 
 fill_gaps_na <- function(df) {

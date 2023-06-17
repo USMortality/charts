@@ -2,9 +2,9 @@ source("lib/common.r")
 source("lib/asmr.r")
 source("mortality/world_dataset_functions.r")
 
-source("mortality/_collection/mortality_org.r")
-source("mortality/_collection/world_mortality.r")
-source("mortality/usa/mortality_states.r")
+# source("mortality/_collection/mortality_org.r")
+# source("mortality/_collection/world_mortality.r")
+# source("mortality/usa/mortality_states.r")
 source("mortality/deu/mortality_states.r")
 
 # Country names are added back in the end.
@@ -17,10 +17,11 @@ asmr_types <- c("asmr_who", "asmr_esp", "asmr_usa", "asmr_country")
 
 # For duplicates: first values take precedence.
 dd <- rbind(
-  deu_mortality_states,
-  usa_mortality_states,
-  world_mortality |> filter(!iso3c %in% c("DEU", "USA")),
-  mortality_org |> filter(!iso3c %in% c("DEU", "USA"))
+  deu_mortality_states |> filter(iso3c == "DEU")
+  # ,
+  # usa_mortality_states,
+  # world_mortality |> filter(!iso3c %in% c("DEU", "USA")),
+  # mortality_org |> filter(!iso3c %in% c("DEU", "USA"))
 ) |>
   distinct(iso3c, date, age_group, type, .keep_all = TRUE) |>
   arrange(iso3c, date, age_group, type) |>
@@ -36,16 +37,26 @@ dd_all <- dd |>
   inner_join(iso3c_jurisdiction, by = c("iso3c")) |>
   mutate(iso = iso3c)
 
-dd_asmr <- dd |>
+dd_age <- dd |>
   filter(age_group != "all") |>
+  inner_join(iso3c_jurisdiction, by = c("iso3c")) |>
+  mutate(iso = iso3c)
+dd_asmr <- dd_age |>
   group_by(iso3c, type) |>
   group_modify(~ calculate_asmr_variants(.x), .keep = TRUE) |>
   ungroup() |>
   inner_join(iso3c_jurisdiction, by = c("iso3c")) |>
   mutate(iso = iso3c)
 
+weekly_nested_age <- get_nested_data_by_time_age(dd_age, "yearweek")=-,mnbv
 # Weekly data
 weekly_nested <- get_nested_data_by_time(dd_asmr, dd_all, "yearweek")
+
+weekly_nested <- (weekly_nested_age |> filter(age_group == "0-29"))$data[[1]] |>
+  mutate(iso = iso3c) |>
+  nest(data = !c(iso3c))
+
+weekly_nested$data[[1]]
 
 print('Calculating "Weekly" dataset')
 weekly <- weekly_nested |>
