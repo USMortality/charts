@@ -104,7 +104,7 @@ ggplot(ts, aes(x = year, y = deaths)) +
     y = "Deaths"
   ) +
   geom_smooth(
-    data = subset(ts, date >= 2010 & date <= 2019),
+    data = subset(ts, year >= 2010 & year <= 2019),
     fullrange = TRUE,
     color = "black",
     linetype = 5,
@@ -134,7 +134,7 @@ ggplot(ts, aes(x = year, y = cmr)) +
     y = "Deaths/100k"
   ) +
   geom_smooth(
-    data = subset(ts, date >= 2010 & date <= 2019),
+    data = subset(ts, year >= 2010 & year <= 2019),
     fullrange = TRUE,
     color = "black",
     linetype = 5,
