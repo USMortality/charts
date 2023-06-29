@@ -22,7 +22,9 @@ ggplot(ts, aes(x = Jahr, y = Krankenhausbehandlungen)) +
   geom_col(fill = "blue") +
   geom_hline(yintercept = 0) +
   twitter_theme() +
-  watermark()
+  watermark() +
+  stat_cor(label.y = 2500, label.x = 2018) +
+  stat_regline_equation(label.y = 2300, label.x = 2018)
 
 ts <- data |>
   select(Jahr, Hitzetage) |>
@@ -39,4 +41,6 @@ ggplot(ts, aes(x = Jahr, y = Hitzetage)) +
   geom_col(fill = "red") +
   geom_hline(yintercept = 0) +
   twitter_theme() +
-  watermark()
+  watermark() +
+  stat_cor(label.y = 20, label.x = 2010) +
+  stat_regline_equation(label.y = 18, label.x = 2010)
