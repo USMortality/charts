@@ -140,3 +140,40 @@ save_collage(
   chart1, chart2, chart3, chart4,
   path = paste("mortality", "usa", "cancer", sep = "/")
 )
+
+# Montly Trend Chart
+m_data <- data |>
+  index_by(yearmonth(date)) |>
+  summarise(sum(mortality)) |>
+  head(-1) |>
+  tail(-1) |>
+  setNames(c("date", "mortality"))
+
+c_data <- m_data |>
+  model(STL(mortality)) |>
+  components() |>
+  select(date, trend)
+
+chart5 <- ggplot(c_data, aes(
+  x = date, y = trend
+)) +
+  geom_line() +
+  labs(
+    title = "US Cancer Mortality Trend [USA]",
+    subtitle = "Source: cdc.gov",
+    x = "Month of Year",
+    y = "Deaths/100k"
+  ) +
+  twitter_theme() +
+  watermark() +
+  geom_smooth(
+    data = subset(c_data, date < make_yearmonth(year = 2020, month = 3)),
+    method = lm,
+    fullrange = TRUE
+  ) +
+  theme(
+    # panel.spacing = unit(0.3, "in"),
+    legend.position = "none"
+  )
+
+save_chart(chart5, paste("mortality", "usa", "cancer", "monthly_trend", sep = "/"))
