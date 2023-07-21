@@ -52,7 +52,15 @@ aggregate_data <- function(data, fun_name) {
     rename("date" = fun_name)
 }
 
-filter_ytd <- function(data, max_date_cmr, max_date_asmr) {
+filter_ytd <- function(data, max_date_cmr) {
+  year(max_date_cmr) <- year(data$date[1])
+
+  data <- data |>
+    filter(date <= max_date_cmr) |>
+    mutate(max_date_cmr = max_date_cmr)
+}
+
+filter_ytd_asmr <- function(data, max_date_cmr, max_date_asmr) {
   year(max_date_cmr) <- year(data$date[1])
   year(max_date_asmr) <- year(data$date[1])
 
@@ -70,12 +78,31 @@ calc_ytd <- function(data) {
   nested <- data |> nest(data = !year)
 
   cmr_data <- nested[[2]][[length(nested[[2]])]] |> filter(!is.na(cmr))
-  asmr_data <- nested[[2]][[length(nested[[2]])]] |> filter(!is.na(asmr_who))
   max_date_cmr <- max(cmr_data$date)
-  max_date_asmr <- if (length(asmr_data) > 0) max(asmr_data$date) else NA
-  nested |>
-    mutate(data = lapply(data, filter_ytd, max_date_cmr, max_date_asmr)) |>
-    unnest(cols = c(data))
+
+  if ("asmr_who" %in% names(data)) {
+    asmr_data <- nested[[2]][[length(nested[[2]])]] |> filter(!is.na(asmr_who))
+    max_date_asmr <- if (length(asmr_data) > 0) max(asmr_data$date) else NA
+    nested |>
+      mutate(data = lapply(data, filter_ytd_asmr, max_date_cmr, max_date_asmr)) |>
+      unnest(cols = c(data))
+  } else {
+    nested |>
+      mutate(data = lapply(data, filter_ytd, max_date_cmr)) |>
+      unnest(cols = c(data))
+  }
+}
+
+aggregate_data_ytd_age <- function(data) {
+  data |>
+    group_by(iso3c, jurisdiction, year, max_date_cmr) |>
+    summarise(
+      deaths = round(sumIfNotEmpty(deaths)),
+      cmr = round(sumIfNotEmpty(cmr), digits = 1)
+    ) |>
+    ungroup() |>
+    rename("date" = "year") |>
+    as_tibble()
 }
 
 aggregate_data_ytd <- function(data) {
@@ -108,10 +135,12 @@ calc_sma <- function(data, n) {
 
   data$deaths <- round(SMA(data$deaths, n = n), 0)
   data$cmr <- round(SMA(data$cmr, n = n), 2)
-  data$asmr_who <- round(SMA(data$asmr_who, n = n), 2)
-  data$asmr_esp <- round(SMA(data$asmr_esp, n = n), 2)
-  data$asmr_usa <- round(SMA(data$asmr_usa, n = n), 2)
-  data$asmr_country <- round(SMA(data$asmr_country, n = n), 2)
+  if ("asmr_who" %in% colnames(ts)) {
+    data$asmr_who <- round(SMA(data$asmr_who, n = n), 2)
+    data$asmr_esp <- round(SMA(data$asmr_esp, n = n), 2)
+    data$asmr_usa <- round(SMA(data$asmr_usa, n = n), 2)
+    data$asmr_country <- round(SMA(data$asmr_country, n = n), 2)
+  }
   data
 }
 
@@ -258,18 +287,22 @@ calculate_baseline_excess <- function(data, chart_type) {
   print(paste("calculate_baseline_excess:", unique(ts$iso3c)))
   result <- ts |>
     calculate_baseline("deaths", chart_type) |>
-    calculate_baseline("cmr", chart_type) |>
-    calculate_baseline("asmr_who", chart_type) |>
-    calculate_baseline("asmr_esp", chart_type) |>
-    calculate_baseline("asmr_usa", chart_type) |>
-    calculate_baseline("asmr_country", chart_type) |>
-    as_tibble()
+    calculate_baseline("cmr", chart_type)
+  if ("asmr_who" %in% colnames(ts)) {
+    result |>
+      calculate_baseline("asmr_who", chart_type) |>
+      calculate_baseline("asmr_esp", chart_type) |>
+      calculate_baseline("asmr_usa", chart_type) |>
+      calculate_baseline("asmr_country", chart_type)
+  }
 
   if (chart_type %in% c("fluseason", "midyear")) {
     # Restore Flu Season Notation
-    result |> mutate(date = paste0(date - 1, "-", date))
+    result |>
+      as_tibble() |>
+      mutate(date = paste0(date - 1, "-", date))
   } else {
-    result
+    result |> as_tibble()
   }
 }
 
