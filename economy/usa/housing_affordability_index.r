@@ -1,5 +1,9 @@
 source("lib/common.r")
 
+last_pct <- function(df) {
+  sprintf("%0.1f%%", tail(df, n = 1) * 100)
+}
+
 # 30-Year Fixed Rate Mortgage Average in the United States (MORTGAGE30US)
 mortgage_rate <- read.csv(
   paste0(
@@ -33,7 +37,7 @@ chart <-
   ) +
   geom_line(color = "#5383EC", linewidth = 1.5) +
   twitter_theme() +
-  watermark(max(mortgage_rate$date)) +
+  watermark(paste(max(mortgage_rate$date), last_pct(mortgage_rate$rate))) +
   expand_limits(x = 0, y = 0) +
   scale_y_continuous(
     labels = scales::percent_format()
@@ -81,7 +85,7 @@ chart <-
   ) +
   geom_line(color = "#5383EC", linewidth = 1.5) +
   twitter_theme() +
-  watermark(max(median_home_price$date)) +
+  watermark(paste(max(median_home_price$date), last_pct(median_home_price$price))) +
   scale_y_continuous(
     trans = "log2",
     labels = scales::dollar_format()
@@ -127,7 +131,7 @@ chart <-
   ) +
   geom_line(color = "#5383EC", linewidth = 1.5) +
   twitter_theme() +
-  watermark(max(ts$date)) +
+  watermark(paste(max(ts$date), last_pct(ts$income))) +
   scale_y_continuous(
     trans = "log2",
     labels = scales::dollar_format()
@@ -193,7 +197,7 @@ chart <-
   ) +
   geom_line(color = "#5383EC", linewidth = 1.5) +
   twitter_theme() +
-  watermark(max(ts$date)) +
+  watermark(paste(max(ts$date), last_pct(ts$a_index))) +
   scale_y_continuous(labels = scales::percent, limits = c(0.25, 1.75)) +
   scale_x_yearweek(date_breaks = "5 year", date_labels = "%Y")
 
@@ -234,7 +238,7 @@ chart <-
   ) +
   geom_line(color = "#5383EC", linewidth = 1.5) +
   twitter_theme() +
-  watermark(max(ts$date)) +
+  watermark(paste(max(ts$date), last_pct(ts$rent))) +
   scale_y_continuous(
     trans = "log2"
   ) +
