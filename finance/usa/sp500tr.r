@@ -33,6 +33,7 @@ chart <-
     color = "black",
     linetype = "dashed"
   ) +
-  theme(axis.text.x = element_text(angle = 30, hjust = 0.5, vjust = 0.5))
+  theme(axis.text.x = element_text(angle = 30, hjust = 0.5, vjust = 0.5)) +
+  watermark(max(df$date))
 
 save_chart(chart, "finance/usa/sp500tr")
