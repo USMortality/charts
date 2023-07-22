@@ -175,7 +175,7 @@ for (j in unique(population_grouped_forecasted$jurisdiction)) {
     ) +
     geom_line(aes(color = age_group), size = 1) +
     twitter_theme() +
-    watermark(df$yearmonth, df$value_p) +
+    watermark(max(data$year)) +
     scale_y_continuous(labels = label_number(suffix = "M", scale = 1e-6))
 
   save_chart(chart, paste0("population/usa/", j))

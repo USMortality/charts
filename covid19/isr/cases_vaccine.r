@@ -24,7 +24,7 @@ ggplot(
   ) +
   geom_line(linewidth = 1.2) +
   twitter_theme() +
-  watermark(df$date, df$cmr) +
+  watermark() +
   theme(
     axis.text.x = element_text(angle = 30, hjust = 0.5, vjust = 0.5),
     legend.position = "top",

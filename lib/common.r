@@ -8,11 +8,11 @@ options(vsc.dev.args = list(width = 600 * sf, height = 335 * sf, res = 72 * sf))
 charts_bucket <- "charts"
 data_bucket <- "data"
 
-watermark <- function(x, y) {
+watermark <- function(latest = "") {
   annotate("text",
     y = Inf,
     x = structure(Inf, class = "Date"),
-    label = "@USMortality",
+    label = paste("@USMortality", latest),
     vjust = 1,
     hjust = 1,
     col = "#000000",

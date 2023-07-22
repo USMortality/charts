@@ -35,7 +35,7 @@ chart <-
   geom_line(color = "#5383EC", linewidth = 1.5) +
   geom_hline(yintercept = 0) +
   twitter_theme() +
-  watermark(df$yearmonth, df$value_p) +
+  watermark(max(df$yearmonth)) +
   scale_y_continuous(labels = scales::percent)
 
 save_chart(chart, "economy/usa/unemployment")

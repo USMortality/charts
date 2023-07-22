@@ -31,7 +31,6 @@ df <- data |>
   select(date, data) |>
   setNames(c("date", "temp"))
 
-
 # Daily
 df |>
   filter(!is.na(temp)) |>
@@ -59,7 +58,9 @@ chart <- ts |>
       "Source: climatereanalyzer.org",
       sep = " | "
     )
-  ) + twitter_theme() + watermark()
+  ) +
+  twitter_theme() +
+  watermark(max(ts$date))
 
 save_chart(chart, "climate/sea_temp_north_atlantic_monthly")
 
@@ -85,6 +86,8 @@ chart <- ts |>
       "Source: climatereanalyzer.org",
       sep = " | "
     )
-  ) + twitter_theme() + watermark()
+  ) +
+  twitter_theme() +
+  watermark(max(ts$date))
 
 save_chart(chart, "climate/sea_temp_north_atlantic_yearly")

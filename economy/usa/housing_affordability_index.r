@@ -33,7 +33,7 @@ chart <-
   ) +
   geom_line(color = "#5383EC", linewidth = 1.5) +
   twitter_theme() +
-  watermark(df$yearmonth, df$value_p) +
+  watermark(max(mortgage_rate$date)) +
   expand_limits(x = 0, y = 0) +
   scale_y_continuous(
     labels = scales::percent_format()
@@ -81,7 +81,7 @@ chart <-
   ) +
   geom_line(color = "#5383EC", linewidth = 1.5) +
   twitter_theme() +
-  watermark(df$yearmonth, df$value_p) +
+  watermark(max(median_home_price$date)) +
   scale_y_continuous(
     trans = "log2",
     labels = scales::dollar_format()
@@ -127,7 +127,7 @@ chart <-
   ) +
   geom_line(color = "#5383EC", linewidth = 1.5) +
   twitter_theme() +
-  watermark(df$yearmonth, df$value_p) +
+  watermark(max(ts$date)) +
   scale_y_continuous(
     trans = "log2",
     labels = scales::dollar_format()
@@ -193,7 +193,7 @@ chart <-
   ) +
   geom_line(color = "#5383EC", linewidth = 1.5) +
   twitter_theme() +
-  watermark(df$yearmonth, df$value_p) +
+  watermark(max(ts$date)) +
   scale_y_continuous(labels = scales::percent, limits = c(0.25, 1.75)) +
   scale_x_yearweek(date_breaks = "5 year", date_labels = "%Y")
 
@@ -234,7 +234,7 @@ chart <-
   ) +
   geom_line(color = "#5383EC", linewidth = 1.5) +
   twitter_theme() +
-  watermark(df$yearmonth, df$value_p) +
+  watermark(max(ts$date)) +
   scale_y_continuous(
     trans = "log2"
   ) +

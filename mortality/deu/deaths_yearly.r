@@ -111,7 +111,7 @@ ggplot(ts, aes(x = year, y = deaths)) +
     size = 0.8,
     method = "lm"
   ) +
-  watermark() +
+  watermark(max(ts$year)) +
   geom_line(color = "#5383EC", linewidth = 1) +
   twitter_theme() +
   scale_y_continuous(labels = label_number(suffix = "K", scale = 1e-3)) +
@@ -141,7 +141,7 @@ ggplot(ts, aes(x = year, y = cmr)) +
     size = 0.8,
     method = "lm"
   ) +
-  watermark() +
+  watermark(max(ts$year)) +
   geom_line(color = "#5383EC", linewidth = 1) +
   twitter_theme() +
   facet_wrap(vars(age_group), scales = "free") +
@@ -196,7 +196,7 @@ ggplot(asmr |> filter(date >= START_YEAR), aes(x = date)) +
     method = "lm",
     level = 0.999
   ) +
-  watermark() +
+  watermark(max(asmr$date)) +
   geom_line(aes(y = asmr_who), color = "#5383EC", linewidth = 1) +
   twitter_theme()
 
@@ -225,7 +225,7 @@ ggplot(asmr |> filter(date >= START_YEAR), aes(x = date)) +
     method = "lm",
     level = 0.95
   ) +
-  watermark() +
+  watermark(max(asmr$date)) +
   geom_line(aes(y = asmr_who), color = "#5383EC", linewidth = 1) +
   twitter_theme()
 
@@ -254,7 +254,7 @@ ggplot(asmr |> filter(date >= START_YEAR), aes(x = date)) +
     method = "lm",
     level = 0.999
   ) +
-  watermark() +
+  watermark(max(asmr$date)) +
   geom_line(aes(y = asmr_esp), color = "#5383EC", linewidth = 1) +
   twitter_theme()
 
@@ -283,7 +283,7 @@ ggplot(asmr |> filter(date >= START_YEAR), aes(x = date)) +
     method = "lm",
     level = 0.95
   ) +
-  watermark() +
+  watermark(max(asmr$date)) +
   geom_line(aes(y = asmr_esp), color = "#5383EC", linewidth = 1) +
   twitter_theme()
 
@@ -303,7 +303,7 @@ ggplot(asmr |> filter(date >= 1990), aes(x = date)) +
     x = "Year",
     y = "Deaths/100k"
   ) +
-  watermark() +
+  watermark(max(asmr$date)) +
   scale_y_continuous(trans = "log2") +
   geom_line(aes(y = asmr_esp), color = "#5383EC", linewidth = 1) +
   twitter_theme()
@@ -351,7 +351,7 @@ ggplot(
     x = "Forecast Year",
     y = "Excess Deaths/100k"
   ) +
-  watermark() +
+  watermark(max(data_excess$date)) +
   geom_col(aes(y = excess), fill = "#5383EC") +
   twitter_theme() +
   scale_y_continuous(limits = c(-100, 100))
@@ -374,7 +374,7 @@ ggplot(
     x = "Forecast Year",
     y = "Excess ASMR (%)"
   ) +
-  watermark() +
+  watermark(max(data_excess$date)) +
   geom_col(aes(y = excess_p), fill = "#5383EC") +
   twitter_theme() +
   scale_y_continuous(labels = scales::percent, limits = c(-0.1, .10))
@@ -405,7 +405,7 @@ make_chart <- function(df) {
       method = "lm",
       level = 0.95
     ) +
-    watermark() +
+    watermark(max(df$date)) +
     geom_line(aes(y = asmr_esp), color = "#5383EC", linewidth = 1) +
     scale_x_continuous(breaks = df$date) +
     twitter_theme()

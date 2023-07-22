@@ -56,7 +56,7 @@ chart <-
   geom_hline(yintercept = 0) +
   geom_hline(aes(yintercept = 0.02), color = "#58A65C", linetype = "dashed") +
   twitter_theme() +
-  watermark(df$yearmonth, df$value_p) +
+  watermark(max(df$yearmonth)) +
   scale_y_continuous(labels = scales::percent)
 
 save_chart(chart, "economy/usa/inflation")
