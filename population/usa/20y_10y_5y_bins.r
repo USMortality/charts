@@ -5,7 +5,7 @@ us_states_iso3c <- as_tibble(read.csv("./data_static/usa_states_iso3c.csv"))
 # Download data
 data0 <- as_tibble(read.csv("./data_static/population_usa_2000-2010.csv"))
 data1 <- as_tibble(read.csv("./data_static/population_usa_2010-2020.csv"))
-data2 <- as_tibble(read.csv("./data_static/population_usa_2020-2021.csv"))
+data2 <- as_tibble(read.csv("./data_static/population_usa_2020-2022.csv"))
 
 # Transform data
 a <- data0 |>

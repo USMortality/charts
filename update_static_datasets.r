@@ -8,8 +8,8 @@ urls <- list(
     "population_usa_2010-2020.csv"
   ),
   c(
-    "https://www2.census.gov/programs-surveys/popest/datasets/2020-2021/state/asrh/sc-est2021-agesex-civ.csv",
-    "population_usa_2020-2021.csv"
+    "https://www2.census.gov/programs-surveys/popest/datasets/2020-2022/state/asrh/sc-est2022-agesex-civ.csv",
+    "population_usa_2020-2022.csv"
   ),
   c(
     "https://www2.census.gov/programs-surveys/popest/datasets/2000-2010/intercensal/county/co-est00int-agesex-5yr.csv",
@@ -20,8 +20,8 @@ urls <- list(
     "population_usa_county_2010-2020.csv"
   ),
   c(
-    "https://www2.census.gov/programs-surveys/popest/datasets/2020-2021/counties/asrh/cc-est2021-alldata-36.csv",
-    "population_usa_county_2020-2021.csv"
+    "https://www2.census.gov/programs-surveys/popest/datasets/2020-2022/counties/asrh/cc-est2022-alldata-36.csv",
+    "population_usa_county_2020-2022.csv"
   ),
   c(
     "https://population.un.org/wpp/Download/Files/1_Indicators%20(Standard)/EXCEL_FILES/1_General/WPP2022_GEN_F01_DEMOGRAPHIC_INDICATORS_COMPACT_REV1.xlsx",
