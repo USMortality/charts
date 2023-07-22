@@ -49,7 +49,8 @@ chart <-
     color = "black",
     linetype = "dashed"
   ) +
-  twitter_theme()
+  twitter_theme() +
+  watermark(paste(max(data$date), last_usd(data$possible_price)))
 
 save_chart(chart, "economy/usa/mortgage_buying_power")
 

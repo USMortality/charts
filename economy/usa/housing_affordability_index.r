@@ -1,9 +1,5 @@
 source("lib/common.r")
 
-last_pct <- function(df) {
-  sprintf("%0.1f%%", tail(df, n = 1) * 100)
-}
-
 # 30-Year Fixed Rate Mortgage Average in the United States (MORTGAGE30US)
 mortgage_rate <- read.csv(
   paste0(
@@ -85,7 +81,10 @@ chart <-
   ) +
   geom_line(color = "#5383EC", linewidth = 1.5) +
   twitter_theme() +
-  watermark(paste(max(median_home_price$date), last_pct(median_home_price$price))) +
+  watermark(paste(
+    max(median_home_price$date),
+    last_usd(median_home_price$price)
+  )) +
   scale_y_continuous(
     trans = "log2",
     labels = scales::dollar_format()
@@ -131,7 +130,7 @@ chart <-
   ) +
   geom_line(color = "#5383EC", linewidth = 1.5) +
   twitter_theme() +
-  watermark(paste(max(ts$date), last_pct(ts$income))) +
+  watermark(paste(max(ts$date), last_usd(ts$income))) +
   scale_y_continuous(
     trans = "log2",
     labels = scales::dollar_format()

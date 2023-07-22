@@ -361,3 +361,19 @@ imputeFromAggregate <- function(df1, df2, aggregate_group, groups) {
   df1$deaths[df1$age_group %in% df$age_group & is.na(df1$deaths)] <- target
   df1[3:4]
 }
+
+first_pct <- function(df) {
+  sprintf("%0.1f%%", head(df, n = 1) * 100)
+}
+
+last_pct <- function(df) {
+  sprintf("%0.1f%%", tail(df, n = 1) * 100)
+}
+
+first_usd <- function(df) {
+  dollar(head(df, n = 1))
+}
+
+last_usd <- function(df) {
+  dollar(tail(df, n = 1))
+}
