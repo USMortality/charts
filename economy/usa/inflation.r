@@ -1,4 +1,5 @@
 source("lib/common.r")
+library(ggrepel)
 
 getData <- function(from, to) {
   req <- POST("https://api.bls.gov/publicAPI/v2/timeseries/data/",
@@ -44,8 +45,8 @@ df <- rbind(
 save_csv(df, "economy/usa/inflation")
 
 # Make Chart
-chart <-
-  ggplot(as_tsibble(df, index = yearmonth), aes(x = yearmonth, y = value_p)) +
+# chart <-
+ggplot(as_tsibble(df, index = yearmonth), aes(x = yearmonth, y = value_p)) +
   labs(
     title = "Inflation Rate [USA]",
     subtitle = "Source: bls.gov",
@@ -56,7 +57,17 @@ chart <-
   geom_hline(yintercept = 0) +
   geom_hline(aes(yintercept = 0.02), color = "#58A65C", linetype = "dashed") +
   twitter_theme() +
-  watermark(paste(max(df$yearmonth), first_pct(df$value_p))) +
-  scale_y_continuous(labels = scales::percent)
+  watermark() +
+  scale_y_continuous(labels = scales::percent) +
+  geom_label_repel(
+    data = head(df, n = 1) |> mutate(str = paste0(
+      yearmonth,
+      ": ",
+      sprintf("%0.1f%%", value_p * 100)
+    )),
+    aes(label = str),
+    nudge_y = 0.1,
+    segment.color = "grey50",
+  )
 
 save_chart(chart, "economy/usa/inflation")
