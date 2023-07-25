@@ -16,7 +16,7 @@ filter_by_complete_temp_values <- function(data, col, n) {
     ungroup()
 
   rbind(start, mid, end) |>
-    group_by(across(all_of(c("iso3c", "jurisdiction", col))))
+    group_by(across(all_of(c("iso3c", col))))
 }
 
 aggregate_data <- function(data, fun_name) {
@@ -95,7 +95,7 @@ calc_ytd <- function(data) {
 
 aggregate_data_ytd_age <- function(data) {
   data |>
-    group_by(iso3c, jurisdiction, year, max_date_cmr) |>
+    group_by(iso3c, year, max_date_cmr) |>
     summarise(
       deaths = round(sumIfNotEmpty(deaths)),
       cmr = round(sumIfNotEmpty(cmr), digits = 1)
@@ -107,7 +107,7 @@ aggregate_data_ytd_age <- function(data) {
 
 aggregate_data_ytd <- function(data) {
   data |>
-    group_by(iso3c, jurisdiction, year, max_date_cmr, max_date_asmr) |>
+    group_by(iso3c, year, max_date_cmr, max_date_asmr) |>
     summarise(
       deaths = round(sumIfNotEmpty(deaths)),
       cmr = round(sumIfNotEmpty(cmr), digits = 1),
@@ -289,7 +289,7 @@ calculate_baseline_excess <- function(data, chart_type) {
     calculate_baseline("deaths", chart_type) |>
     calculate_baseline("cmr", chart_type)
   if ("asmr_who" %in% colnames(ts)) {
-    result |>
+    result <- result |>
       calculate_baseline("asmr_who", chart_type) |>
       calculate_baseline("asmr_esp", chart_type) |>
       calculate_baseline("asmr_usa", chart_type) |>
@@ -298,7 +298,7 @@ calculate_baseline_excess <- function(data, chart_type) {
 
   if (chart_type %in% c("fluseason", "midyear")) {
     # Restore Flu Season Notation
-    result |>
+    result <- result |>
       as_tibble() |>
       mutate(date = paste0(date - 1, "-", date))
   } else {
@@ -348,9 +348,9 @@ get_nested_data_by_time <- function(dd_asmr, dd_all, fun_name) {
 
   all |>
     left_join(asmr, by = c("iso3c", "date")) |>
-    select(-iso.y, -jurisdiction.y) |>
+    select(-iso.y) |>
     setNames(c(
-      "iso", "iso3c", "jurisdiction", "date", "deaths", "population", "cmr",
+      "iso", "iso3c", "date", "deaths", "population", "cmr",
       asmr_types
     )) |>
     nest(data = !c("iso"))

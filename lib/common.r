@@ -1,3 +1,6 @@
+# group_by, "drop_last" by default
+options(dplyr.summarise.inform = F)
+
 libs <- read.table("dependencies_r.txt")
 for (lib in libs$V1) {
   library(lib, character.only = TRUE, quietly = TRUE)
@@ -36,7 +39,7 @@ save_csv <- function(df, name, upload = TRUE) {
   file_name <- paste0(name, ".csv")
   local_file_name <- paste0("out/", file_name)
   dir.create(dirname(local_file_name), recursive = TRUE)
-  write.csv(df, local_file_name, row.names = FALSE)
+  write.csv(df, local_file_name, na = "", row.names = FALSE)
 
   if (upload) {
     put_object(
@@ -308,6 +311,7 @@ save_info <- function(df) {
           result,
           tibble(
             iso3c = code,
+            jurisdiction = head(df_country_type_source$jurisdiction, n = 1),
             type = t,
             source = s,
             min_date = min(df_country_type_source$date),
@@ -321,7 +325,7 @@ save_info <- function(df) {
       }
     }
   }
-  save_csv(result, "mortality/world_meta", upload = TRUE)
+  save_csv(result, "mortality/stage/world_meta", upload = TRUE)
 }
 
 imputeSingleNA <- function(df) {

@@ -29,22 +29,19 @@ dd <- rbind(
   group_modify(~ fill_gaps_na(.x)) |>
   ungroup()
 
-# save_info(dd)
+save_info(dd |> inner_join(iso3c_jurisdiction, by = c("iso3c")))
 
 dd_all <- dd |>
   filter(age_group == "all") |>
-  inner_join(iso3c_jurisdiction, by = c("iso3c")) |>
   mutate(iso = iso3c)
 
 dd_age <- dd |>
   filter(age_group != "all") |>
-  inner_join(iso3c_jurisdiction, by = c("iso3c")) |>
   mutate(iso = iso3c)
 dd_asmr <- dd_age |>
   group_by(iso3c, type) |>
   group_modify(~ calculate_asmr_variants(.x), .keep = TRUE) |>
   ungroup() |>
-  inner_join(iso3c_jurisdiction, by = c("iso3c")) |>
   mutate(iso = iso3c)
 
 save_dataset <- function(
@@ -55,8 +52,8 @@ save_dataset <- function(
     ytd_nested,
     fluseason_nested,
     midyear_nested,
-    age_group) {
-  postfix <- ifelse(age_group == "all", "", paste0("_", age_group))
+    ag) {
+  postfix <- ifelse(ag == "all", "", paste0("_", ag))
 
   print('Calculating "Weekly" dataset')
   weekly <- weekly_nested |>
@@ -258,10 +255,10 @@ ytd_nested_age <- dd_age |>
 
 ytd_nested <- dd_all |>
   left_join(dd_asmr, by = c("iso3c", "date", "type")) |>
-  select(-iso.y, -jurisdiction.y, -age_group) |>
+  select(-iso.y, -age_group) |>
   setNames(c(
-    "iso3c", "type", "date", "deaths", "population", "source", "cmr",
-    "jurisdiction", "iso", asmr_types
+    "iso3c", "type", "date", "deaths", "population", "source", "cmr", "iso",
+    asmr_types
   )) |>
   mutate(year = year(date)) |>
   arrange(iso3c, date) |>
