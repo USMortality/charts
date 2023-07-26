@@ -17,3 +17,5 @@ lubridate
 rtweet
 rvest
 imputeTS
+usmap
+ggeasy
