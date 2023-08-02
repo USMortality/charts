@@ -45,8 +45,7 @@ df <- rbind(
 save_csv(df, "economy/usa/inflation")
 
 # Make Chart
-# chart <-
-ggplot(as_tsibble(df, index = yearmonth), aes(x = yearmonth, y = value_p)) +
+chart <- ggplot(as_tsibble(df, index = yearmonth), aes(x = yearmonth, y = value_p)) +
   labs(
     title = "Inflation Rate [USA]",
     subtitle = "Source: bls.gov",
