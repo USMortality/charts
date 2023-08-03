@@ -8,30 +8,48 @@ who <- read_excel(
 )
 
 deaths <- who |>
-  filter(location == "Global") |>
+  mutate(location = case_when(
+    location == "EUR" ~ "Europe",
+    location == "AMR" ~ "America",
+    location == "AFR" ~ "Africa",
+    location %in% c("EMR", "WPR", "SEAR") ~ "Asia_Australia",
+    .default = "other"
+  )) |>
+  filter(location != "other") |>
   mutate(date = make_yearmonth(year = year, month = month)) |>
-  select(date, `excess.mean*`) |>
-  setNames(c("date", "excess_deaths"))
+  select(location, date, `excess.mean*`) |>
+  setNames(c("location", "date", "excess_deaths")) |>
+  group_by(location, date) |>
+  summarise(excess_deaths = sum(excess_deaths, na.rm = TRUE))
 
 # Vaccinations
 df2 <- read.csv("./data/owid.csv") |> as_tibble()
 
 vaxx <- df2 |>
-  filter(iso_code == "OWID_WRL") |>
-  select(date, new_vaccinations_smoothed) |>
+  mutate(location = case_when(
+    iso_code == "OWID_EUR" ~ "Europe",
+    iso_code %in% c("OWID_NAM", "OWID_SAM") ~ "America",
+    iso_code == "OWID_AFR" ~ "Africa",
+    iso_code %in% c("OWID_ASI", "OWID_OCE") ~ "Asia_Australia",
+    .default = "other"
+  )) |>
+  filter(location != "other") |>
+  select(location, date, new_vaccinations_smoothed) |>
   mutate(date = yearmonth(date(date))) |>
-  group_by(date) |>
+  group_by(location, date) |>
   summarise(new_vaccinations_smoothed = sum(
     new_vaccinations_smoothed,
     na.rm = TRUE
   ))
 
-df <- deaths |> inner_join(vaxx, by = c("date"))
+df <- deaths |>
+  inner_join(vaxx, by = c("date", "location")) |>
+  filter(location == "Asia_Australia")
 
 coeff <- max(df$new_vaccinations_smoothed) / max(df$excess_deaths)
 ggplot(df, aes(x = date)) +
   labs(
-    title = "Excess Deaths & COVID-19 Vaccine Doses [World]",
+    title = "Excess Deaths & COVID-19 Vaccine Doses [Asia_Australia]",
     subtitle = paste(
       "Source:",
       "World Health Organization (WHO)",
