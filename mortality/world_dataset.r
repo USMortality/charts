@@ -64,7 +64,7 @@ save_dataset <- function(
   save_csv(
     weekly,
     paste0("mortality/world_weekly", postfix),
-    upload = FALSE
+    upload = TRUE
   )
 
   print('Calculating "Weekly 104W SMA" dataset')
@@ -81,7 +81,7 @@ save_dataset <- function(
   save_csv(
     weekly104wsma,
     paste0("mortality/world_weekly_104w_sma", postfix),
-    upload = FALSE
+    upload = TRUE
   )
 
   print('Calculating "Weekly 52W SMA" dataset')
@@ -98,7 +98,7 @@ save_dataset <- function(
   save_csv(
     weekly52wsma,
     paste0("mortality/world_weekly_52w_sma", postfix),
-    upload = FALSE
+    upload = TRUE
   )
 
   print('Calculating "Weekly 26W SMA" dataset')
@@ -115,7 +115,7 @@ save_dataset <- function(
   save_csv(
     weekly26wsma,
     paste0("mortality/world_weekly_26w_sma", postfix),
-    upload = FALSE
+    upload = TRUE
   )
 
   print('Calculating "Weekly 13W SMA" dataset')
@@ -132,7 +132,7 @@ save_dataset <- function(
   save_csv(
     weekly13wsma,
     paste0("mortality/world_weekly_13w_sma", postfix),
-    upload = FALSE
+    upload = TRUE
   )
 
   print('Calculating "Monthly" dataset')
@@ -144,7 +144,7 @@ save_dataset <- function(
   save_csv(
     monthly,
     paste0("mortality/world_monthly", postfix),
-    upload = FALSE
+    upload = TRUE
   )
 
   print('Calculating "Quarterly" dataset')
@@ -156,7 +156,7 @@ save_dataset <- function(
   save_csv(
     quarterly,
     paste0("mortality/world_quarterly", postfix),
-    upload = FALSE
+    upload = TRUE
   )
 
   print('Calculating "Yearly" dataset')
@@ -168,7 +168,7 @@ save_dataset <- function(
   save_csv(
     yearly,
     paste0("mortality/world_yearly", postfix),
-    upload = FALSE
+    upload = TRUE
   )
 
   print('Calculating "YTD" dataset')
@@ -180,7 +180,7 @@ save_dataset <- function(
   save_csv(
     ytd,
     paste0("mortality/world_ytd", postfix),
-    upload = FALSE
+    upload = TRUE
   )
 
   print('Calculating "YTD" dataset')
@@ -192,7 +192,7 @@ save_dataset <- function(
   save_csv(
     ytd,
     paste0("mortality/world_ytd", postfix),
-    upload = FALSE
+    upload = TRUE
   )
 
   print('Calculating "Fluseason" dataset')
@@ -204,7 +204,7 @@ save_dataset <- function(
   save_csv(
     fluseason,
     paste0("mortality/world_fluseason", postfix),
-    upload = FALSE
+    upload = TRUE
   )
 
   print('Calculating "Midyear" dataset')
@@ -216,7 +216,7 @@ save_dataset <- function(
   save_csv(
     midyear,
     paste0("mortality/world_midyear", postfix),
-    upload = FALSE
+    upload = TRUE
   )
 }
 
