@@ -133,13 +133,13 @@ SMA <- function(vec, n) {
 calc_sma <- function(data, n) {
   if (nrow(data) < n) stop("Not enough rows for SMA")
 
-  data$deaths <- round(SMA(data$deaths, n = n), 0)
-  data$cmr <- round(SMA(data$cmr, n = n), 2)
+  data$deaths <- round(SMA(data$deaths, n = n), 3)
+  data$cmr <- round(SMA(data$cmr, n = n), 3)
   if ("asmr_who" %in% colnames(ts)) {
-    data$asmr_who <- round(SMA(data$asmr_who, n = n), 2)
-    data$asmr_esp <- round(SMA(data$asmr_esp, n = n), 2)
-    data$asmr_usa <- round(SMA(data$asmr_usa, n = n), 2)
-    data$asmr_country <- round(SMA(data$asmr_country, n = n), 2)
+    data$asmr_who <- round(SMA(data$asmr_who, n = n), 3)
+    data$asmr_esp <- round(SMA(data$asmr_esp, n = n), 3)
+    data$asmr_usa <- round(SMA(data$asmr_usa, n = n), 3)
+    data$asmr_country <- round(SMA(data$asmr_country, n = n), 3)
   }
   data
 }
