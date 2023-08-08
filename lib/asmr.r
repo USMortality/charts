@@ -1,14 +1,42 @@
 source("lib/common.r")
 source("population/std_pop.r")
 
-calculate_asmr <- function(df, pop, col_name) {
-  col <- rlang::sym(col_name)
+# Define default functions
+select <- dplyr::select
+filter <- dplyr::filter
+mutate <- dplyr::mutate
+group_by <- dplyr::group_by
+ungroup <- dplyr::ungroup
+summarise <- dplyr::summarise
+inner_join <- dplyr::inner_join
+relocate <- dplyr::relocate
+year <- lubridate::year
+month <- lubridate::month
+week <- lubridate::week
+days <- lubridate::days
+days_in_month <- lubridate::days_in_month
+as_tibble <- tibble::as_tibble
+tibble <- tibble::tibble
+as_tsibble <- tsibble::as_tsibble
+str_replace <- stringr::str_replace
+uncount <- tidyr::uncount
+sym <- rlang::sym
+model <- fabletools::model
+date <- lubridate::date
+forecast <- fabletools::forecast
+select <- dplyr::select
+all_of <- dplyr::all_of
+nest <- tidyr::nest
+unnest <- tidyr::unnest
+
+calculate_asmr <- function(df, pop, col_name) { # nolint: object_usage_linter.
+  col <- sym(col_name)
   df |>
-    dplyr::inner_join(pop, by = "age_group") |>
-    dplyr::mutate(!!col_name := cmr * weight) |>
-    dplyr::group_by(iso3c, date) |>
-    dplyr::summarise(!!col_name := sum(!!col)) |>
-    dplyr::ungroup()
+    inner_join(pop, by = "age_group") |>
+    mutate(!!col_name := .data$cmr * .data$weight) |>
+    group_by(.data$iso3c, .data$date) |>
+    summarise(!!col_name := sum(!!col)) |>
+    ungroup()
 }
 
 calculate_asmr_variants <- function(df) {
@@ -23,8 +51,8 @@ calculate_asmr_variants <- function(df) {
   dd_asmr3 <- df |> calculate_asmr(std_pop_usa, "asmr_usa")
   dd_asmr4 <- df |> calculate_asmr(std_pop_country, "asmr_country")
   dd_asmr1 |>
-    dplyr::inner_join(dd_asmr2, by = c("iso3c", "date")) |>
-    dplyr::inner_join(dd_asmr3, by = c("iso3c", "date")) |>
-    dplyr::inner_join(dd_asmr4, by = c("iso3c", "date")) |>
-    dplyr::select(-iso3c)
+    inner_join(dd_asmr2, by = c("iso3c", "date")) |>
+    inner_join(dd_asmr3, by = c("iso3c", "date")) |>
+    inner_join(dd_asmr4, by = c("iso3c", "date")) |>
+    select(-iso3c)
 }

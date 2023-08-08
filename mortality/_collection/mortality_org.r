@@ -9,21 +9,30 @@ deaths$CountryCode[deaths$CountryCode == "NZL_NP"] <- "NZL"
 deaths$CountryCode[deaths$CountryCode == "GBR_NP"] <- "GBR"
 
 df <- deaths |>
-  filter(Sex == "b") |>
+  filter(.data$Sex == "b") |>
   mutate(
-    P0_14 = D0_14 / R0_14 * 52,
-    P15_64 = D15_64 / R15_64 * 52,
-    P65_74 = D65_74 / R65_74 * 52,
-    P75_84 = D75_84 / R75_84 * 52,
-    P85p = D85p / R85p * 52,
-    PTotal = DTotal / RTotal * 52,
+    P0_14 = .data$D0_14 / .data$R0_14 * 52,
+    P15_64 = .data$D15_64 / .data$R15_64 * 52,
+    P65_74 = .data$D65_74 / .data$R65_74 * 52,
+    P75_84 = .data$D75_84 / .data$R75_84 * 52,
+    P85p = .data$D85p / .data$R85p * 52,
+    PTotal = .data$DTotal / .data$RTotal * 52,
   ) |>
   mutate(date = make_yearweek(
-    year = Year, week = Week
+    year = .data$Year, week = .data$Week
   ))
 
 population <- df |>
-  select(CountryCode, date, P0_14, P15_64, P65_74, P75_84, P85p, PTotal) |>
+  select(
+    "CountryCode",
+    "date",
+    "P0_14",
+    "P15_64",
+    "P65_74",
+    "P75_84",
+    "P85p",
+    "PTotal"
+  ) |>
   setNames(
     c("iso3c", "year", "0-14", "15-64", "65-74", "75-84", "85+", "all")
   ) |>
@@ -62,7 +71,7 @@ mortality_org <- df |>
     names_to = "age_group",
     values_to = "deaths"
   ) |>
-  getDailyFromWeekly(c("deaths")) |>
+  get_daily_from_weekly(c("deaths")) |>
   mutate(type = "weekly") |>
   inner_join(population, by = c("iso3c", "date", "age_group")) |>
   arrange(iso3c, date, age_group, type) |>

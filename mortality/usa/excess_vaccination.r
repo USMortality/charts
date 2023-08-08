@@ -4,20 +4,6 @@ df <- read_remote("mortality/world_weekly.csv") |>
   filter(substr(iso3c, 0, 3) == "USA") |>
   mutate(date = yearweek(date))
 
-tail(df)
-
-# "Administered_Dose1_Pop_Pct"
-# "Administered_Dose1_Recip_18PlusPop_Pct"
-# "Administered_Dose1_Recip_65PlusPop_Pct"
-# "Series_Complete_Pop_Pct"
-# "Series_Complete_18PlusPop_Pct"
-# "Series_Complete_65PlusPop_Pct"
-# "Additional_Doses_Vax_Pct"
-# "Additional_Doses_18Plus_Vax_Pct"
-# "Additional_Doses_65Plus_Vax_Pct"
-# "Bivalent_Booster_18Plus_Pop_Pct"
-# "Bivalent_Booster_65Plus_Pop_Pct"
-
 data1 <- as_tibble(read.csv("./data/usa_states_vaccination.csv")) |>
   select(Location, Bivalent_Booster_18Plus_Pop_Pct) |>
   setNames(c("iso3c", "dose_pct")) |>

@@ -24,7 +24,7 @@ asmr <- cmr |>
 result <- cmr |>
   filter(age_group == "all") |>
   inner_join(asmr, by = c("iso3c", "date")) |>
-  select(-age_group)
+  select(-any_of(age_group))
 
 save_csv(result, "mortality/usa/yearly")
 

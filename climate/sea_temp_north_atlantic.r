@@ -12,9 +12,9 @@ data <- content(req, "text") |>
   fromJSON()
 
 fun <- function(a) {
-  startDate <- paste0(a$date[1], "-01-01")
-  endDate <- paste0(a$date[1], "-12-31")
-  dates <- seq.Date(as.Date(startDate), as.Date(endDate), by = "day")
+  start_date <- paste0(a$date[1], "-01-01")
+  end_date <- paste0(a$date[1], "-12-31")
+  dates <- seq.Date(as.Date(start_date), as.Date(end_date), by = "day")
   if (length(dates) == 365) dates <- c(dates, NA)
   a$date <- dates
   a

@@ -1,5 +1,41 @@
 source("lib/common.r")
 
+# Define default functions
+select <- dplyr::select
+filter <- dplyr::filter
+mutate <- dplyr::mutate
+group_by <- dplyr::group_by
+ungroup <- dplyr::ungroup
+summarise <- dplyr::summarise
+inner_join <- dplyr::inner_join
+relocate <- dplyr::relocate
+year <- lubridate::year
+month <- lubridate::month
+week <- lubridate::week
+days <- lubridate::days
+days_in_month <- lubridate::days_in_month
+as_tibble <- tibble::as_tibble
+tibble <- tibble::tibble
+as_tsibble <- tsibble::as_tsibble
+str_replace <- stringr::str_replace
+uncount <- tidyr::uncount
+sym <- rlang::sym
+model <- fabletools::model
+date <- lubridate::date
+forecast <- fabletools::forecast
+select <- dplyr::select
+all_of <- dplyr::all_of
+nest <- tidyr::nest
+unnest <- tidyr::unnest
+.data <- dplyr::.data
+yearmonth <- tsibble::yearmonth
+yearweek <- tsibble::yearweek
+ggplot <- ggplot2::ggplot
+make_yearmonth <- tsibble::make_yearmonth
+arrange <- dplyr::arrange
+distinct <- dplyr::distinct
+complete <- tidyr::complete
+
 us_states_iso3c <- as_tibble(read.csv("./data_static/usa_states_iso3c.csv"))
 
 usa_10y <- read_remote("deaths/usa/monthly_10y.csv") |>
@@ -8,39 +44,39 @@ usa_10y <- read_remote("deaths/usa/monthly_10y.csv") |>
   summarise(deaths = sum(deaths)) |>
   ungroup() |>
   mutate(date = year) |>
-  select(-year)
+  select(-any_of(year))
 usa_10y_complete <- read_remote("deaths/usa/monthly_10y_complete.csv") |>
   filter(iso3c == "USA") |>
   group_by(iso3c, year, age_group) |>
   summarise(deaths = sum(deaths)) |>
   ungroup() |>
   mutate(date = year) |>
-  select(-year)
+  select(-any_of(year))
 usa_5y <- read_remote("deaths/usa/monthly_5y.csv") |>
   filter(iso3c == "USA") |>
   group_by(iso3c, year, age_group) |>
   summarise(deaths = sum(deaths)) |>
   ungroup() |>
   mutate(date = year) |>
-  select(-year)
+  select(-any_of(year))
 usa_5y_complete <- read_remote("deaths/usa/monthly_5y_complete.csv") |>
   filter(iso3c == "USA") |>
   group_by(iso3c, year, age_group) |>
   summarise(deaths = sum(deaths)) |>
   ungroup() |>
   mutate(date = year) |>
-  select(-year)
+  select(-any_of(year))
 
 data1 <- read.csv("../wonder_dl/out/yearly/us_states_1999_2020_all.csv")
 data2 <- read.csv("../wonder_dl/out/yearly/us_states_2021_n_all.csv")
 
 parse_data <- function(df, jurisdiction_column, age_group) {
   df |>
-    select(!!jurisdiction_column, Year.Code, Deaths) |>
+    select(all_of(!!jurisdiction_column, .data$Year.Code, .data$Deaths)) |>
     setNames(c("jurisdiction", "date", "deaths")) |>
-    left_join(us_states_iso3c, by = "jurisdiction") |>
-    filter(!is.na(iso3c), !is.na(date)) |>
-    select(iso3c, date, deaths) |>
+    dplyr::left_join(us_states_iso3c, by = "jurisdiction") |>
+    filter(!is.na(.data$iso3c), !is.na(date)) |>
+    select(all_of(.data$iso3c, .data$date, .data$deaths)) |>
     mutate(age_group = gsub("_", "-", age_group), .after = date)
 }
 
@@ -77,13 +113,13 @@ process_age_groups <- function(age_groups) {
 
   totals_ag <- rbind(ag1, ag2) |>
     as_tibble() |>
-    arrange(iso3c, date, age_group) |>
-    distinct(iso3c, date, age_group, .keep_all = TRUE)
+    arrange("iso3c", "date", "age_group") |>
+    distinct("iso3c", "date", "age_group", .keep_all = TRUE)
 
   rbind(totals, totals_ag) |>
-    arrange(iso3c, date, age_group) |>
-    distinct(iso3c, date, age_group, .keep_all = TRUE) |>
-    complete(iso3c, date, age_group)
+    arrange("iso3c", "date", "age_group") |>
+    distinct("iso3c", "date", "age_group", .keep_all = TRUE) |>
+    complete("iso3c", "date", "age_group")
 }
 
 # By 10y age group
@@ -107,7 +143,7 @@ result_10y <- process_age_groups(age_groups) |>
 result_10y_complete <- result_10y |>
   filter(date <= 2022) |>
   group_by(iso3c, date) |>
-  group_modify(~ imputeSingleNA(.x)) |>
+  group_modify(~ impute_single_na(.x)) |>
   ungroup()
 
 # By 5y age group
@@ -147,11 +183,11 @@ result_5y_complete <- rbind(
 result_5y_complete <- result_5y_complete |>
   filter(date <= 2022) |>
   group_by(iso3c, date) |>
-  group_modify(~ imputeSingleNA(.x)) |>
-  group_modify(~ imputeFromAggregate(
+  group_modify(~ impute_single_na(.x)) |>
+  group_modify(~ impute_from_aggregate(
     .x, result_10y_complete, "0-9", c("0-4", "5-9")
   ), .keep = TRUE) |>
-  group_modify(~ imputeFromAggregate(
+  group_modify(~ impute_from_aggregate(
     .x, result_10y_complete, "10-19", c("10-14", "15-19")
   ), .keep = TRUE) |>
   ungroup()

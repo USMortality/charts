@@ -3,10 +3,6 @@ source("lib/common.r")
 df <- read_remote("mortality/world_weekly.csv") |>
   mutate(date = yearweek(date))
 
-# people_vaccinated_per_hundred
-# people_fully_vaccinated_per_hundred
-# total_boosters_per_hundred
-
 data1 <- as_tibble(read.csv("./data/owid.csv")) |>
   select(iso_code, people_vaccinated_per_hundred) |>
   setNames(c("iso3c", "dose_pct")) |>

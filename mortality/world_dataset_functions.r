@@ -1,3 +1,42 @@
+# Define default functions
+select <- dplyr::select
+filter <- dplyr::filter
+mutate <- dplyr::mutate
+group_by <- dplyr::group_by
+ungroup <- dplyr::ungroup
+summarise <- dplyr::summarise
+inner_join <- dplyr::inner_join
+relocate <- dplyr::relocate
+year <- lubridate::year
+month <- lubridate::month
+week <- lubridate::week
+days <- lubridate::days
+days_in_month <- lubridate::days_in_month
+as_tibble <- tibble::as_tibble
+tibble <- tibble::tibble
+as_tsibble <- tsibble::as_tsibble
+str_replace <- stringr::str_replace
+uncount <- tidyr::uncount
+sym <- rlang::sym
+model <- fabletools::model
+date <- lubridate::date
+forecast <- fabletools::forecast
+select <- dplyr::select
+all_of <- dplyr::all_of
+nest <- tidyr::nest
+unnest <- tidyr::unnest
+.data <- dplyr::.data
+yearmonth <- tsibble::yearmonth
+yearweek <- tsibble::yearweek
+ggplot <- ggplot2::ggplot
+make_yearmonth <- tsibble::make_yearmonth
+arrange <- dplyr::arrange
+distinct <- dplyr::distinct
+complete <- tidyr::complete
+case_when <- dplyr::case_when
+across <- dplyr::across
+left_join <- dplyr::left_join
+
 filter_by_complete_temp_values <- function(data, col, n) {
   start <- data |>
     filter(.data[[col]] == head(data[[col]], n = 1)) |>
@@ -32,24 +71,24 @@ aggregate_data <- function(data, fun_name) {
   if ("cmr" %in% names(data)) {
     result <- result |>
       summarise(
-        deaths = round(sumIfNotEmpty(deaths)),
-        population = round(mean(population)),
-        cmr = round(sumIfNotEmpty(cmr), digits = 1)
+        deaths = round(sum_if_not_empty(deaths)),
+        population = round(mean(.data$population)),
+        cmr = round(sum_if_not_empty(.data$cmr), digits = 1)
       )
   }
   if ("asmr_who" %in% names(data)) {
     result <- result |>
       summarise(
-        asmr_who = round(sumIfNotEmpty(asmr_who), digits = 1),
-        asmr_esp = round(sumIfNotEmpty(asmr_esp), digits = 1),
-        asmr_usa = round(sumIfNotEmpty(asmr_usa), digits = 1),
-        asmr_country = round(sumIfNotEmpty(asmr_country), digits = 1)
+        asmr_who = round(sum_if_not_empty(.data$asmr_who), digits = 1),
+        asmr_esp = round(sum_if_not_empty(.data$asmr_esp), digits = 1),
+        asmr_usa = round(sum_if_not_empty(.data$asmr_usa), digits = 1),
+        asmr_country = round(sum_if_not_empty(.data$asmr_country), digits = 1)
       )
   }
   result |>
     ungroup() |>
     as_tibble() |>
-    rename("date" = fun_name)
+    dplyr::rename("date" = all_of(fun_name))
 }
 
 filter_ytd <- function(data, max_date_cmr) {
@@ -80,66 +119,71 @@ calc_ytd <- function(data) {
   cmr_data <- nested[[2]][[length(nested[[2]])]] |> filter(!is.na(cmr))
   max_date_cmr <- max(cmr_data$date)
 
-  if ("asmr_who" %in% names(data)) {
+  if ("asmr_who" %in% colnames(data) &&
+    nrow(data |> filter(!is.na(asmr_who)))) {
     asmr_data <- nested[[2]][[length(nested[[2]])]] |> filter(!is.na(asmr_who))
-    max_date_asmr <- if (length(asmr_data) > 0) max(asmr_data$date) else NA
+    max_date_asmr <- if (nrow(asmr_data) > 0) max(asmr_data$date) else NA
     nested |>
-      mutate(data = lapply(data, filter_ytd_asmr, max_date_cmr, max_date_asmr)) |>
-      unnest(cols = c(data))
+      mutate(data = lapply(
+        data, filter_ytd_asmr, max_date_cmr, max_date_asmr
+      )) |>
+      unnest(cols = c(data)) |>
+      select(-max_date_cmr, -max_date_asmr)
   } else {
     nested |>
       mutate(data = lapply(data, filter_ytd, max_date_cmr)) |>
-      unnest(cols = c(data))
+      unnest(cols = c(data)) |>
+      select(-max_date_cmr)
   }
 }
 
 aggregate_data_ytd_age <- function(data) {
   data |>
-    group_by(iso3c, year, max_date_cmr) |>
+    group_by(.data$iso3c, .data$year) |>
     summarise(
-      deaths = round(sumIfNotEmpty(deaths)),
-      cmr = round(sumIfNotEmpty(cmr), digits = 1)
+      deaths = round(sum_if_not_empty(.data$deaths)),
+      cmr = round(sum_if_not_empty(.data$cmr), digits = 1)
     ) |>
     ungroup() |>
-    rename("date" = "year") |>
+    dplyr::rename("date" = "year") |>
     as_tibble()
 }
 
 aggregate_data_ytd <- function(data) {
   data |>
-    group_by(iso3c, year, max_date_cmr, max_date_asmr) |>
+    group_by(.data$iso3c, .data$year) |>
     summarise(
-      deaths = round(sumIfNotEmpty(deaths)),
-      cmr = round(sumIfNotEmpty(cmr), digits = 1),
-      asmr_who = round(sumIfNotEmpty(asmr_who), digits = 1),
-      asmr_esp = round(sumIfNotEmpty(asmr_esp), digits = 1),
-      asmr_usa = round(sumIfNotEmpty(asmr_usa), digits = 1),
-      asmr_country = round(sumIfNotEmpty(asmr_country), digits = 1)
+      deaths = round(sum_if_not_empty(.data$deaths)),
+      cmr = round(sum_if_not_empty(.data$cmr), digits = 1),
+      asmr_who = round(sum_if_not_empty(.data$asmr_who), digits = 1),
+      asmr_esp = round(sum_if_not_empty(.data$asmr_esp), digits = 1),
+      asmr_usa = round(sum_if_not_empty(.data$asmr_usa), digits = 1),
+      asmr_country = round(sum_if_not_empty(.data$asmr_country), digits = 1)
     ) |>
     ungroup() |>
-    rename("date" = "year") |>
+    dplyr::rename("date" = "year") |>
     as_tibble()
 }
 
-SMA <- function(vec, n) {
+sma <- function(vec, n) {
   sma <- c()
   sma[1:(n - 1)] <- NA
   for (i in n:length(vec)) {
     sma[i] <- mean(vec[(i - n + 1):i], na.rm = TRUE)
   }
-  reclass(sma, vec)
+  xts::reclass(sma, vec)
 }
 
 calc_sma <- function(data, n) {
   if (nrow(data) < n) stop("Not enough rows for SMA")
 
-  data$deaths <- round(SMA(data$deaths, n = n), 3)
-  data$cmr <- round(SMA(data$cmr, n = n), 3)
+  data$deaths <- round(sma(data$deaths, n = n), 3)
+  data$cmr <- round(sma(data$cmr, n = n), 3)
   if ("asmr_who" %in% colnames(ts)) {
-    data$asmr_who <- round(SMA(data$asmr_who, n = n), 3)
-    data$asmr_esp <- round(SMA(data$asmr_esp, n = n), 3)
-    data$asmr_usa <- round(SMA(data$asmr_usa, n = n), 3)
-    data$asmr_country <- round(SMA(data$asmr_country, n = n), 3)
+    data$asmr_who <- round(sma(data$asmr_who, n = n), 3)
+    data$asmr_esp <- round(sma(data$asmr_esp, n = n), 3)
+    data$asmr_usa <- round(sma(data$asmr_usa, n = n), 3)
+    data$asmr_country <- round(sma(data$asmr_country, n = n), 3)
   }
   data
 }
@@ -173,31 +217,46 @@ apply_model <- function(data, col, chart_type) {
   if (chart_type %in% c(
     "weekly_26w_sma", "weekly_13w_sma", "quarterly", "monthly", "weekly"
   )) {
-    data |> model(TSLM(!!col ~ trend() + season()))
+    data |> model(fable::TSLM(!!col ~ trend() + season()))
   } else {
-    data |> model(TSLM(!!col ~ trend()))
+    data |> model(fable::TSLM(!!col ~ trend()))
   }
 }
 
 get_baseline_length <- function(iso, ct, cn) {
   if (!ct %in% c("fluseason", "midyear")) ct <- "yearly"
   baseline <- baseline_size |>
-    filter(iso3c == iso & chart_type == ct & type == cn)
+    filter(.data$iso3c == iso & .data$chart_type == ct & .data$type == cn)
   ifelse(nrow(baseline) == 0, 5, baseline$window)
 }
 
 # TODO: Remove when next version of fabeletools (>0.3.2) is published.
-unpack_hilo <- function(data, cols, names_sep = "_", names_repair = "check_unique") {
+unpack_hilo <- function(
+    data,
+    cols,
+    names_sep = "_",
+    names_repair = "check_unique") {
   orig <- data
-  cols <- tidyselect::eval_select(enexpr(cols), data)
-  if (any(bad_col <- !map_lgl(data[cols], inherits, "hilo"))) {
-    abort(sprintf(
-      "Not all unpacking columns are hilo objects (%s). All unpacking columns of unpack_hilo() must be hilo vectors.",
+  cols <- tidyselect::eval_select(dplyr::enexpr(cols), data)
+  if (any(bad_col <- !purrr::map_lgl(data[cols], inherits, "hilo"))) {
+    rlang::abort(sprintf(
+      paste(
+        "Not all unpacking columns are hilo objects (%s).",
+        "All unpacking columns of unpack_hilo() must be hilo vectors."
+      ),
       paste(names(bad_col)[bad_col], collapse = ", ")
     ))
   }
-  data[cols] <- map(data[cols], function(x) vctrs::vec_proxy(x)[c("lower", "upper")])
-  data <- tidyr::unpack(data, names(cols), names_sep = names_sep, names_repair = names_repair)
+  data[cols] <- purrr::map(
+    data[cols], function(x) {
+      vctrs::vec_proxy(x)[c("lower", "upper")]
+    }
+  )
+  data <- tidyr::unpack(
+    data,
+    names(cols),
+    names_sep = names_sep, names_repair = names_repair
+  )
   vctrs::vec_restore(data, orig)
 }
 
@@ -208,14 +267,14 @@ calculate_baseline <- function(data, col_name, chart_type) {
   forecast_interval <- round(4 * multiplier)
 
   col <- sym(col_name)
-  if (chart_type %in% c("yearly", "fluseason", "midyear")) {
+  if (chart_type %in% c("yearly", "fluseason", "midyear", "ytd")) {
     df <- data |> filter(date < 2020)
   } else {
     df <- data |> filter(year(date) < 2020)
   }
 
   # No rows, return
-  if (nrow(drop_na(df |> select(!!col))) == 0) {
+  if (nrow(tidyr::drop_na(df |> select(!!col))) == 0) {
     data[paste0(col, "_baseline")] <- NA
     data[paste0(col, "_baseline_lower")] <- NA
     data[paste0(col, "_baseline_upper")] <- NA
@@ -229,12 +288,12 @@ calculate_baseline <- function(data, col_name, chart_type) {
     fc <- bl_data |>
       apply_model(col, chart_type) |>
       forecast(h = forecast_interval)
-    fc_hl <- hilo(fc, 95) |> unpack_hilo(cols = `95%`)
+    fc_hl <- fabletools::hilo(fc, 95) |> unpack_hilo(cols = `95%`)
 
     bl <- bl_data |>
       apply_model(col, chart_type) |>
       forecast(new_data = bl_data)
-    bl_hl <- hilo(bl, 95) |> unpack_hilo(cols = `95%`)
+    bl_hl <- fabletools::hilo(bl, 95) |> unpack_hilo(cols = `95%`)
 
     result <- data.frame(date = c(bl$date, fc$date))
     result[paste0(col, "_baseline")] <- c(bl$.mean, fc$.mean)
@@ -309,10 +368,10 @@ calculate_baseline_excess <- function(data, chart_type) {
 filter_n_rows <- function(df, n) {
   df |>
     unnest(cols = c(data)) |>
-    group_by(iso3c) |>
+    group_by(.data$iso3c) |>
     filter(n() >= n) |>
     ungroup() |>
-    nest(data = !iso)
+    nest(data = !c("iso"))
 }
 
 get_nested_data_by_time <- function(dd_asmr, dd_all, fun_name) {
@@ -329,26 +388,26 @@ get_nested_data_by_time <- function(dd_asmr, dd_all, fun_name) {
     unnest(cols = c(data))
 
   asmr <- rbind(
-    df_asmr |> filter(type == "weekly"),
-    df_asmr |> filter(type == "monthly"),
-    df_asmr |> filter(type == "yearly")
+    df_asmr |> filter(.data$type == "weekly"),
+    df_asmr |> filter(.data$type == "monthly"),
+    df_asmr |> filter(.data$type == "yearly")
   ) |>
-    arrange(iso3c, date) |>
-    distinct(iso3c, date, .keep_all = TRUE) |>
-    select(-type)
+    arrange(.data$iso3c, .data$date) |>
+    distinct(.data$iso3c, .data$date, .keep_all = TRUE) |>
+    select(-all_of("type"))
 
   all <- rbind(
-    df_all |> filter(type == "weekly"),
-    df_all |> filter(type == "monthly"),
-    df_all |> filter(type == "yearly")
+    df_all |> filter(.data$type == "weekly"),
+    df_all |> filter(.data$type == "monthly"),
+    df_all |> filter(.data$type == "yearly")
   ) |>
     arrange(iso3c, date) |>
     distinct(iso3c, date, .keep_all = TRUE) |>
-    select(-type)
+    select(-all_of("type"))
 
   all |>
     left_join(asmr, by = c("iso3c", "date")) |>
-    select(-iso.y) |>
+    select(!all_of("iso.y")) |>
     setNames(c(
       "iso", "iso3c", "date", "deaths", "population", "cmr",
       asmr_types
@@ -365,24 +424,24 @@ get_nested_data_by_time_age <- function(dd_age, fun_name) {
     unnest(cols = c(data))
 
   all <- rbind(
-    df_all |> filter(type == "weekly"),
-    df_all |> filter(type == "monthly"),
-    df_all |> filter(type == "yearly")
+    df_all |> filter(.data$type == "weekly"),
+    df_all |> filter(.data$type == "monthly"),
+    df_all |> filter(.data$type == "yearly")
   ) |>
-    arrange(iso3c, date, age_group) |>
+    arrange(.data$iso3c, date, .data$age_group) |>
     distinct(iso3c, date, age_group, .keep_all = TRUE) |>
-    select(-type)
+    select(-all_of("type"))
 
   all |> nest(data = !c("iso", "age_group"))
 }
 
 fill_gaps_na <- function(df) {
   ts <- df |> as_tsibble(index = date)
-  if (!has_gaps(ts)) {
+  if (!tsibble::has_gaps(ts)) {
     return(ts)
   }
   ts |>
-    fill_gaps() |>
-    fill(population, .direction = "down") |>
+    tsibble::fill_gaps() |>
+    tidyr::fill(population, .direction = "down") |>
     fill(source, .direction = "down")
 }

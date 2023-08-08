@@ -2,6 +2,38 @@ source("lib/common.r")
 source("lib/asmr.r")
 source("population/std_pop.r")
 
+# Define default functions
+select <- dplyr::select
+filter <- dplyr::filter
+mutate <- dplyr::mutate
+group_by <- dplyr::group_by
+ungroup <- dplyr::ungroup
+summarise <- dplyr::summarise
+inner_join <- dplyr::inner_join
+relocate <- dplyr::relocate
+year <- lubridate::year
+month <- lubridate::month
+week <- lubridate::week
+days <- lubridate::days
+days_in_month <- lubridate::days_in_month
+as_tibble <- tibble::as_tibble
+tibble <- tibble::tibble
+as_tsibble <- tsibble::as_tsibble
+str_replace <- stringr::str_replace
+uncount <- tidyr::uncount
+sym <- rlang::sym
+model <- fabletools::model
+date <- lubridate::date
+forecast <- fabletools::forecast
+select <- dplyr::select
+all_of <- dplyr::all_of
+nest <- tidyr::nest
+unnest <- tidyr::unnest
+.data <- dplyr::.data
+yearmonth <- tsibble::yearmonth
+yearweek <- tsibble::yearweek
+ggplot <- ggplot2::ggplot
+
 # Genesis 12411-0005: Bevölkerung: Deutschland, Stichtag, Altersjahre
 population <- as_tibble(
   head(
@@ -71,7 +103,7 @@ deaths <- deaths |>
 deaths$sex[deaths$sex == "I"] <- "all"
 deaths <- deaths |>
   group_by(sex, year) |>
-  group_modify(~ imputeSingleNA(.x)) |>
+  group_modify(~ impute_single_na(.x)) |>
   ungroup()
 
 df <- deaths |>
@@ -84,7 +116,7 @@ df <- deaths |>
   summarise(deaths = sum(deaths)) |>
   ungroup() |>
   inner_join(population, by = c("year", "sex", "age_group")) |>
-  select(-sex) |>
+  select(-any_of(sex)) |>
   mutate(cmr = deaths / population * 100000)
 
 ts <- df |>
@@ -169,9 +201,9 @@ asmr_who <- df |>
 asmr <- asmr_esp
 asmr$asmr_who <- asmr_who$asmr_who
 
-START_YEAR <- 1970
+start_year <- 1970
 
-ggplot(asmr |> filter(date >= START_YEAR), aes(x = date)) +
+ggplot(asmr |> filter(date >= start_year), aes(x = date)) +
   labs(
     title = "Yearly All-Cause ASMR (Single Age Groups) [Germany]",
     subtitle = paste0(
@@ -200,7 +232,7 @@ ggplot(asmr |> filter(date >= START_YEAR), aes(x = date)) +
   geom_line(aes(y = asmr_who), color = "#5383EC", linewidth = 1) +
   twitter_theme()
 
-ggplot(asmr |> filter(date >= START_YEAR), aes(x = date)) +
+ggplot(asmr |> filter(date >= start_year), aes(x = date)) +
   labs(
     title = "Yearly All-Cause ASMR (Single Age Groups) [Germany]",
     subtitle = paste0(
@@ -229,7 +261,7 @@ ggplot(asmr |> filter(date >= START_YEAR), aes(x = date)) +
   geom_line(aes(y = asmr_who), color = "#5383EC", linewidth = 1) +
   twitter_theme()
 
-ggplot(asmr |> filter(date >= START_YEAR), aes(x = date)) +
+ggplot(asmr |> filter(date >= start_year), aes(x = date)) +
   labs(
     title = "Yearly All-Cause ASMR (Single Age Groups) [Germany]",
     subtitle = paste0(
@@ -258,7 +290,7 @@ ggplot(asmr |> filter(date >= START_YEAR), aes(x = date)) +
   geom_line(aes(y = asmr_esp), color = "#5383EC", linewidth = 1) +
   twitter_theme()
 
-ggplot(asmr |> filter(date >= START_YEAR), aes(x = date)) +
+ggplot(asmr |> filter(date >= start_year), aes(x = date)) +
   labs(
     title = "Yearly All-Cause ASMR (Single Age Groups) [Germany]",
     subtitle = paste0(
@@ -308,16 +340,16 @@ ggplot(asmr |> filter(date >= 1990), aes(x = date)) +
   geom_line(aes(y = asmr_esp), color = "#5383EC", linewidth = 1) +
   twitter_theme()
 
-BL_LEN <- 10
-H_STEP_FORECAST <- 2
+bl_len <- 10
+h_step_fc <- 2
 
 calc_excess <- function(df) {
-  fc <- head(df, BL_LEN) |>
+  fc <- head(df, bl_len) |>
     as_tsibble(index = date) |>
-    model(RW(asmr_esp ~ drift())) |>
-    forecast(h = H_STEP_FORECAST)
+    model(fable::RW(asmr_esp ~ drift())) |>
+    forecast(h = h_step_fc)
 
-  result <- tail(df, H_STEP_FORECAST)
+  result <- tail(df, h_step_fc)
   result$expected <- fc$.mean
   result$excess <- result$asmr_esp - result$expected
   result$excess_p <- (result$asmr_esp - result$expected) / result$asmr_esp
@@ -325,16 +357,16 @@ calc_excess <- function(df) {
 }
 
 data_excess <- asmr |>
-  select(-iso3c, -asmr_who) |>
+  select(-any_of(iso3c, -asmr_who)) |>
   as_tsibble(index = date) |>
-  slide_tsibble(.size = (BL_LEN + H_STEP_FORECAST)) |>
+  slide_tsibble(.size = (bl_len + h_step_fc)) |>
   group_by(.id) |>
   group_modify(~ calc_excess(.x)) |>
   mutate(id = row_number()) |>
   ungroup()
 
 ggplot(
-  data_excess |> filter(id == H_STEP_FORECAST) |> as_tsibble(index = date),
+  data_excess |> filter(id == h_step_fc) |> as_tsibble(index = date),
   aes(x = date)
 ) +
   labs(
@@ -357,7 +389,7 @@ ggplot(
   scale_y_continuous(limits = c(-100, 100))
 
 ggplot(
-  data_excess |> filter(id == H_STEP_FORECAST) |> as_tsibble(index = date),
+  data_excess |> filter(id == h_step_fc) |> as_tsibble(index = date),
   aes(x = date)
 ) +
   labs(
@@ -381,8 +413,8 @@ ggplot(
 
 # Animate
 make_chart <- function(df) {
-  chart <- ggplot(df, aes(x = date)) +
-    labs(
+  chart <- ggplot(df, ggplot2::aes(x = date)) +
+    ggplot2::labs(
       title = "Yearly All-Cause ASMR (Single Age Groups) [Germany]",
       subtitle = paste0(
         c(
@@ -395,9 +427,9 @@ make_chart <- function(df) {
       x = "Year",
       y = "Deaths/100k"
     ) +
-    geom_smooth(
+    ggplot2::geom_smooth(
       mapping = aes(y = asmr_esp),
-      data = head(df, BL_LEN),
+      data = head(df, bl_len),
       fullrange = TRUE,
       color = "black",
       linetype = 5,
@@ -406,23 +438,24 @@ make_chart <- function(df) {
       level = 0.95
     ) +
     watermark(max(df$date)) +
-    geom_line(aes(y = asmr_esp), color = "#5383EC", linewidth = 1) +
-    scale_x_continuous(breaks = df$date) +
+    ggplot2::geom_line(aes(y = asmr_esp), color = "#5383EC", linewidth = 1) +
+    ggplot2::scale_x_continuous(breaks = df$date) +
     twitter_theme()
   save_chart(
     chart,
     paste("mortality", "deu", paste0(
-      "forecast_", str_pad(unique(df$.id), 2, pad = "0")
+      "forecast_", stringr::str_pad(unique(df$.id), 2, pad = "0")
     ), sep = "/"),
     upload = FALSE
   )
 }
 
 asmr |>
-  select(-iso3c, -asmr_who) |>
+  select(-any_of(iso3c, -asmr_who)) |>
   as_tsibble(index = date) |>
-  slide_tsibble(.size = (BL_LEN + H_STEP_FORECAST)) |>
+  slide_tsibble(.size = (bl_len + h_step_fc)) |>
   group_by(.id) |>
   group_map(~ make_chart(.x), .keep = TRUE)
 
-# ffmpeg -hide_banner -loglevel error -r 1 -pattern_type glob -i '*.png' -c:v libx264 -vf "fps=1,format=yuv420p,scale=1200x670" _movie.mp4ffmpeg
+# ffmpeg -hide_banner -loglevel error -r 1 -pattern_type glob -i '*.png' -c:v
+# libx264 -vf "fps=1,format=yuv420p,scale=1200x670" _movie.mp4ffmpeg

@@ -14,7 +14,7 @@ us_population <- read_remote("population/usa/six_age_bands.csv") |>
   filter(jurisdiction != "United States") |>
   mutate(jurisdiction = paste0("USA - ", jurisdiction)) |>
   filter(age_group == "all") |>
-  select(-age_group)
+  select(-any_of(age_group))
 
 countries <- as_tibble(read.csv("./data_static/countries.csv")) |>
   select(iso3, name) |>
@@ -38,7 +38,7 @@ population <- world_population |>
 population <- rbind(
   population,
   us_population,
-  de_population |> filter(age_group == "all") |> select(-age_group)
+  de_population |> filter(age_group == "all") |> select(-any_of(age_group))
 ) |> distinct(iso3c, year, .keep_all = TRUE)
 
 save_csv(population, "population/world")

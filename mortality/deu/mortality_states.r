@@ -11,7 +11,7 @@ df_all <- df |>
     date = make_yearweek(year = year, week = week),
     age_group = "all"
   ) |>
-  getDailyFromWeekly(c("deaths")) |>
+  get_daily_from_weekly(c("deaths")) |>
   select(iso3c, date, age_group, deaths) |>
   arrange(iso3c, date)
 
@@ -41,7 +41,7 @@ df_age_d <- df |>
   group_by(iso3c, date, age_group) |>
   summarise(deaths = sum(deaths)) |>
   ungroup() |>
-  getDailyFromWeekly(c("deaths"))
+  get_daily_from_weekly(c("deaths"))
 
 # By age group, states
 df_age_states <- df |>
@@ -58,7 +58,7 @@ df_age_states <- df |>
   group_by(iso3c, date, age_group) |>
   summarise(deaths = sum(deaths)) |>
   ungroup() |>
-  getDailyFromWeekly(c("deaths"))
+  get_daily_from_weekly(c("deaths"))
 
 # Population
 source("population/deu/deu.r")

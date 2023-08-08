@@ -59,7 +59,7 @@ asmr <- cmr |>
 result <- cmr |>
   filter(age_group == "all") |>
   inner_join(asmr, by = c("iso3c", "date")) |>
-  select(-age_group)
+  select(-any_of(age_group))
 
 cmr2 <- df2 |> mutate(cmr = deaths / population * 100000)
 asmr2 <- cmr2 |>
@@ -70,7 +70,7 @@ asmr2 <- cmr2 |>
 result2 <- cmr2 |>
   filter(age_group == "all") |>
   inner_join(asmr2, by = c("iso3c", "date")) |>
-  select(-age_group)
+  select(-any_of(age_group)
 
 cmr3 <- df3 |> mutate(cmr = deaths / population * 100000)
 asmr3 <- cmr3 |>
@@ -81,7 +81,7 @@ asmr3 <- cmr3 |>
 result3 <- cmr3 |>
   filter(age_group == "all") |>
   inner_join(asmr3, by = c("iso3c", "date")) |>
-  select(-age_group)
+  select(-any_of(age_group)
 
 ts_diff <- result |>
   select(iso3c, date, cmr, asmr_country) |>

@@ -7,12 +7,48 @@ source("mortality/_collection/world_mortality.r")
 source("mortality/usa/mortality_states.r")
 source("mortality/deu/mortality_states.r")
 
+# Define default functions
+select <- dplyr::select
+filter <- dplyr::filter
+mutate <- dplyr::mutate
+group_by <- dplyr::group_by
+ungroup <- dplyr::ungroup
+summarise <- dplyr::summarise
+inner_join <- dplyr::inner_join
+relocate <- dplyr::relocate
+year <- lubridate::year
+month <- lubridate::month
+week <- lubridate::week
+days <- lubridate::days
+days_in_month <- lubridate::days_in_month
+as_tibble <- tibble::as_tibble
+tibble <- tibble::tibble
+as_tsibble <- tsibble::as_tsibble
+str_replace <- stringr::str_replace
+uncount <- tidyr::uncount
+sym <- rlang::sym
+model <- fabletools::model
+date <- lubridate::date
+forecast <- fabletools::forecast
+select <- dplyr::select
+all_of <- dplyr::all_of
+nest <- tidyr::nest
+unnest <- tidyr::unnest
+.data <- dplyr::.data
+yearmonth <- tsibble::yearmonth
+yearweek <- tsibble::yearweek
+ggplot <- ggplot2::ggplot
+make_yearmonth <- tsibble::make_yearmonth
+arrange <- dplyr::arrange
+distinct <- dplyr::distinct
+complete <- tidyr::complete
+case_when <- dplyr::case_when
+
 # Country names are added back in the end.
 source("mortality/world_iso.r")
 
 # Load Data
 baseline_size <- read_remote("mortality/world_baseline.csv")
-
 asmr_types <- c("asmr_who", "asmr_esp", "asmr_usa", "asmr_country")
 
 # For duplicates: first values take precedence.
@@ -53,6 +89,7 @@ save_dataset <- function(
     fluseason_nested,
     midyear_nested,
     ag) {
+  ag <- "all"
   postfix <- ifelse(ag == "all", "", paste0("_", ag))
 
   print('Calculating "Weekly" dataset')
@@ -75,8 +112,8 @@ save_dataset <- function(
     mutate(data = lapply(data, calculate_baseline_excess, "weekly_104w_sma")) |>
     unnest(cols = c(data)) |>
     select(-iso) |>
-    group_by(iso3c) |>
-    filter(!is.na(deaths)) |>
+    group_by(.data$iso3c) |>
+    filter(!is.na(.data$deaths)) |>
     ungroup()
   save_csv(
     weekly104wsma,
@@ -91,9 +128,9 @@ save_dataset <- function(
     mutate(data = lapply(data, calc_sma, 52)) |>
     mutate(data = lapply(data, calculate_baseline_excess, "weekly_52w_sma")) |>
     unnest(cols = c(data)) |>
-    select(-iso) |>
-    group_by(iso3c) |>
-    filter(!is.na(deaths)) |>
+    select(-"iso") |>
+    group_by(.data$iso3c) |>
+    filter(!is.na(.data$deaths)) |>
     ungroup()
   save_csv(
     weekly52wsma,
@@ -108,8 +145,8 @@ save_dataset <- function(
     filter_n_rows(26) |>
     mutate(data = lapply(data, calculate_baseline_excess, "weekly_26w_sma")) |>
     unnest(cols = c(data)) |>
-    select(-iso) |>
-    group_by(iso3c) |>
+    select(-"iso") |>
+    group_by(.data$iso3c) |>
     filter(!is.na(deaths)) |>
     ungroup()
   save_csv(
@@ -125,8 +162,8 @@ save_dataset <- function(
     filter_n_rows(13) |>
     mutate(data = lapply(data, calculate_baseline_excess, "weekly_13w_sma")) |>
     unnest(cols = c(data)) |>
-    select(-iso) |>
-    group_by(iso3c) |>
+    select(-"iso") |>
+    group_by(.data$iso3c) |>
     filter(!is.na(deaths)) |>
     ungroup()
   save_csv(
@@ -140,7 +177,7 @@ save_dataset <- function(
     filter(age_group == ag) |>
     mutate(data = lapply(data, calculate_baseline_excess, "monthly")) |>
     unnest(cols = c(data)) |>
-    select(-iso)
+    select(-any_of("iso"))
   save_csv(
     monthly,
     paste0("mortality/world_monthly", postfix),
@@ -152,7 +189,7 @@ save_dataset <- function(
     filter(age_group == ag) |>
     mutate(data = lapply(data, calculate_baseline_excess, "quarterly")) |>
     unnest(cols = c(data)) |>
-    select(-iso)
+    select(-any_of("iso"))
   save_csv(
     quarterly,
     paste0("mortality/world_quarterly", postfix),
@@ -164,7 +201,7 @@ save_dataset <- function(
     filter(age_group == ag) |>
     mutate(data = lapply(data, calculate_baseline_excess, "yearly")) |>
     unnest(cols = c(data)) |>
-    select(-iso)
+    select(-any_of("iso"))
   save_csv(
     yearly,
     paste0("mortality/world_yearly", postfix),
@@ -176,7 +213,7 @@ save_dataset <- function(
     filter(age_group == ag) |>
     mutate(data = lapply(data, calculate_baseline_excess, "ytd")) |>
     unnest(cols = c(data)) |>
-    select(-iso)
+    select(-any_of("iso"))
   save_csv(
     ytd,
     paste0("mortality/world_ytd", postfix),
@@ -188,7 +225,7 @@ save_dataset <- function(
     filter(age_group == ag) |>
     mutate(data = lapply(data, calculate_baseline_excess, "yearly")) |>
     unnest(cols = c(data)) |>
-    select(-iso)
+    select(-any_of("iso"))
   save_csv(
     ytd,
     paste0("mortality/world_ytd", postfix),
@@ -200,7 +237,7 @@ save_dataset <- function(
     filter(age_group == ag) |>
     mutate(data = lapply(data, calculate_baseline_excess, "fluseason")) |>
     unnest(cols = c(data)) |>
-    select(-iso)
+    select(-any_of("iso"))
   save_csv(
     fluseason,
     paste0("mortality/world_fluseason", postfix),
@@ -212,7 +249,7 @@ save_dataset <- function(
     filter(age_group == ag) |>
     mutate(data = lapply(data, calculate_baseline_excess, "midyear")) |>
     unnest(cols = c(data)) |>
-    select(-iso)
+    select(-any_of("iso"))
   save_csv(
     midyear,
     paste0("mortality/world_midyear", postfix),
@@ -221,7 +258,7 @@ save_dataset <- function(
 }
 
 # Weekly
-weekly_nested_age <- get_nested_data_by_time_age(dd_age, "yearweek")
+weekly_nested_age <- get_nested_data_by_time_age(dd_age, fun_name = "yearweek")
 weekly_nested <- get_nested_data_by_time(dd_asmr, dd_all, "yearweek")
 weekly_nested$age_group <- "all"
 weekly_nested <- rbind(weekly_nested_age, weekly_nested)

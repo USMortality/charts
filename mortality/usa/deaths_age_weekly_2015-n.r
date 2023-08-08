@@ -13,7 +13,7 @@ df1 <- data1 |>
     age_group = "all",
     deaths = as.integer(str_replace(deaths, ",", ""))
   ) |>
-  select(-year)
+  select(-any_of(year))
 
 # Combine NY/NYC
 ny <- df1 |>
@@ -40,7 +40,7 @@ df2 <- data2 |>
       age_group == "85 years and older" ~ "85+"
     )
   ) |>
-  select(-year, -week)
+  select(-any_of(year, -week))
 
 # Combine NY/NYC
 ny <- df2 |>
@@ -59,12 +59,12 @@ df <- rbind(df1, df2, df3)
 
 result <- df |>
   left_join(us_states_iso3c, by = "jurisdiction") |>
-  select(-jurisdiction) |>
+  select(-any_of(jurisdiction)) |>
   relocate(iso3c, date, age_group, deaths) |>
   arrange(iso3c, date, age_group) |>
   complete(iso3c, date, age_group) |>
   group_by(iso3c, date) |>
-  group_modify(~ imputeSingleNA(.x)) |>
+  group_modify(~ impute_single_na(.x)) |>
   ungroup()
 
 save_csv(

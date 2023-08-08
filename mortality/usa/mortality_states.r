@@ -1,6 +1,43 @@
 source("lib/common.r")
 
-aggregate_80Plus <- function(df) {
+# Define default functions
+select <- dplyr::select
+filter <- dplyr::filter
+mutate <- dplyr::mutate
+group_by <- dplyr::group_by
+ungroup <- dplyr::ungroup
+summarise <- dplyr::summarise
+inner_join <- dplyr::inner_join
+relocate <- dplyr::relocate
+year <- lubridate::year
+month <- lubridate::month
+week <- lubridate::week
+days <- lubridate::days
+days_in_month <- lubridate::days_in_month
+as_tibble <- tibble::as_tibble
+tibble <- tibble::tibble
+as_tsibble <- tsibble::as_tsibble
+str_replace <- stringr::str_replace
+uncount <- tidyr::uncount
+sym <- rlang::sym
+model <- fabletools::model
+date <- lubridate::date
+forecast <- fabletools::forecast
+select <- dplyr::select
+all_of <- dplyr::all_of
+nest <- tidyr::nest
+unnest <- tidyr::unnest
+.data <- dplyr::.data
+yearmonth <- tsibble::yearmonth
+yearweek <- tsibble::yearweek
+ggplot <- ggplot2::ggplot
+make_yearmonth <- tsibble::make_yearmonth
+arrange <- dplyr::arrange
+distinct <- dplyr::distinct
+complete <- tidyr::complete
+case_when <- dplyr::case_when
+
+aggregate_80_plus <- function(df) {
   df |>
     mutate(
       age_group = case_when(
@@ -8,8 +45,8 @@ aggregate_80Plus <- function(df) {
         .default = age_group
       )
     ) |>
-    group_by(iso3c, date, age_group) |>
-    summarise(deaths = sum(deaths)) |>
+    group_by(.data$iso3c, .data$date, .data$age_group) |>
+    summarise(deaths = sum(.data$deaths)) |>
     ungroup()
 }
 
@@ -20,12 +57,12 @@ wd_usa <- read_remote("deaths/usa/age_weekly_2015-n.csv") |>
 
 md_usa_10y <- read_remote("deaths/usa/monthly_10y_complete.csv") |>
   mutate(date = make_yearmonth(year = year, month = month)) |>
-  aggregate_80Plus()
+  aggregate_80_plus()
 
 # CMR, Weekly
 dd_us1 <- wd_usa |>
   filter(age_group == "all") |>
-  getDailyFromWeekly(c("deaths")) |>
+  get_daily_from_weekly(c("deaths")) |>
   select(iso3c, date, deaths)
 dd_us1$age_group <- "all"
 dd_us1$type <- "weekly"
@@ -33,7 +70,7 @@ dd_us1$type <- "weekly"
 # CMR, Monthly
 dd_us2 <- md_usa_10y |>
   filter(age_group == "all") |>
-  getDailyFromMonthly(c("deaths")) |>
+  get_daily_from_monthly(c("deaths")) |>
   select(iso3c, date, deaths)
 dd_us2$age_group <- "all"
 dd_us2$type <- "monthly"
@@ -53,7 +90,7 @@ complete_states_weekly <- wd_usa |>
 deaths_weekly <- wd_usa |>
   filter(iso3c %in% complete_states_weekly$iso3c, age_group != "all") |>
   group_by(iso3c, age_group) |>
-  group_modify(~ getDailyFromWeekly(.x, c("deaths"))) |>
+  group_modify(~ get_daily_from_weekly(.x, c("deaths"))) |>
   ungroup()
 deaths_weekly$type <- "weekly"
 
@@ -68,17 +105,17 @@ complete_states_monthly <- md_usa_10y |>
 deaths_monthly <- md_usa_10y |>
   filter(iso3c %in% complete_states_monthly$iso3c, age_group != "all") |>
   group_by(iso3c, age_group) |>
-  group_modify(~ getDailyFromMonthly(.x, c("deaths"))) |>
+  group_modify(~ get_daily_from_monthly(.x, c("deaths"))) |>
   ungroup()
 deaths_monthly$type <- "monthly"
 
 ## Yearly
 deaths_yearly <- read_remote("deaths/usa/yearly_10y_complete.csv") |>
-  aggregate_80Plus() |>
+  aggregate_80_plus() |>
   filter(!iso3c %in% complete_states_monthly$iso3c, age_group != "all") |>
   mutate(date = as.Date(paste0(date, "-01-01"))) |>
   group_by(iso3c, age_group) |>
-  group_modify(~ getDailyFromYearly(.x, c("deaths"))) |>
+  group_modify(~ get_daily_from_yearly(.x, c("deaths"))) |>
   ungroup()
 deaths_yearly$type <- "yearly"
 

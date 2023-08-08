@@ -20,7 +20,7 @@ wd <- deaths |>
     age_group = "all"
   ) |>
   select(iso3c, date, age_group, deaths) |>
-  getDailyFromWeekly(c("deaths"))
+  get_daily_from_weekly(c("deaths"))
 wd$type <- "weekly"
 
 md <- deaths |>
@@ -30,7 +30,7 @@ md <- deaths |>
     age_group = "all"
   ) |>
   select(iso3c, date, age_group, deaths) |>
-  getDailyFromMonthly(c("deaths"))
+  get_daily_from_monthly(c("deaths"))
 md$type <- "monthly"
 
 world_mortality <- rbind(wd, md) |>

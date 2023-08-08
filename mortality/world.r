@@ -166,7 +166,7 @@ for (type in types) {
     df <- data_fluseason |>
       filter(jurisdiction == country)
     df <- df |>
-      mutate(index = seq(1:length(df$date))) |>
+      mutate(index = seq_along(df$date)) |>
       mutate(date = paste0(mid(date, 3, 2), "/", right(date, 2)))
     chart6 <-
       ggplot(df, aes(x = index, y = !!mortality_col)) +
@@ -177,7 +177,7 @@ for (type in types) {
         x = "Flu Season"
       ) +
       geom_line(color = "#5383EC", linewidth = 1) +
-      scale_x_continuous(breaks = 1:length(df$date), labels = df$date) +
+      scale_x_continuous(breaks = seq_along(df$date), labels = df$date) +
       scale_y_continuous(labels = comma_format(decimal.mark = ",")) +
       twitter_theme() +
       theme(axis.text.x = element_text(angle = 30, hjust = 0.5, vjust = 0.5))
@@ -286,7 +286,7 @@ for (type in types) {
     df <- data_fluseason |>
       filter(jurisdiction == country)
     df <- df |>
-      mutate(index = seq(1:length(df$date))) |>
+      mutate(index = seq(seq_along(df$date))) |>
       mutate(date = paste0(mid(date, 3, 2), "/", right(date, 2)))
     chart10 <-
       ggplot(df, aes(x = index, y = !!mortality_col)) +
@@ -302,7 +302,7 @@ for (type in types) {
         aes(label = round(!!mortality_col)),
         size = 3, vjust = 2.5, colour = "#ffffff"
       ) +
-      scale_x_continuous(breaks = 1:length(df$date), labels = df$date) +
+      scale_x_continuous(breaks = seq_along(df$date), labels = df$date) +
       theme(axis.text.x = element_text(angle = 30, hjust = 0.5, vjust = 0.5)) +
       scale_y_continuous(labels = comma_format(decimal.mark = ","))
     save_chart(

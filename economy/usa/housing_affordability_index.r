@@ -170,7 +170,7 @@ df <-
   inner_join(mortgage_rate, by = c("date"))
 
 # Calculate index
-PMT <- function(rate, nper, pv, fv = 0, type = 0) {
+pmt <- function(rate, nper, pv, fv = 0, type = 0) {
   pmt <- ifelse(rate != 0,
     (rate * (fv + pv * (1 + rate)^nper)) /
       ((1 + rate * type) * (1 - (1 + rate)^nper)),
@@ -181,7 +181,7 @@ PMT <- function(rate, nper, pv, fv = 0, type = 0) {
 }
 
 ts <- df |>
-  mutate(monthly_pi = -PMT(rate / 12, 30 * 12, price * .8)) |>
+  mutate(monthly_pi = -pmt(rate / 12, 30 * 12, price * .8)) |>
   mutate(percent_income = (monthly_pi * 12) / income) |>
   mutate(q_income = monthly_pi * 4 * 12) |>
   mutate(a_index = income / q_income) |>
