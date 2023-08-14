@@ -91,7 +91,7 @@ chart <- ggplot(
   twitter_theme() +
   watermark() +
   scale_y_continuous(labels = scales::percent) +
-  geom_label_repel(
+  ggrepel::geom_label_repel(
     data = head(df, n = 1) |> mutate(str = paste0(
       yearmonth,
       ": ",
