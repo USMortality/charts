@@ -147,7 +147,8 @@ lm_right <- function(formula, data, ...) {
   mod
 }
 
-predictdf.lm_right <- function( # nolint: object_name_linter.
+predictdf.lm_right <- function(
+    # nolint: object_name_linter.
     model,
     xseq,
     se,
@@ -433,4 +434,16 @@ first_usd <- function(df) {
 
 last_usd <- function(df) {
   scales::dollar(tail(df, n = 1))
+}
+
+is_integer <- function(num) {
+  grepl("^[0-9]+$", num)
+}
+
+as_integer <- function(num) {
+  if (is_integer(num)) {
+    as.integer(num)
+  } else {
+    NA
+  }
 }

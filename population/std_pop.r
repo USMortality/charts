@@ -39,7 +39,7 @@ split_age_group <- function(age_group) {
 ## Split weights for an age group uniformly.
 get_weights <- function(df) {
   ag <- df$age_group
-  if (is.numeric(ag)) {
+  if (grepl("^[0-9]+$", ag)) {
     data.frame(age_group = as.integer(ag), weight = df$weight)
   } else if (grepl("-", ag)) {
     ages <- split_age_group(ag)
@@ -57,10 +57,10 @@ get_weights <- function(df) {
 get_std_pop_weights <- function(age_groups, std_pop) {
   result <- NULL
   for (ag in age_groups) {
-    if (is.numeric(ag)) {
+    if (grepl("^[0-9]+$", ag)) {
       result <- rbind(result, data.frame(
-        age_group = ag,
-        weight = (std_pop |> filter(.data$age == ag))$weight
+        age_group = as.integer(ag),
+        weight = (std_pop |> filter(.data$age == as.integer(ag)))$weight
       ))
     } else if (grepl("-", ag)) {
       parts <- split_age_group(ag)

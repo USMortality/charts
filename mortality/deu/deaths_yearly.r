@@ -35,7 +35,7 @@ yearweek <- tsibble::yearweek
 ggplot <- ggplot2::ggplot
 
 # Genesis 12411-0005: Bevölkerung: Deutschland, Stichtag, Altersjahre
-population <- as_tibble(
+population_raw <- as_tibble(
   head(
     read.csv("./data_static/12411-0005_$F.csv",
       sep = ";",
@@ -47,7 +47,7 @@ population <- as_tibble(
 )
 
 # Genesis 12613-0003: Gestorbene: Deutschland, Jahre, Geschlecht, Altersjahre
-deaths <- as_tibble(
+deaths_raw <- as_tibble(
   head(
     read.csv("./data_static/12613-0003_$F.csv",
       sep = ";",
@@ -59,9 +59,9 @@ deaths <- as_tibble(
 )
 
 # Parse raw data
-population <- population |>
+population <- population_raw |>
   pivot_longer(
-    cols = 2:ncol(population),
+    cols = 2:ncol(population_raw),
     names_to = "year",
     values_to = "population"
   ) |>
@@ -80,9 +80,9 @@ population <- population |>
   ) |>
   relocate(year, sex, age_group, population)
 
-deaths <- deaths |>
+deaths <- deaths_raw |>
   pivot_longer(
-    cols = 3:ncol(deaths),
+    cols = 3:ncol(deaths_raw),
     names_to = "year",
     values_to = "deaths"
   ) |>
@@ -96,8 +96,8 @@ deaths <- deaths |>
       age_group == "Insgesamt" ~ "all",
       .default = str_replace(age_group, "-J�hrige", "")
     ),
-    year = as.integer(right(year, 4)),
-    deaths = as.integer(deaths)
+    year = sapply(right(year, 4), as_integer),
+    deaths = sapply(deaths, as_integer)
   ) |>
   relocate(year, sex, age_group, deaths)
 deaths$sex[deaths$sex == "I"] <- "all"
@@ -107,8 +107,9 @@ deaths <- deaths |>
   ungroup()
 
 df <- deaths |>
+  rowwise() |>
   mutate(age_group = ifelse(
-    as.integer(age_group) >= 85 | age_group == "100+",
+    as_integer(age_group) >= 85 | age_group == "100+",
     "85+",
     age_group
   )) |>
@@ -116,11 +117,12 @@ df <- deaths |>
   summarise(deaths = sum(deaths)) |>
   ungroup() |>
   inner_join(population, by = c("year", "sex", "age_group")) |>
-  select(-any_of(sex)) |>
+  select(-any_of("sex")) |>
   mutate(cmr = deaths / population * 100000)
 
 ts <- df |>
-  mutate(age_group = as.integer(ifelse(age_group == "85+", "85", age_group))) |>
+  rowwise() |>
+  mutate(age_group = as_integer(ifelse(age_group == "85+", "85", age_group))) |>
   arrange(year, age_group) |>
   filter(year > 2000)
 
@@ -200,17 +202,18 @@ asmr_who <- df |>
 
 asmr <- asmr_esp
 asmr$asmr_who <- asmr_who$asmr_who
+asmr <- asmr |> mutate(year = date, date = as.Date(paste0(date, "-01-01")))
 
-start_year <- 1970
+start_year <- 2010
 
-ggplot(asmr |> filter(date >= start_year), aes(x = date)) +
+ggplot(asmr |> filter(year >= start_year), aes(x = date)) +
   labs(
     title = "Yearly All-Cause ASMR (Single Age Groups) [Germany]",
     subtitle = paste0(
       c(
         "Baseline: 2010-2019",
-        "99.9% CI",
-        "Std. Population: WHO2015",
+        "95% CI",
+        "Std. Population: ESP2013",
         "Source: destatis.de"
       ),
       collapse = " | "
@@ -219,17 +222,18 @@ ggplot(asmr |> filter(date >= start_year), aes(x = date)) +
     y = "Deaths/100k"
   ) +
   geom_smooth(
-    mapping = aes(y = asmr_who),
-    data = subset(asmr, date >= 2010 & date <= 2019),
+    mapping = aes(y = asmr_esp),
+    data = subset(asmr, year >= 2010 & year <= 2019),
     fullrange = TRUE,
     color = "black",
     linetype = 5,
     size = 0.8,
     method = "lm",
-    level = 0.999
+    level = 0.95
   ) +
   watermark(max(asmr$date)) +
-  geom_line(aes(y = asmr_who), color = "#5383EC", linewidth = 1) +
+  scale_x_date(date_breaks = "1 year", date_labels = "%Y") +
+  geom_line(aes(y = asmr_esp), color = "#5383EC", linewidth = 1) +
   twitter_theme()
 
 ggplot(asmr |> filter(date >= start_year), aes(x = date)) +
@@ -345,7 +349,7 @@ h_step_fc <- 2
 
 calc_excess <- function(df) {
   fc <- head(df, bl_len) |>
-    as_tsibble(index = date) |>
+    as_tsibble(index = year) |>
     model(fable::RW(asmr_esp ~ drift())) |>
     forecast(h = h_step_fc)
 
@@ -357,7 +361,7 @@ calc_excess <- function(df) {
 }
 
 data_excess <- asmr |>
-  select(-any_of(iso3c, -asmr_who)) |>
+  select(-any_of(c("iso3c", "asmr_who"))) |>
   as_tsibble(index = date) |>
   slide_tsibble(.size = (bl_len + h_step_fc)) |>
   group_by(.id) |>
@@ -373,7 +377,7 @@ ggplot(
     title = "Yearly All-Cause excess ASMR [Germany]",
     subtitle = paste0(
       c(
-        paste0(h, " year forecast"),
+        paste0(h_step_fc, " year forecast"),
         "Single Age Groups",
         "Std. Population: ESP2013",
         "Source: destatis.de"
@@ -383,7 +387,7 @@ ggplot(
     x = "Forecast Year",
     y = "Excess Deaths/100k"
   ) +
-  watermark(max(data_excess$date)) +
+  watermark() +
   geom_col(aes(y = excess), fill = "#5383EC") +
   twitter_theme() +
   scale_y_continuous(limits = c(-100, 100))
@@ -396,7 +400,7 @@ ggplot(
     title = "Yearly All-Cause excess ASMR [Germany]",
     subtitle = paste0(
       c(
-        paste0(h, " year forecast"),
+        paste0(h_step_fc, " year forecast"),
         "Single Age Groups",
         "Std. Population: ESP2013",
         "Source: destatis.de"
@@ -406,7 +410,7 @@ ggplot(
     x = "Forecast Year",
     y = "Excess ASMR (%)"
   ) +
-  watermark(max(data_excess$date)) +
+  watermark() +
   geom_col(aes(y = excess_p), fill = "#5383EC") +
   twitter_theme() +
   scale_y_continuous(labels = scales::percent, limits = c(-0.1, .10))
@@ -451,8 +455,8 @@ make_chart <- function(df) {
 }
 
 asmr |>
-  select(-any_of(iso3c, -asmr_who)) |>
-  as_tsibble(index = date) |>
+  select(-any_of(c("iso3c", "asmr_who"))) |>
+  as_tsibble(index = year) |>
   slide_tsibble(.size = (bl_len + h_step_fc)) |>
   group_by(.id) |>
   group_map(~ make_chart(.x), .keep = TRUE)
