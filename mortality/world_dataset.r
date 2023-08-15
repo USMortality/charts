@@ -85,7 +85,6 @@ save_dataset <- function(
     monthly_nested,
     quarterly_nested,
     yearly_nested,
-    ytd_nested,
     fluseason_nested,
     midyear_nested,
     ag) {
@@ -208,30 +207,6 @@ save_dataset <- function(
     upload = TRUE
   )
 
-  print('Calculating "YTD" dataset')
-  ytd <- ytd_nested |>
-    filter(age_group == ag) |>
-    mutate(data = lapply(data, calculate_baseline_excess, "ytd")) |>
-    unnest(cols = c(data)) |>
-    select(-any_of("iso"))
-  save_csv(
-    ytd,
-    paste0("mortality/world_ytd", postfix),
-    upload = TRUE
-  )
-
-  print('Calculating "YTD" dataset')
-  ytd <- ytd_nested |>
-    filter(age_group == ag) |>
-    mutate(data = lapply(data, calculate_baseline_excess, "yearly")) |>
-    unnest(cols = c(data)) |>
-    select(-any_of("iso"))
-  save_csv(
-    ytd,
-    paste0("mortality/world_ytd", postfix),
-    upload = TRUE
-  )
-
   print('Calculating "Fluseason" dataset')
   fluseason <- fluseason_nested |>
     filter(age_group == ag) |>
@@ -281,31 +256,6 @@ yearly_nested <- get_nested_data_by_time(dd_asmr, dd_all, "year")
 yearly_nested$age_group <- "all"
 yearly_nested <- rbind(yearly_nested_age, yearly_nested)
 
-# YTD Nested
-ytd_nested_age <- dd_age |>
-  mutate(year = year(date)) |>
-  arrange(iso3c, date) |>
-  distinct(iso3c, date, age_group, .keep_all = TRUE) |>
-  nest(data = !c(iso, age_group)) |>
-  mutate(data = lapply(data, calc_ytd)) |>
-  mutate(data = lapply(data, aggregate_data_ytd_age))
-
-ytd_nested <- dd_all |>
-  left_join(dd_asmr, by = c("iso3c", "date", "type")) |>
-  select(-iso.y, -age_group) |>
-  setNames(c(
-    "iso3c", "type", "date", "deaths", "population", "source", "cmr", "iso",
-    asmr_types
-  )) |>
-  mutate(year = year(date)) |>
-  arrange(iso3c, date) |>
-  distinct(iso3c, date, .keep_all = TRUE) |>
-  nest(data = !iso) |>
-  mutate(data = lapply(data, calc_ytd)) |>
-  mutate(data = lapply(data, aggregate_data_ytd))
-ytd_nested$age_group <- "all"
-ytd_nested <- rbind(ytd_nested_age, ytd_nested)
-
 # Fluseason
 fluseason_nested_age <- get_nested_data_by_time_age(dd_age, "fluseason")
 fluseason_nested <- get_nested_data_by_time(dd_asmr, dd_all, "fluseason")
@@ -325,7 +275,6 @@ for (ag in unique(weekly_nested$age_group)) {
     monthly_nested,
     quarterly_nested,
     yearly_nested,
-    ytd_nested,
     fluseason_nested,
     midyear_nested,
     ag

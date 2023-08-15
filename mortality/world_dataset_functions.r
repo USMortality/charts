@@ -91,80 +91,6 @@ aggregate_data <- function(data, fun_name) {
     dplyr::rename("date" = all_of(fun_name))
 }
 
-filter_ytd <- function(data, max_date_cmr) {
-  year(max_date_cmr) <- year(data$date[1])
-
-  data <- data |>
-    filter(date <= max_date_cmr) |>
-    mutate(max_date_cmr = max_date_cmr)
-}
-
-filter_ytd_asmr <- function(data, max_date_cmr, max_date_asmr) {
-  year(max_date_cmr) <- year(data$date[1])
-  year(max_date_asmr) <- year(data$date[1])
-
-  data <- data |>
-    filter(date <= max_date_cmr) |>
-    mutate(asmr_who = ifelse(date <= max_date_asmr, asmr_who, NA)) |>
-    mutate(asmr_esp = ifelse(date <= max_date_asmr, asmr_esp, NA)) |>
-    mutate(asmr_usa = ifelse(date <= max_date_asmr, asmr_usa, NA)) |>
-    mutate(asmr_country = ifelse(date <= max_date_asmr, asmr_country, NA)) |>
-    mutate(max_date_cmr = max_date_cmr) |>
-    mutate(max_date_asmr = max_date_asmr)
-}
-
-calc_ytd <- function(data) {
-  nested <- data |> nest(data = !year)
-
-  cmr_data <- nested[[2]][[length(nested[[2]])]] |> filter(!is.na(cmr))
-  max_date_cmr <- max(cmr_data$date)
-
-  if ("asmr_who" %in% colnames(data) &&
-    nrow(data |> filter(!is.na(asmr_who)))) {
-    asmr_data <- nested[[2]][[length(nested[[2]])]] |> filter(!is.na(asmr_who))
-    max_date_asmr <- if (nrow(asmr_data) > 0) max(asmr_data$date) else NA
-    nested |>
-      mutate(data = lapply(
-        data, filter_ytd_asmr, max_date_cmr, max_date_asmr
-      )) |>
-      unnest(cols = c(data)) |>
-      select(-max_date_cmr, -max_date_asmr)
-  } else {
-    nested |>
-      mutate(data = lapply(data, filter_ytd, max_date_cmr)) |>
-      unnest(cols = c(data)) |>
-      select(-max_date_cmr)
-  }
-}
-
-aggregate_data_ytd_age <- function(data) {
-  data |>
-    group_by(.data$iso3c, .data$year) |>
-    summarise(
-      deaths = round(sum_if_not_empty(.data$deaths)),
-      cmr = round(sum_if_not_empty(.data$cmr), digits = 1)
-    ) |>
-    ungroup() |>
-    dplyr::rename("date" = "year") |>
-    as_tibble()
-}
-
-aggregate_data_ytd <- function(data) {
-  data |>
-    group_by(.data$iso3c, .data$year) |>
-    summarise(
-      deaths = round(sum_if_not_empty(.data$deaths)),
-      cmr = round(sum_if_not_empty(.data$cmr), digits = 1),
-      asmr_who = round(sum_if_not_empty(.data$asmr_who), digits = 1),
-      asmr_esp = round(sum_if_not_empty(.data$asmr_esp), digits = 1),
-      asmr_usa = round(sum_if_not_empty(.data$asmr_usa), digits = 1),
-      asmr_country = round(sum_if_not_empty(.data$asmr_country), digits = 1)
-    ) |>
-    ungroup() |>
-    dplyr::rename("date" = "year") |>
-    as_tibble()
-}
-
 sma <- function(vec, n) {
   sma <- c()
   sma[1:(n - 1)] <- NA
@@ -200,7 +126,7 @@ calculate_excess <- function(data, col_name) {
 }
 
 get_period_multiplier <- function(chart_type) {
-  if (chart_type %in% c("yearly", "fluseason", "ytd", "midyear")) {
+  if (chart_type %in% c("yearly", "fluseason", "midyear")) {
     return(1)
   } else if (chart_type == "quarterly") {
     return(4)
@@ -267,7 +193,7 @@ calculate_baseline <- function(data, col_name, chart_type) {
   forecast_interval <- round(4 * multiplier)
 
   col <- sym(col_name)
-  if (chart_type %in% c("yearly", "fluseason", "midyear", "ytd")) {
+  if (chart_type %in% c("yearly", "fluseason", "midyear")) {
     df <- data |> filter(date < 2020)
   } else {
     df <- data |> filter(year(date) < 2020)
