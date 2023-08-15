@@ -105,7 +105,7 @@ calc_sma <- function(data, n) {
 
   data$deaths <- round(sma(data$deaths, n = n), 3)
   data$cmr <- round(sma(data$cmr, n = n), 3)
-  if ("asmr_who" %in% colnames(ts)) {
+  if ("asmr_who" %in% colnames(data)) {
     data$asmr_who <- round(sma(data$asmr_who, n = n), 3)
     data$asmr_esp <- round(sma(data$asmr_esp, n = n), 3)
     data$asmr_usa <- round(sma(data$asmr_usa, n = n), 3)

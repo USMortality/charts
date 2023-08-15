@@ -1,6 +1,6 @@
 # group_by, "drop_last" by default
 options(dplyr.summarise.inform = FALSE)
-options(warn = 2)
+# options(warn = 2)
 
 libs <- read.table("dependencies_r.txt")
 for (lib in libs$V1) {
@@ -374,7 +374,7 @@ save_info <- function(df) {
       }
     }
   }
-  save_csv(result, "mortality/world_meta", upload = FALSE)
+  save_csv(result, "mortality/world_meta", upload = TRUE)
 }
 
 impute_single_na <- function(df) {
