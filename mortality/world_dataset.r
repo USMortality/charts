@@ -88,7 +88,6 @@ save_dataset <- function(
     fluseason_nested,
     midyear_nested,
     ag) {
-  ag <- "all"
   postfix <- ifelse(ag == "all", "", paste0("_", ag))
 
   print('Calculating "Weekly" dataset')
