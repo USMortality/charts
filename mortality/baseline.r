@@ -37,18 +37,21 @@ distinct <- dplyr::distinct
 complete <- tidyr::complete
 case_when <- dplyr::case_when
 
-get_optimal_size <- function(df, col_name) {
+forecast_len <- 3
+get_optimal_size <- function(df, type) {
   min <- Inf
   optimal_size <- nrow(df)
-  col_name <- sym(col_name)
+  type <- sym(type)
   if (nrow(na.omit(df)) < 3) {
     return(optimal_size)
   }
-  for (size in 5:ceiling(nrow(df) / 2)) {
+
+  for (size in 3:ceiling(nrow(df) / 2)) {
     acc <- df |>
+      head(-forecast_len) |>
       tsibble::slide_tsibble(.size = size) |>
-      model(fable::TSLM(!!col_name ~ trend())) |>
-      forecast(h = 3) |>
+      model(fable::TSLM(!!type ~ trend())) |>
+      forecast(h = forecast_len) |>
       fabletools::accuracy(df)
     if (!is.nan(acc$RMSE) && acc$RMSE < min) {
       min <- acc$RMSE
@@ -62,29 +65,26 @@ get_optimal_size <- function(df, col_name) {
 
 get_baseline_size <- function(data) {
   result <- setNames(
-    data.frame(matrix(ncol = 4, nrow = 0)),
-    c("iso3c", "jurisdiction", "type", "window")
+    data.frame(matrix(ncol = 3, nrow = 0)),
+    c("iso3c", "type", "window")
   )
   asmr_types <- c("asmr_who", "asmr_esp", "asmr_usa", "asmr_country")
   types <- c("deaths", "cmr", asmr_types)
-  for (mortality_type in types) {
-    for (country in unique(data$jurisdiction)) {
-      print(paste(country, mortality_type))
+  for (type in types) {
+    for (iso in unique(data$iso3c)) {
+      print(paste(iso, type))
       df <- data |>
-        filter(
-          .data$jurisdiction == country,
-          date < 2020
-        ) |>
+        filter(.data$iso3c == iso, date < 2020) |>
         as_tsibble(index = date)
 
       optimal_size <- ifelse(ceiling(nrow(df) / 2) > 5,
-        get_optimal_size(df, mortality_type),
+        get_optimal_size(df, type),
         nrow(df)
       )
 
-      iso <- head(data |> filter(.data$jurisdiction == country), 1)$iso3c
+      iso <- head(data |> filter(.data$iso3c == iso), 1)$iso3c
       result[nrow(result) + 1, ] <- c(
-        iso, country, mortality_type, optimal_size
+        iso, type, optimal_size
       )
       print(paste0("Optimal window size: ", optimal_size))
     }
@@ -95,18 +95,18 @@ get_baseline_size <- function(data) {
 data <- read_remote("mortality/world_yearly.csv")
 yearly <- data |>
   get_baseline_size() |>
-  mutate(chart_type = "yearly", .after = "jurisdiction")
+  mutate(chart_type = "yearly", .after = "iso3c")
 
 data <- read_remote("mortality/world_fluseason.csv")
 fluseason <- data |>
   mutate(date = as.integer(left(date, 4))) |>
   get_baseline_size() |>
-  mutate(chart_type = "fluseason", .after = "jurisdiction")
+  mutate(chart_type = "fluseason", .after = "iso3c")
 
 data <- read_remote("mortality/world_midyear.csv")
 midyear <- data |>
   mutate(date = as.integer(left(date, 4))) |>
   get_baseline_size() |>
-  mutate(chart_type = "midyear", .after = "jurisdiction")
+  mutate(chart_type = "midyear", .after = "iso3c")
 
 save_csv(rbind(yearly, fluseason, midyear), "mortality/world_baseline")

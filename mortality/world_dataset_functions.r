@@ -258,7 +258,7 @@ round_x <- function(data, col_name, digits = 0) {
 }
 
 calculate_baseline_excess <- function(data, chart_type) {
-  if (nrow(data) < 2) {
+  if (nrow(data |> filter(date < 2020)) < 2) { # Minimum 3 years pre-pandemic.
     return(data)
   }
   if (chart_type %in% c("fluseason", "midyear")) {
@@ -273,7 +273,7 @@ calculate_baseline_excess <- function(data, chart_type) {
   result <- ts |>
     calculate_baseline("deaths", chart_type) |>
     calculate_baseline("cmr", chart_type)
-  if ("asmr_who" %in% colnames(ts)) {
+  if ("asmr_who" %in% colnames(ts) && sum(!is.na(ts$asmr_who)) > 0) {
     result <- result |>
       calculate_baseline("asmr_who", chart_type) |>
       calculate_baseline("asmr_esp", chart_type) |>
@@ -370,4 +370,33 @@ fill_gaps_na <- function(df) {
     tsibble::fill_gaps() |>
     tidyr::fill(population, .direction = "down") |>
     fill(source, .direction = "down")
+}
+
+save_info <- function(df) {
+  result <- tibble()
+  for (code in unique(df$iso3c)) {
+    df_country <- df |> filter(.data$iso3c == code)
+    for (t in unique(df_country$type)) {
+      df_country_type <- df_country |> filter(.data$type == t)
+      for (s in unique(df_country_type$source)) {
+        df_country_type_source <- df_country_type |> filter(.data$source == s)
+        result <- rbind(
+          result,
+          tibble(
+            iso3c = code,
+            jurisdiction = head(df_country_type_source$jurisdiction, n = 1),
+            type = t,
+            source = s,
+            min_date = min(df_country_type_source$date),
+            max_date = max(df_country_type_source$date),
+            age_groups = paste(
+              unique(df_country_type_source$age_group),
+              collapse = ", "
+            )
+          )
+        )
+      }
+    }
+  }
+  save_csv(result, "mortality/world_meta", upload = TRUE)
 }
