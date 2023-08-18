@@ -105,7 +105,6 @@ save_dataset <- function(
   print('Calculating "Weekly 104W SMA" dataset')
   weekly104wsma <- weekly_nested |>
     filter(age_group == ag) |>
-    filter_n_rows(104) |>
     mutate(data = lapply(data, calc_sma, 104)) |>
     mutate(data = lapply(data, calculate_baseline_excess, "weekly_104w_sma")) |>
     unnest(cols = c(data)) |>
@@ -122,7 +121,6 @@ save_dataset <- function(
   print('Calculating "Weekly 52W SMA" dataset')
   weekly52wsma <- weekly_nested |>
     filter(age_group == ag) |>
-    filter_n_rows(52) |>
     mutate(data = lapply(data, calc_sma, 52)) |>
     mutate(data = lapply(data, calculate_baseline_excess, "weekly_52w_sma")) |>
     unnest(cols = c(data)) |>
@@ -140,7 +138,6 @@ save_dataset <- function(
   weekly26wsma <- weekly_nested |>
     filter(age_group == ag) |>
     mutate(data = lapply(data, calc_sma, 26)) |>
-    filter_n_rows(26) |>
     mutate(data = lapply(data, calculate_baseline_excess, "weekly_26w_sma")) |>
     unnest(cols = c(data)) |>
     select(-any_of(c("age_group", "iso"))) |>
@@ -157,7 +154,6 @@ save_dataset <- function(
   weekly13wsma <- weekly_nested |>
     filter(age_group == ag) |>
     mutate(data = lapply(data, calc_sma, 13)) |>
-    filter_n_rows(13) |>
     mutate(data = lapply(data, calculate_baseline_excess, "weekly_13w_sma")) |>
     unnest(cols = c(data)) |>
     select(-any_of(c("age_group", "iso"))) |>

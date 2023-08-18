@@ -153,7 +153,7 @@ get_baseline_length <- function(iso, ct, cn) {
   if (!ct %in% c("fluseason", "midyear")) ct <- "yearly"
   baseline <- baseline_size |>
     filter(.data$iso3c == iso & .data$chart_type == ct & .data$type == cn)
-  ifelse(nrow(baseline) == 0, 5, baseline$window)
+  ifelse(nrow(baseline) < 3, 3, baseline$window)
 }
 
 # TODO: Remove when next version of fabeletools (>0.3.2) is published.
@@ -200,7 +200,7 @@ calculate_baseline <- function(data, col_name, chart_type) {
   }
 
   # No rows, return
-  if (nrow(tidyr::drop_na(df |> select(!!col))) == 0) {
+  if (nrow(tidyr::drop_na(df |> select(!!col))) < bl_size) {
     data[paste0(col, "_baseline")] <- NA
     data[paste0(col, "_baseline_lower")] <- NA
     data[paste0(col, "_baseline_upper")] <- NA
@@ -258,9 +258,6 @@ round_x <- function(data, col_name, digits = 0) {
 }
 
 calculate_baseline_excess <- function(data, chart_type) {
-  if (nrow(data |> filter(date < 2020)) < 2) { # Minimum 3 years pre-pandemic.
-    return(data)
-  }
   if (chart_type %in% c("fluseason", "midyear")) {
     ts <- data |>
       mutate(date = as.integer(right(date, 4))) |>
@@ -271,14 +268,14 @@ calculate_baseline_excess <- function(data, chart_type) {
 
   print(paste("calculate_baseline_excess:", unique(ts$iso3c)))
   result <- ts |>
-    calculate_baseline("deaths", chart_type) |>
-    calculate_baseline("cmr", chart_type)
+    calculate_baseline(col_name = "deaths", chart_type) |>
+    calculate_baseline(col_name = "cmr", chart_type)
   if ("asmr_who" %in% colnames(ts) && sum(!is.na(ts$asmr_who)) > 0) {
     result <- result |>
-      calculate_baseline("asmr_who", chart_type) |>
-      calculate_baseline("asmr_esp", chart_type) |>
-      calculate_baseline("asmr_usa", chart_type) |>
-      calculate_baseline("asmr_country", chart_type)
+      calculate_baseline(col_name = "asmr_who", chart_type) |>
+      calculate_baseline(col_name = "asmr_esp", chart_type) |>
+      calculate_baseline(col_name = "asmr_usa", chart_type) |>
+      calculate_baseline(col_name = "asmr_country", chart_type)
   }
 
   if (chart_type %in% c("fluseason", "midyear")) {
@@ -289,15 +286,6 @@ calculate_baseline_excess <- function(data, chart_type) {
   } else {
     result |> as_tibble()
   }
-}
-
-filter_n_rows <- function(df, n) {
-  df |>
-    unnest(cols = c(data)) |>
-    group_by(.data$iso3c) |>
-    filter(n() >= n) |>
-    ungroup() |>
-    nest(data = !c("iso"))
 }
 
 get_nested_data_by_time <- function(dd_asmr, dd_all, fun_name) {
