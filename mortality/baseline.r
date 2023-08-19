@@ -46,7 +46,8 @@ get_optimal_size <- function(df, type) {
     return(optimal_size)
   }
 
-  for (size in 3:ceiling(nrow(df) / 2)) {
+  optimal_size <- nrow(df)
+  for (size in 5:min(optimal_size - forecast_len, 15)) {
     acc <- df |>
       head(-forecast_len) |>
       tsibble::slide_tsibble(.size = size) |>
@@ -77,7 +78,7 @@ get_baseline_size <- function(data) {
         filter(.data$iso3c == iso, date < 2020) |>
         as_tsibble(index = date)
 
-      optimal_size <- ifelse(ceiling(nrow(df) / 2) > 5,
+      optimal_size <- ifelse(nrow(df) > 5,
         get_optimal_size(df, type),
         nrow(df)
       )
