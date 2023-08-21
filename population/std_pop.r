@@ -127,9 +127,18 @@ get_who2015_bins <- function(age_groups) {
 }
 
 get_country2020_bins <- function(df) {
-  data1 <- df |>
-    ungroup() |>
-    filter(date == as.Date("2020-01-01"))
+  if (is.numeric.Date(df$date)) {
+    data1 <- df |>
+      ungroup() |>
+      filter(date == as.Date("2020-01-01"))
+  } else {
+    data1 <- df |>
+      ungroup() |>
+      filter(date == 2020) |>
+      group_by(.data$age_group) |>
+      summarise(population = mean(population))
+  }
+
   if (nrow(data1) == 0) data1 <- df |> filter(date == 2020)
   if (nrow(data1) == 0) stop("No data for 2020 available.")
   data <- data1 |>
