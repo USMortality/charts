@@ -153,7 +153,15 @@ get_baseline_length <- function(iso, ct, cn) {
   if (!ct %in% c("fluseason", "midyear")) ct <- "yearly"
   baseline <- baseline_size |>
     filter(.data$iso3c == iso & .data$chart_type == ct & .data$type == cn)
-  ifelse(nrow(baseline) == 0, 5, baseline$window)
+  # Use at least 3 years baseline, if no ideal baseline size is available.
+  if (nrow(baseline) == 0) {
+    return(3)
+  }
+  if (baseline$window < 3) {
+    return(3)
+  } else {
+    return(baseline$window)
+  }
 }
 
 # TODO: Remove when next version of fabeletools (>0.3.2) is published.
