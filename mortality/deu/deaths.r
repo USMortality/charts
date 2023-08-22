@@ -1,4 +1,5 @@
 source("lib/common.r")
+options(warn = 1)
 
 # National
 df1 <- read_excel(
