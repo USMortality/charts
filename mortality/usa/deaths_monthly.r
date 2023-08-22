@@ -54,29 +54,44 @@ parse_data <- function(df, jurisdiction_column, age_group) {
     )
   if (nchar(jurisdiction_column) == 0) {
     df <- df |>
-      select(.data$date, .data$Deaths) |>
+      select("date", "Deaths") |>
       setNames(c("date", "deaths"))
     df$iso3c <- "USA"
     df |>
-      filter(!is.na(.data$iso3c), !is.na(date)) |>
-      select(all_of("iso3c", "date", "deaths")) |>
+      filter(!is.na("iso3c"), !is.na("date")) |>
+      select("iso3c", "date", "deaths") |>
       mutate(age_group = gsub("_", "-", age_group), .after = date)
   } else {
     df |>
-      select(all_of(!!jurisdiction_column, .data$date, .data$Deaths)) |>
+      select(!!jurisdiction_column, "date", "Deaths") |>
       setNames(c("jurisdiction", "date", "deaths")) |>
       dplyr::left_join(us_states_iso3c, by = "jurisdiction") |>
-      filter(!is.na(.data$iso3c), !is.na(date)) |>
-      select(all_of("iso3c", "date", "deaths")) |>
+      filter(!is.na(iso3c), !is.na(date)) |>
+      select("iso3c", "date", "deaths") |>
       mutate(age_group = gsub("_", "-", age_group), .after = date)
   }
 }
 
 totals <- rbind(
-  parse_data(data0, "", "all"),
-  parse_data(data1, "", "all"),
-  parse_data(data2, "State", "all"),
-  parse_data(data3, "Residence.State", "all")
+  parse_data(
+    df = data0,
+    jurisdiction_column = "",
+    age_group = "all"
+  ),
+  parse_data(
+    df = data1,
+    jurisdiction_column = "", age_group = "all"
+  ),
+  parse_data(
+    df = data2,
+    jurisdiction_column = "State",
+    age_group = "all"
+  ),
+  parse_data(
+    df = data3,
+    jurisdiction_column = "Residence.State",
+    age_group = "all"
+  )
 ) |>
   as_tibble() |>
   arrange(iso3c, date) |>
@@ -85,6 +100,7 @@ totals <- rbind(
 processAgeGroups <- function(prefix, age_groups) {
   # 1999-2020
   ag1 <- data.frame()
+  ag_group <- "0_9"
   for (age_group in age_groups) {
     data <- read.csv(paste0(
       "../wonder_dl/out/monthly/us_", prefix, "1999_2020_",
@@ -116,7 +132,7 @@ processAgeGroups <- function(prefix, age_groups) {
   totals_ag <- rbind(ag1, ag2) |>
     as_tibble() |>
     arrange("iso3c", "date", "age_group") |>
-    distinct("iso3c", "date", "age_group", .keep_all = TRUE)
+    distinct(.data$iso3c, .data$date, .data$age_group, .keep_all = TRUE)
 
   if (nchar(prefix) == 0 && length(age_groups) > 11) {
     ttl <- totals |> filter(.data$iso3c == "USA")
@@ -126,8 +142,8 @@ processAgeGroups <- function(prefix, age_groups) {
 
   rbind(ttl, totals_ag) |>
     arrange("iso3c", "date", "age_group") |>
-    distinct("iso3c", "date", "age_group", .keep_all = TRUE) |>
-    complete("iso3c", "date", "age_group")
+    distinct(.data$iso3c, .data$date, .data$age_group, .keep_all = TRUE) |>
+    complete(.data$iso3c, .data$date, .data$age_group)
 }
 
 # By 10y age group
@@ -144,7 +160,7 @@ age_groups <- c(
   "90_100",
   "NS"
 )
-result_10y <- processAgeGroups("states_", age_groups)
+result_10y <- processAgeGroups(prefix = "states_", age_groups)
 result_10y_complete <- result_10y |>
   group_by(iso3c, date) |>
   group_modify(~ impute_single_na(.x)) |>

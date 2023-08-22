@@ -44,45 +44,53 @@ usa_10y <- read_remote("deaths/usa/monthly_10y.csv") |>
   summarise(deaths = sum(deaths)) |>
   ungroup() |>
   mutate(date = year) |>
-  select(-any_of(year))
+  select(-any_of("year"))
 usa_10y_complete <- read_remote("deaths/usa/monthly_10y_complete.csv") |>
   filter(iso3c == "USA") |>
   group_by(iso3c, year, age_group) |>
   summarise(deaths = sum(deaths)) |>
   ungroup() |>
   mutate(date = year) |>
-  select(-any_of(year))
+  select(-any_of("year"))
 usa_5y <- read_remote("deaths/usa/monthly_5y.csv") |>
   filter(iso3c == "USA") |>
   group_by(iso3c, year, age_group) |>
   summarise(deaths = sum(deaths)) |>
   ungroup() |>
   mutate(date = year) |>
-  select(-any_of(year))
+  select(-any_of("year"))
 usa_5y_complete <- read_remote("deaths/usa/monthly_5y_complete.csv") |>
   filter(iso3c == "USA") |>
   group_by(iso3c, year, age_group) |>
   summarise(deaths = sum(deaths)) |>
   ungroup() |>
   mutate(date = year) |>
-  select(-any_of(year))
+  select(-any_of("year"))
 
 data1 <- read.csv("../wonder_dl/out/yearly/us_states_1999_2020_all.csv")
 data2 <- read.csv("../wonder_dl/out/yearly/us_states_2021_n_all.csv")
 
 parse_data <- function(df, jurisdiction_column, age_group) {
   df |>
-    select(all_of(!!jurisdiction_column, .data$Year.Code, .data$Deaths)) |>
+    select(!!jurisdiction_column, "Year.Code", "Deaths") |>
     setNames(c("jurisdiction", "date", "deaths")) |>
     dplyr::left_join(us_states_iso3c, by = "jurisdiction") |>
     filter(!is.na(.data$iso3c), !is.na(date)) |>
-    select(all_of(.data$iso3c, .data$date, .data$deaths)) |>
+    select("iso3c", "date", "deaths") |>
     mutate(age_group = gsub("_", "-", age_group), .after = date)
 }
 
 totals <- rbind(
-  parse_data(data1, "State", "all"),
-  parse_data(data2, "Residence.State", "all")
+  parse_data(
+    df = data1,
+    jurisdiction_column = "State",
+    age_group = "all"
+  ),
+  parse_data(
+    df = data2,
+    jurisdiction_column = "Residence.State",
+    age_group = "all"
+  )
 ) |>
   as_tibble() |>
   arrange(iso3c, date) |>
@@ -114,12 +122,12 @@ process_age_groups <- function(age_groups) {
   totals_ag <- rbind(ag1, ag2) |>
     as_tibble() |>
     arrange("iso3c", "date", "age_group") |>
-    distinct("iso3c", "date", "age_group", .keep_all = TRUE)
+    distinct(.data$iso3c, .data$date, .data$age_group, .keep_all = TRUE)
 
   rbind(totals, totals_ag) |>
     arrange("iso3c", "date", "age_group") |>
-    distinct("iso3c", "date", "age_group", .keep_all = TRUE) |>
-    complete("iso3c", "date", "age_group")
+    distinct(.data$iso3c, .data$date, .data$age_group, .keep_all = TRUE) |>
+    complete(iso3c, date, age_group)
 }
 
 # By 10y age group
