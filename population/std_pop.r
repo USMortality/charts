@@ -127,7 +127,7 @@ get_who2015_bins <- function(age_groups) {
 }
 
 get_country2020_bins <- function(df) {
-  if (is.numeric.Date(df$date)) {
+  if (class(df$date) == "Date") {
     data1 <- df |>
       ungroup() |>
       filter(date == as.Date("2020-01-01"))

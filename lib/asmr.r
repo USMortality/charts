@@ -54,5 +54,5 @@ calculate_asmr_variants <- function(df) {
     inner_join(dd_asmr2, by = c("iso3c", "date")) |>
     inner_join(dd_asmr3, by = c("iso3c", "date")) |>
     inner_join(dd_asmr4, by = c("iso3c", "date")) |>
-    select(-iso3c)
+    select(-"iso3c")
 }
