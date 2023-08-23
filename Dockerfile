@@ -1,15 +1,18 @@
 FROM eddelbuettel/r2u:22.04
 
-RUN echo "Updating deps..."
+RUN echo "Updating deps... $CACHEBUST"
 RUN apt-get update
 ADD dependencies.txt .
-RUN apt-get install -y `cat dependencies.txt`
+RUN apt-get install -y $(cat dependencies.txt)
+
+ENV NODE_VERSION="18.x"
+ENV CRONICLE_VERSION="v0.9.30"
 
 # Install NodeJS 18
-RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
+RUN curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION} | bash -
 RUN apt-get install -y nodejs
 
-RUN curl -s https://raw.githubusercontent.com/jhuckaby/Cronicle/master/bin/install.js | node
+RUN curl -s https://raw.githubusercontent.com/jhuckaby/Cronicle/${CRONICLE_VERSION}/bin/install.js | node
 WORKDIR /opt/cronicle
 
 # Cronicle
