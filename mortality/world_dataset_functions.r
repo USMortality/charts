@@ -164,36 +164,6 @@ get_baseline_length <- function(iso, ct, cn) {
   }
 }
 
-# TODO: Remove when next version of fabeletools (>0.3.2) is published.
-unpack_hilo <- function(
-    data,
-    cols,
-    names_sep = "_",
-    names_repair = "check_unique") {
-  orig <- data
-  cols <- tidyselect::eval_select(dplyr::enexpr(cols), data)
-  if (any(bad_col <- !purrr::map_lgl(data[cols], inherits, "hilo"))) {
-    rlang::abort(sprintf(
-      paste(
-        "Not all unpacking columns are hilo objects (%s).",
-        "All unpacking columns of unpack_hilo() must be hilo vectors."
-      ),
-      paste(names(bad_col)[bad_col], collapse = ", ")
-    ))
-  }
-  data[cols] <- purrr::map(
-    data[cols], function(x) {
-      vctrs::vec_proxy(x)[c("lower", "upper")]
-    }
-  )
-  data <- tidyr::unpack(
-    data,
-    names(cols),
-    names_sep = names_sep, names_repair = names_repair
-  )
-  vctrs::vec_restore(data, orig)
-}
-
 calculate_baseline <- function(data, col_name, chart_type) {
   iso <- unique(data$iso3c)
   multiplier <- get_period_multiplier(chart_type)
