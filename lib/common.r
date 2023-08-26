@@ -277,14 +277,32 @@ get_daily_from_yearly <- function(wd, column_names) {
   })
 }
 
+suppress_warnings <- function(.expr, .f, ...) {
+  eval.parent(
+    substitute(
+      withCallingHandlers(.expr, warning = function(w) {
+        cm <- conditionMessage(w)
+        cond <- if (is.character(.f)) {
+          grepl(.f, cm)
+        } else {
+          rlang::as_function(.f)(cm, ...)
+        }
+        if (cond) invokeRestart("muffleWarning")
+      })
+    )
+  )
+}
+
 # Forecast n+5
 forecast_population <- function(data) {
   fc_n <- 5
-  y <- data |>
+  df <- data |>
     as_tsibble(index = year) |>
-    tail(n = 5) |>
-    model(fable::NAIVE(population ~ drift())) |>
-    forecast(h = fc_n)
+    tail(n = 5)
+  y <- suppress_warnings(
+    df |> model(fable::NAIVE(population ~ drift())) |> forecast(h = fc_n),
+    "perfect fit"
+  )
 
   last_available_year <- data$year[length(data$year)]
   data$is_projection <- FALSE
