@@ -61,7 +61,7 @@ md_usa_10y <- read_remote("deaths/usa/monthly_10y_complete.csv") |>
 
 # CMR, Weekly
 dd_us1 <- wd_usa |>
-  filter(age_group == "all") |>
+  filter(age_group == "all", !is.na(date)) |>
   get_daily_from_weekly(c("deaths")) |>
   select(iso3c, date, deaths)
 dd_us1$age_group <- "all"
@@ -69,7 +69,7 @@ dd_us1$type <- "weekly"
 
 # CMR, Monthly
 dd_us2 <- md_usa_10y |>
-  filter(age_group == "all") |>
+  filter(age_group == "all", !is.na(date)) |>
   get_daily_from_monthly(c("deaths")) |>
   select(iso3c, date, deaths)
 dd_us2$age_group <- "all"
@@ -88,7 +88,11 @@ complete_states_weekly <- wd_usa |>
   count(iso3c) |>
   filter(n == n_)
 deaths_weekly <- wd_usa |>
-  filter(iso3c %in% complete_states_weekly$iso3c, age_group != "all") |>
+  filter(
+    iso3c %in% complete_states_weekly$iso3c,
+    age_group != "all",
+    !is.na(date)
+  ) |>
   group_by(iso3c, age_group) |>
   group_modify(~ get_daily_from_weekly(.x, c("deaths"))) |>
   ungroup()
@@ -103,7 +107,10 @@ complete_states_monthly <- md_usa_10y |>
   count(iso3c) |>
   filter(n == n_)
 deaths_monthly <- md_usa_10y |>
-  filter(iso3c %in% complete_states_monthly$iso3c, age_group != "all") |>
+  filter(
+    iso3c %in% complete_states_monthly$iso3c,
+    age_group != "all", !is.na(date)
+  ) |>
   group_by(iso3c, age_group) |>
   group_modify(~ get_daily_from_monthly(.x, c("deaths"))) |>
   ungroup()
@@ -112,7 +119,11 @@ deaths_monthly$type <- "monthly"
 ## Yearly
 deaths_yearly <- read_remote("deaths/usa/yearly_10y_complete.csv") |>
   aggregate_80_plus() |>
-  filter(!iso3c %in% complete_states_monthly$iso3c, age_group != "all") |>
+  filter(
+    !iso3c %in% complete_states_monthly$iso3c,
+    age_group != "all",
+    !is.na(date)
+  ) |>
   mutate(date = as.Date(paste0(date, "-01-01"))) |>
   group_by(iso3c, age_group) |>
   group_modify(~ get_daily_from_yearly(.x, c("deaths"))) |>
