@@ -128,19 +128,31 @@ get_who2015_bins <- function(age_groups) {
 
 get_country2020_bins <- function(df) {
   if (class(df$date) == "Date") {
+    # Use 2020 or earlier
+    if (nrow(df |> filter(date == as.Date("2020-01-01"))) > 0) {
+      ref_date <- as.Date("2020-01-01")
+    } else {
+      ref_date <- tail((df |> arrange(date))$date, n = 1)
+      ref_date <- as.Date(paste0(left(ref_date, 4), "-01-01"))
+    }
     data1 <- df |>
       ungroup() |>
-      filter(date == as.Date("2020-01-01"))
+      filter(date == ref_date)
   } else {
+    # Use 2020 or earlier
+    if (nrow(df |> filter(date == 2020) > 0)) {
+      ref_date <- 2020
+    } else {
+      ref_date <- tail((df |> arrange(date))$date, n = 1)
+    }
     data1 <- df |>
       ungroup() |>
-      filter(date == 2020) |>
+      filter(date == ref_date) |>
       group_by(.data$age_group) |>
       summarise(population = mean(population))
   }
 
-  if (nrow(data1) == 0) data1 <- df |> filter(date == 2020)
-  if (nrow(data1) == 0) stop("No data for 2020 available.")
+  if (nrow(data1) == 0) stop("No ref data: ", df)
   data <- data1 |>
     select("age_group", "population") |>
     mutate(

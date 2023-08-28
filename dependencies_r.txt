@@ -17,3 +17,4 @@ lubridate
 rtweet
 rvest
 imputeTS
+countrycode
