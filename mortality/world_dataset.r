@@ -4,8 +4,12 @@ source("mortality/world_dataset_functions.r")
 
 source("mortality/_collection/mortality_org.r")
 source("mortality/_collection/world_mortality.r")
+source("mortality/_collection/eurostat.r")
 source("mortality/usa/mortality_states.r")
 source("mortality/deu/mortality_states.r")
+
+# Country names are saved in meta data.
+source("mortality/world_iso.r")
 
 # Define default functions
 select <- dplyr::select
@@ -45,19 +49,18 @@ complete <- tidyr::complete
 case_when <- dplyr::case_when
 any_of <- dplyr::any_of
 
-# Country names are added back in the end.
-source("mortality/world_iso.r")
-
 # Load Data
 baseline_size <- read_remote("mortality/world_baseline.csv")
 asmr_types <- c("asmr_who", "asmr_esp", "asmr_usa", "asmr_country")
 
 # For duplicates: first values take precedence.
+individual_jurisdictions <- c("DEU", "USA")
 dd <- rbind(
   deu_mortality_states,
   usa_mortality_states,
-  world_mortality |> filter(!iso3c %in% c("DEU", "USA")),
-  mortality_org |> filter(!iso3c %in% c("DEU", "USA"))
+  eurostat |> filter(!iso3c %in% individual_jurisdictions),
+  world_mortality |> filter(!iso3c %in% individual_jurisdictions),
+  mortality_org |> filter(!iso3c %in% individual_jurisdictions)
 ) |>
   distinct(iso3c, date, age_group, type, .keep_all = TRUE) |>
   arrange(iso3c, date, age_group, type) |>

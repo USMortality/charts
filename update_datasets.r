@@ -40,6 +40,14 @@ urls <- list(
   c(
     "https://data.cdc.gov/api/views/unsk-b7fc/rows.csv?accessType=DOWNLOAD",
     "usa_states_vaccination.csv"
+  ),
+  c(
+    "https://ec.europa.eu/eurostat/estat-navtree-portlet-prod/BulkDownloadListing?file=data/demo_r_mwk_10.tsv.gz",
+    "eurostat_weekly.tsv.gz"
+  ),
+  c(
+    "https://ec.europa.eu/eurostat/estat-navtree-portlet-prod/BulkDownloadListing?file=data/demo_pjan.tsv.gz",
+    "eurostat_population.tsv.gz"
   )
 )
 
