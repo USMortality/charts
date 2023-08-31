@@ -364,5 +364,5 @@ save_info <- function(df) {
       }
     }
   }
-  save_csv(result, "mortality/world_meta", upload = TRUE)
+  save_csv(result, "mortality/world_meta")
 }

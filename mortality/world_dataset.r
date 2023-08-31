@@ -101,8 +101,7 @@ save_dataset <- function(
     select(-any_of(c("age_group", "iso")))
   save_csv(
     weekly,
-    paste0("mortality/world_weekly", postfix),
-    upload = TRUE
+    paste0("mortality/world_weekly", postfix)
   )
 
   print('Calculating "Weekly 104W SMA" dataset')
@@ -117,8 +116,7 @@ save_dataset <- function(
     ungroup()
   save_csv(
     weekly104wsma,
-    paste0("mortality/world_weekly_104w_sma", postfix),
-    upload = TRUE
+    paste0("mortality/world_weekly_104w_sma", postfix)
   )
 
   print('Calculating "Weekly 52W SMA" dataset')
@@ -133,8 +131,7 @@ save_dataset <- function(
     ungroup()
   save_csv(
     weekly52wsma,
-    paste0("mortality/world_weekly_52w_sma", postfix),
-    upload = TRUE
+    paste0("mortality/world_weekly_52w_sma", postfix)
   )
 
   print('Calculating "Weekly 26W SMA" dataset')
@@ -149,8 +146,7 @@ save_dataset <- function(
     ungroup()
   save_csv(
     weekly26wsma,
-    paste0("mortality/world_weekly_26w_sma", postfix),
-    upload = TRUE
+    paste0("mortality/world_weekly_26w_sma", postfix)
   )
 
   print('Calculating "Weekly 13W SMA" dataset')
@@ -165,8 +161,7 @@ save_dataset <- function(
     ungroup()
   save_csv(
     weekly13wsma,
-    paste0("mortality/world_weekly_13w_sma", postfix),
-    upload = TRUE
+    paste0("mortality/world_weekly_13w_sma", postfix)
   )
 
   print('Calculating "Monthly" dataset')
@@ -177,8 +172,7 @@ save_dataset <- function(
     select(-any_of(c("age_group", "iso")))
   save_csv(
     monthly,
-    paste0("mortality/world_monthly", postfix),
-    upload = TRUE
+    paste0("mortality/world_monthly", postfix)
   )
 
   print('Calculating "Quarterly" dataset')
@@ -189,8 +183,7 @@ save_dataset <- function(
     select(-any_of(c("age_group", "iso")))
   save_csv(
     quarterly,
-    paste0("mortality/world_quarterly", postfix),
-    upload = TRUE
+    paste0("mortality/world_quarterly", postfix)
   )
   print('Calculating "Yearly" dataset')
   yearly <- yearly_nested |>
@@ -200,8 +193,7 @@ save_dataset <- function(
     select(-any_of(c("age_group", "iso")))
   save_csv(
     yearly,
-    paste0("mortality/world_yearly", postfix),
-    upload = TRUE
+    paste0("mortality/world_yearly", postfix)
   )
 
   print('Calculating "Fluseason" dataset')
@@ -212,8 +204,7 @@ save_dataset <- function(
     select(-any_of(c("age_group", "iso")))
   save_csv(
     fluseason,
-    paste0("mortality/world_fluseason", postfix),
-    upload = TRUE
+    paste0("mortality/world_fluseason", postfix)
   )
 
   print('Calculating "Midyear" dataset')
@@ -224,8 +215,7 @@ save_dataset <- function(
     select(-any_of(c("age_group", "iso")))
   save_csv(
     midyear,
-    paste0("mortality/world_midyear", postfix),
-    upload = TRUE
+    paste0("mortality/world_midyear", postfix)
   )
 }
 

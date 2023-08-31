@@ -2,6 +2,8 @@
 options(dplyr.summarise.inform = FALSE)
 options(warn = 2)
 
+upload_files <- TRUE
+
 libs <- read.table("dependencies_r.txt")
 for (lib in libs$V1) {
   library(lib, character.only = TRUE, quietly = TRUE)
@@ -76,7 +78,7 @@ twitter_theme <- function() {
     )
 }
 
-save_csv <- function(df, name, upload = TRUE) {
+save_csv <- function(df, name, upload = upload_files) {
   file_name <- paste0(name, ".csv")
   local_file_name <- paste0("out/", file_name)
   if (!dir.exists(dirname(local_file_name))) {
@@ -93,7 +95,7 @@ save_csv <- function(df, name, upload = TRUE) {
   }
 }
 
-save_chart <- function(chart, name, scale, upload = TRUE) {
+save_chart <- function(chart, name, scale, upload = upload_files) {
   if (missing(scale)) scale <- sf
   file_name <- paste0(name, ".png")
   local_file_name <- paste0("out/", file_name)
