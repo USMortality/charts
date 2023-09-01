@@ -388,27 +388,31 @@ impute_single_na <- function(df) {
 
 impute_from_aggregate <- function(df1, df2, aggregate_group, groups) {
   df <- df1 |> filter("age_group" %in% groups)
-  if (sum(is.na(df$deaths)) == 0) {
-    return(df1[3:4])
-  } # No NA
-  if (sum(is.na(df$deaths)) > 1) {
-    return(df1[3:4])
-  } # More than 1 NA
+  if (sum(is.na(df$deaths)) == 0) { # No NA
+    return(df1[4:5])
+  }
+
+  if (sum(is.na(df$deaths)) > 1) { # More than 1 NA
+    return(df1[4:5])
+  }
+
   sum_groups <- sum(df$deaths, na.rm = TRUE)
   sum_aggregate <- (df2 |> filter(
     "iso3c" == unique(df1$iso3c),
-    "date" == unique(df1$date),
+    "year" == unique(df1$year),
+    "month" == unique(df1$month),
     "age_group" == aggregate_group
   ))$deaths
   target <- sum_aggregate - sum_groups
   if (target > 9) {
     stop(paste(
-      "imputed value is >9:", target, unique(df1$iso3c), unique(df1$date)
+      "imputed value is >9:", target,
+      unique(df1$iso3c), unique(df1$year), unique(df1$month)
     ))
   }
 
   df1$deaths[df1$age_group %in% df$age_group & is.na(df1$deaths)] <- target
-  df1[3:4]
+  df1[4:5]
 }
 
 first_pct <- function(df) {

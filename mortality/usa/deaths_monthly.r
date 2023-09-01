@@ -47,28 +47,26 @@ data3 <- read.csv("../wonder_dl/out/monthly/us_states_2021_n_all.csv")
 parse_data <- function(df, jurisdiction_column, age_group) {
   df <- df |>
     mutate(
-      date = make_yearmonth(
-        year = as.numeric(left(.data$Month.Code, 4)),
-        month = as.numeric(right(.data$Month.Code, 2))
-      )
+      year = as.numeric(left(.data$Month.Code, 4)),
+      month = as.numeric(right(.data$Month.Code, 2))
     )
   if (nchar(jurisdiction_column) == 0) {
     df <- df |>
-      select("date", "Deaths") |>
-      setNames(c("date", "deaths"))
+      select("year", "month", "Deaths") |>
+      setNames(c("year", "month", "deaths"))
     df$iso3c <- "USA"
     df |>
-      filter(!is.na("iso3c"), !is.na("date")) |>
-      select("iso3c", "date", "deaths") |>
-      mutate(age_group = gsub("_", "-", age_group), .after = date)
+      filter(!is.na("iso3c"), !is.na("year"), !is.na("month")) |>
+      select("iso3c", "year", "month", "deaths") |>
+      mutate(age_group = gsub("_", "-", age_group), .after = month)
   } else {
     df |>
-      select(!!jurisdiction_column, "date", "Deaths") |>
-      setNames(c("jurisdiction", "date", "deaths")) |>
+      select(!!jurisdiction_column, "year", "month", "Deaths") |>
+      setNames(c("jurisdiction", "year", "month", "deaths")) |>
       dplyr::left_join(us_states_iso3c, by = "jurisdiction") |>
-      filter(!is.na(iso3c), !is.na(date)) |>
-      select("iso3c", "date", "deaths") |>
-      mutate(age_group = gsub("_", "-", age_group), .after = date)
+      filter(!is.na(iso3c), !is.na(year), !is.na(month)) |>
+      select("iso3c", "year", "month", "deaths") |>
+      mutate(age_group = gsub("_", "-", age_group), .after = month)
   }
 }
 
@@ -94,8 +92,8 @@ totals <- rbind(
   )
 ) |>
   as_tibble() |>
-  arrange(iso3c, date) |>
-  distinct(iso3c, date, .keep_all = TRUE)
+  arrange(iso3c, year, month) |>
+  distinct(iso3c, year, month, .keep_all = TRUE)
 
 processAgeGroups <- function(prefix, age_groups) {
   # 1999-2020
@@ -131,8 +129,11 @@ processAgeGroups <- function(prefix, age_groups) {
 
   totals_ag <- rbind(ag1, ag2) |>
     as_tibble() |>
-    arrange("iso3c", "date", "age_group") |>
-    distinct(.data$iso3c, .data$date, .data$age_group, .keep_all = TRUE)
+    arrange("iso3c", "year", "month", "age_group") |>
+    distinct(
+      .data$iso3c, .data$year, .data$month, .data$age_group,
+      .keep_all = TRUE
+    )
 
   if (nchar(prefix) == 0 && length(age_groups) > 11) {
     ttl <- totals |> filter(.data$iso3c == "USA")
@@ -141,9 +142,12 @@ processAgeGroups <- function(prefix, age_groups) {
   }
 
   rbind(ttl, totals_ag) |>
-    arrange("iso3c", "date", "age_group") |>
-    distinct(.data$iso3c, .data$date, .data$age_group, .keep_all = TRUE) |>
-    complete(.data$iso3c, .data$date, .data$age_group)
+    arrange("iso3c", "year", "month", "age_group") |>
+    distinct(
+      .data$iso3c, .data$year, .data$month, .data$age_group,
+      .keep_all = TRUE
+    ) |>
+    complete(.data$iso3c, .data$year, .data$month, .data$age_group)
 }
 
 # By 10y age group
@@ -162,7 +166,7 @@ age_groups <- c(
 )
 result_10y <- processAgeGroups(prefix = "states_", age_groups)
 result_10y_complete <- result_10y |>
-  group_by(iso3c, date) |>
+  group_by(iso3c, year, month) |>
   group_modify(~ impute_single_na(.x)) |>
   ungroup()
 
@@ -195,10 +199,11 @@ result_5y <- rbind(
   processAgeGroups("", age_groups), # USA
   processAgeGroups("states_", age_groups) # States
 ) |>
-  mutate(age_group = ifelse(age_group == "95-100", "95+", age_group))
+  mutate(age_group = ifelse(age_group == "95-100", "95+", age_group)) |>
+  filter(!is.na(year), !is.na(month))
 
 result_5y_complete <- result_5y |>
-  group_by(iso3c, date) |>
+  group_by(iso3c, year, month) |>
   group_modify(~ impute_single_na(.x)) |>
   group_modify(~ impute_from_aggregate(
     .x, result_10y_complete, "0-9", c("0-4", "5-9")
@@ -236,31 +241,19 @@ aggregate10y <- function(df) {
         .data$age_group %in% c("all") ~ "all"
       )
     ) |>
-    group_by(iso3c, date, age_group) |>
+    group_by(iso3c, year, month, age_group) |>
     summarise(deaths = sum(.data$deaths)) |>
     ungroup()
 }
 
 # Aggregate 10y for USA national.
+save_csv(result_5y, "deaths/usa/monthly_5y")
+save_csv(result_5y_complete, "deaths/usa/monthly_5y_complete")
 save_csv(
-  result_5y |> mutate(year = year(date), month = month(date)),
-  "deaths/usa/monthly_5y",
-  upload = TRUE
+  rbind(aggregate10y(result_5y), result_10y),
+  "deaths/usa/monthly_10y"
 )
 save_csv(
-  result_5y_complete |> mutate(year = year(date), month = month(date)),
-  "deaths/usa/monthly_5y_complete",
-  upload = TRUE
-)
-save_csv(
-  rbind(aggregate10y(result_5y), result_10y) |>
-    mutate(year = year(date), month = month(date)),
-  "deaths/usa/monthly_10y",
-  upload = TRUE
-)
-save_csv(
-  rbind(aggregate10y(result_5y_complete), result_10y_complete) |>
-    mutate(year = year(date), month = month(date)),
-  "deaths/usa/monthly_10y_complete",
-  upload = TRUE
+  rbind(aggregate10y(result_5y_complete), result_10y_complete),
+  "deaths/usa/monthly_10y_complete"
 )

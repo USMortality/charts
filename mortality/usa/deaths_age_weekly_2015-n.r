@@ -29,7 +29,7 @@ df2 <- data2 |>
   select(Jurisdiction, Year, Week, Age.Group, Number.of.Deaths) |>
   setNames(c("jurisdiction", "year", "week", "age_group", "deaths")) |>
   mutate(
-    date = make_yearweek(year = year, week = week),
+    date = yearweek(date_parse(paste(year, week, 1), format = "%G %V %u")),
     # Create categories
     age_group = case_when(
       age_group == "Under 25 years" ~ "0-24",
@@ -68,7 +68,6 @@ result <- df |>
   ungroup()
 
 save_csv(
-  result |> mutate(year = isoyear(date), week = isoweek(date)),
-  "deaths/usa/age_weekly_2015-n",
-  upload = TRUE
+  result |> mutate(year = isoyear(date), week = isoweek(date)) |> select(-date),
+  "deaths/usa/age_weekly_2015-n"
 )
