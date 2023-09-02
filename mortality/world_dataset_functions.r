@@ -37,36 +37,36 @@ case_when <- dplyr::case_when
 across <- dplyr::across
 left_join <- dplyr::left_join
 
-filter_by_complete_temp_values <- function(data, col, n) {
+filter_by_complete_temp_values <- function(data, fun_name, n) {
   start <- data |>
-    filter(.data[[col]] == head(data[[col]], n = 1)) |>
-    group_by(across(all_of(col))) |>
+    filter(.data[[fun_name]] == head(data[[fun_name]], n = 1)) |>
+    group_by(across(all_of(fun_name))) |>
     filter(n() >= n) |>
     ungroup()
   mid <- data |>
-    filter(!.data[[col]] %in% c(
-      head(data, n = 1)[[col]],
-      tail(data, n = 1)[[col]]
+    filter(!.data[[fun_name]] %in% c(
+      head(data, n = 1)[[fun_name]],
+      tail(data, n = 1)[[fun_name]]
     ))
   end <- data |>
-    filter(.data[[col]] == tail(data, n = 1)[[col]]) |>
-    group_by(across(all_of(col))) |>
+    filter(.data[[fun_name]] == tail(data, n = 1)[[fun_name]]) |>
+    group_by(across(all_of(fun_name))) |>
     filter(n() >= n) |>
     ungroup()
 
   rbind(start, mid, end) |>
-    group_by(across(all_of(c("iso3c", col))))
+    group_by(across(all_of(c("iso3c", fun_name))))
 }
 
 aggregate_data <- function(data, fun_name) {
   # Filter ends
   result <- switch(fun_name,
-    yearweek = filter_by_complete_temp_values(data, fun_name, 7),
-    yearmonth = filter_by_complete_temp_values(data, fun_name, 28),
-    yearquarter = filter_by_complete_temp_values(data, fun_name, 90),
-    year = filter_by_complete_temp_values(data, fun_name, 365),
-    fluseason = filter_by_complete_temp_values(data, fun_name, 365),
-    midyear = filter_by_complete_temp_values(data, fun_name, 365)
+    "yearweek" = filter_by_complete_temp_values(data, fun_name, 7),
+    "yearmonth" = filter_by_complete_temp_values(data, fun_name, 28),
+    "yearquarter" = filter_by_complete_temp_values(data, fun_name, 90),
+    "year" = filter_by_complete_temp_values(data, fun_name, 365),
+    "fluseason" = filter_by_complete_temp_values(data, fun_name, 365),
+    "midyear" = filter_by_complete_temp_values(data, fun_name, 365)
   )
   if ("cmr" %in% names(data)) {
     result <- result |>
@@ -101,7 +101,9 @@ sma <- function(vec, n) {
 }
 
 calc_sma <- function(data, n) {
-  if (nrow(data) < n) stop("Not enough rows for SMA")
+  if (nrow(data) < n) {
+    return(data[c(), ])
+  }
 
   data$deaths <- round(sma(data$deaths, n = n), 3)
   data$cmr <- round(sma(data$cmr, n = n), 3)
@@ -236,6 +238,9 @@ round_x <- function(data, col_name, digits = 0) {
 }
 
 calculate_baseline_excess <- function(data, chart_type) {
+  if (nrow(data) == 0) {
+    return(data)
+  }
   if (chart_type %in% c("fluseason", "midyear")) {
     ts <- data |>
       mutate(date = as.integer(right(date, 4))) |>
@@ -244,7 +249,7 @@ calculate_baseline_excess <- function(data, chart_type) {
     ts <- data |> as_tsibble(index = date)
   }
 
-  print(paste("calculate_baseline_excess:", unique(ts$iso3c)))
+  # print(paste("calculate_baseline_excess:", unique(ts$iso3c)))
   result <- ts |>
     calculate_baseline(col_name = "deaths", chart_type) |>
     calculate_baseline(col_name = "cmr", chart_type)
@@ -270,35 +275,21 @@ get_nested_data_by_time <- function(dd_asmr, dd_all, fun_name) {
   fun <- get(fun_name)
   df_asmr <- dd_asmr |>
     mutate(!!fun_name := fun(date), .after = date) |>
-    nest(data = !c("iso", "type")) |>
+    nest(data = !c("iso")) |>
     mutate(data = lapply(data, aggregate_data, fun_name)) |>
-    unnest(cols = c(data))
+    unnest(cols = c(data)) |>
+    arrange(.data$iso3c, .data$date) |>
+    distinct(.data$iso3c, .data$date, .keep_all = TRUE)
   df_all <- dd_all |>
     mutate(!!fun_name := fun(date), .after = date) |>
-    nest(data = !c("iso", "type")) |>
+    nest(data = !c("iso")) |>
     mutate(data = lapply(data, aggregate_data, fun_name)) |>
-    unnest(cols = c(data))
-
-  asmr <- rbind(
-    df_asmr |> filter(.data$type == "weekly"),
-    df_asmr |> filter(.data$type == "monthly"),
-    df_asmr |> filter(.data$type == "yearly")
-  ) |>
-    arrange(.data$iso3c, .data$date) |>
-    distinct(.data$iso3c, .data$date, .keep_all = TRUE) |>
-    select(-all_of("type"))
-
-  all <- rbind(
-    df_all |> filter(.data$type == "weekly"),
-    df_all |> filter(.data$type == "monthly"),
-    df_all |> filter(.data$type == "yearly")
-  ) |>
+    unnest(cols = c(data)) |>
     arrange(iso3c, date) |>
-    distinct(iso3c, date, .keep_all = TRUE) |>
-    select(-all_of("type"))
+    distinct(iso3c, date, .keep_all = TRUE)
 
-  all |>
-    left_join(asmr, by = c("iso3c", "date")) |>
+  df_all |>
+    left_join(df_asmr, by = c("iso3c", "date")) |>
     select(!all_of("iso.y")) |>
     setNames(c(
       "iso", "iso3c", "date", "deaths", "population", "cmr",
@@ -309,22 +300,14 @@ get_nested_data_by_time <- function(dd_asmr, dd_all, fun_name) {
 
 get_nested_data_by_time_age <- function(dd_age, fun_name) {
   fun <- get(fun_name)
-  df_all <- dd_age |>
+  dd_age |>
     mutate(!!fun_name := fun(date), .after = date) |>
-    nest(data = !c("iso", "type", "age_group")) |>
+    nest(data = !c("iso", "age_group")) |>
     mutate(data = lapply(data, aggregate_data, fun_name)) |>
-    unnest(cols = c(data))
-
-  all <- rbind(
-    df_all |> filter(.data$type == "weekly"),
-    df_all |> filter(.data$type == "monthly"),
-    df_all |> filter(.data$type == "yearly")
-  ) |>
+    unnest(cols = c(data)) |>
     arrange(.data$iso3c, date, .data$age_group) |>
     distinct(iso3c, date, age_group, .keep_all = TRUE) |>
-    select(-all_of("type"))
-
-  all |> nest(data = !c("iso", "age_group"))
+    nest(data = !c("iso", "age_group"))
 }
 
 fill_gaps_na <- function(df) {

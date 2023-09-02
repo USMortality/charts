@@ -17,10 +17,8 @@ df <- deaths |>
     P75_84 = .data$D75_84 / .data$R75_84 * 52,
     P85p = .data$D85p / .data$R85p * 52,
     PTotal = .data$DTotal / .data$RTotal * 52,
-  ) |>
-  mutate(date = make_yearweek(
-    year = .data$Year, week = .data$Week
-  ))
+    date = date_parse(paste(.data$Year, .data$Week, 1), format = "%G %V %u")
+  )
 
 population <- df |>
   select(
@@ -72,8 +70,9 @@ mortality_org <- df |>
     values_to = "deaths"
   ) |>
   get_daily_from_weekly(c("deaths")) |>
-  mutate(type = "weekly") |>
+  mutate(type = 3) |>
   inner_join(population, by = c("iso3c", "date", "age_group")) |>
   arrange(iso3c, date, age_group, type) |>
   distinct(iso3c, date, age_group, type, .keep_all = TRUE)
 mortality_org$source <- "mortality_org"
+mortality_org$n_age_groups <- 5

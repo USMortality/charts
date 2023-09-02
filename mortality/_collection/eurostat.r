@@ -52,7 +52,7 @@ deaths_daily <- deaths_raw |>
         week = as.integer(right(date, 2))
     ) |>
     mutate(
-        date = make_yearweek(year, week),
+        date = date_parse(paste(year, week, 1), format = "%G %V %u"),
         deaths = suppress_warnings(
             as.integer(str_replace_all(deaths, c(" p" = "", ": " = ""))),
             "NAs introduced by coercion"
@@ -80,6 +80,8 @@ deaths_daily <- deaths_raw |>
         )
     ) |>
     select(iso3c, age_group, date, deaths) |>
+    group_by(iso3c, age_group, date) |>
+    summarize(deaths = sum(deaths)) |>
     get_daily_from_weekly(c("deaths"))
 
 # Population
@@ -151,13 +153,15 @@ population_daily <- rbind(population_all, population_age) |>
 
 eurostat <- deaths_daily |>
     inner_join(population_daily, by = c("iso3c", "age_group", "date")) |>
-    mutate(type = "weekly") |>
-    get_daily_from_weekly(c("deaths")) |>
     mutate(iso3c = countrycode(
         iso3c,
         origin = "iso2c",
         destination = "iso3c",
         custom_match = custom_match
-    ))
+    )) |>
+    arrange(iso3c, date, age_group) |>
+    distinct(iso3c, date, age_group, .keep_all = TRUE)
 
+eurostat$type <- 3
+eurostat$n_age_groups <- 9
 eurostat$source <- "eurostat"

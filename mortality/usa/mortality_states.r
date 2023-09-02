@@ -41,7 +41,7 @@ aggregate_80_plus <- function(df) {
   df |>
     mutate(
       age_group = case_when(
-        age_group %in% c("80-89", "90-100") ~ "80+",
+        age_group %in% c("80-89", "90+") ~ "80+",
         .default = age_group
       )
     ) |>
@@ -53,31 +53,34 @@ aggregate_80_plus <- function(df) {
 # Weekly 2017+
 wd_usa <- read_remote("deaths/usa/age_weekly_2015-n.csv") |>
   filter(year >= 2017) |> # Totals are only available from 2017.
-  mutate(date = make_yearweek(year = year, week = week))
+  mutate(date = date_parse(paste(year, week, 1), format = "%G %V %u")) |>
+  filter(!is.na(deaths))
 
 md_usa_10y <- read_remote("deaths/usa/monthly_10y_complete.csv") |>
-  mutate(date = make_yearmonth(year = year, month = month)) |>
-  aggregate_80_plus()
+  mutate(date = date_parse(paste(year, month, 1), format = "%Y %m %d")) |>
+  aggregate_80_plus() |>
+  filter(!is.na(deaths))
 
 # CMR, Weekly
 dd_us1 <- wd_usa |>
-  filter(age_group == "all", !is.na(date)) |>
+  filter(age_group == "all") |>
   get_daily_from_weekly(c("deaths")) |>
   select(iso3c, date, deaths)
 dd_us1$age_group <- "all"
-dd_us1$type <- "weekly"
+dd_us1$type <- 3
 
 # CMR, Monthly
 dd_us2 <- md_usa_10y |>
-  filter(age_group == "all", !is.na(date)) |>
+  filter(age_group == "all") |>
   get_daily_from_monthly(c("deaths")) |>
   select(iso3c, date, deaths)
 dd_us2$age_group <- "all"
-dd_us2$type <- "monthly"
+dd_us2$type <- 2
 
 dd_us <- rbind(dd_us1, dd_us2) |>
   distinct(iso3c, date, type, .keep_all = TRUE) |>
   arrange(iso3c, date, age_group, type)
+dd_us$n_age_groups <- 1
 
 # ASMR
 ## Weekly
@@ -96,7 +99,8 @@ deaths_weekly <- wd_usa |>
   group_by(iso3c, age_group) |>
   group_modify(~ get_daily_from_weekly(.x, c("deaths"))) |>
   ungroup()
-deaths_weekly$type <- "weekly"
+deaths_weekly$type <- 3
+deaths_weekly$n_age_groups <- 6
 
 ## Monthly
 n_ <- nrow(md_usa_10y |> filter(iso3c == "USA"))
@@ -114,7 +118,8 @@ deaths_monthly <- md_usa_10y |>
   group_by(iso3c, age_group) |>
   group_modify(~ get_daily_from_monthly(.x, c("deaths"))) |>
   ungroup()
-deaths_monthly$type <- "monthly"
+deaths_monthly$type <- 2
+deaths_monthly$n_age_groups <- 9
 
 ## Yearly
 deaths_yearly <- read_remote("deaths/usa/yearly_10y_complete.csv") |>
@@ -128,7 +133,8 @@ deaths_yearly <- read_remote("deaths/usa/yearly_10y_complete.csv") |>
   group_by(iso3c, age_group) |>
   group_modify(~ get_daily_from_yearly(.x, c("deaths"))) |>
   ungroup()
-deaths_yearly$type <- "yearly"
+deaths_yearly$type <- 1
+deaths_yearly$n_age_groups <- 9
 
 dd_us_age <- rbind(
   deaths_monthly,
@@ -208,7 +214,7 @@ usa_mortality_states <- rbind(dd_us, dd_us_age) |>
     population =
       ifelse(is.na(population.x), population.y, population.x)
   ) |>
-  select(iso3c, date, age_group, deaths, population, type) |>
+  select(iso3c, date, age_group, deaths, population, type, n_age_groups) |>
   arrange(iso3c, date, age_group) |>
   distinct(iso3c, date, age_group, type, .keep_all = TRUE) |>
   filter(age_group != "NS", !is.na(population))

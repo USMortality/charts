@@ -8,18 +8,19 @@ df <- read_remote("deaths/deu/deaths.csv") |>
 df_all <- df |>
   filter(age_group == "Insgesamt") |>
   mutate(
-    date = make_yearweek(year = year, week = week),
+    date = date_parse(paste(year, week, 1), format = "%G %V %u"),
     age_group = "all"
   ) |>
   get_daily_from_weekly(c("deaths")) |>
   select(iso3c, date, age_group, deaths) |>
   arrange(iso3c, date)
+df_all$n_age_groups <- 1
 
 # By age group, national
 df_age_d <- df |>
   filter(jurisdiction == "Deutschland" & age_group != "Insgesamt") |>
   mutate(
-    date = make_yearweek(year = year, week = week),
+    date = date_parse(paste(year, week, 1), format = "%G %V %u"),
     age_group = case_when(
       age_group %in% c("0-30") ~ "0-29",
       age_group %in% c("30-35") ~ "30-44",
@@ -42,12 +43,13 @@ df_age_d <- df |>
   summarise(deaths = sum(deaths)) |>
   ungroup() |>
   get_daily_from_weekly(c("deaths"))
+df_age_d$n_age_groups <- 6
 
 # By age group, states
 df_age_states <- df |>
   filter(jurisdiction != "Deutschland" & age_group != "Insgesamt") |>
   mutate(
-    date = make_yearweek(year = year, week = week),
+    date = date_parse(paste(year, week, 1), format = "%G %V %u"),
     age_group = case_when(
       age_group %in% c("0-65") ~ "0-64",
       age_group %in% c("65-75") ~ "65-74",
@@ -59,6 +61,7 @@ df_age_states <- df |>
   summarise(deaths = sum(deaths)) |>
   ungroup() |>
   get_daily_from_weekly(c("deaths"))
+df_age_states$n_age_groups <- 4
 
 # Population
 source("population/deu/deu.r")
@@ -82,5 +85,5 @@ deu_mortality_states <- rbind(df_all, df_age_d, df_age_states) |>
   arrange(iso3c, date, age_group) |>
   distinct(iso3c, date, age_group, .keep_all = TRUE)
 
-deu_mortality_states$type <- "weekly"
+deu_mortality_states$type <- 3
 deu_mortality_states$source <- "destatis"

@@ -53,34 +53,46 @@ any_of <- dplyr::any_of
 baseline_size <- read_remote("mortality/world_baseline.csv")
 asmr_types <- c("asmr_who", "asmr_esp", "asmr_usa", "asmr_country")
 
-# For duplicates: first values take precedence.
-individual_jurisdictions <- c("DEU", "USA")
 dd <- rbind(
   deu_mortality_states,
   usa_mortality_states,
-  eurostat |> filter(!iso3c %in% individual_jurisdictions),
-  world_mortality |> filter(!iso3c %in% individual_jurisdictions),
-  mortality_org |> filter(!iso3c %in% individual_jurisdictions)
+  eurostat |> filter(iso3c != "SWE"),
+  world_mortality |> filter(!iso3c %in% unique(eurostat$iso3c)),
+  mortality_org |> filter(!iso3c %in% unique(eurostat$iso3c)),
+  world_mortality |> filter(iso3c == "SWE"),
+  mortality_org |> filter(iso3c == "SWE")
 ) |>
-  distinct(iso3c, date, age_group, type, .keep_all = TRUE) |>
-  arrange(iso3c, date, age_group, type) |>
   mutate(cmr = deaths / population * 100000) |>
-  group_by(iso3c, age_group, type) |>
-  group_modify(~ fill_gaps_na(.x)) |>
-  ungroup()
+  arrange(iso3c, date, age_group, type, n_age_groups)
 
-save_info(df = dd |> inner_join(iso3c_jurisdiction, by = c("iso3c")))
-
+# slice_max is used for conflict resolution.
 dd_all <- dd |>
   filter(age_group == "all") |>
-  mutate(iso = iso3c)
+  group_by(iso3c, date) |>
+  group_modify(~ slice_max(.x, type, n = 1, with_ties = TRUE)) |>
+  ungroup() |>
+  mutate(iso = iso3c) |>
+  distinct(iso3c, date, age_group, .keep_all = TRUE)
+
 dd_age <- dd |>
   filter(age_group != "all") |>
+  group_by(iso3c, date) |>
+  group_modify(~ slice_max(.x, type, n = 1, with_ties = TRUE)) |>
+  group_modify(~ slice_max(.x, n_age_groups, n = 1, with_ties = TRUE)) |>
+  ungroup() |>
+  distinct(iso3c, date, age_group, .keep_all = TRUE) |>
   mutate(iso = iso3c)
+
+save_info(
+  df = rbind(dd_all, dd_age) |> inner_join(iso3c_jurisdiction, by = c("iso3c"))
+)
+
 dd_asmr <- dd_age |>
-  group_by(iso3c, type) |>
+  group_by(iso3c, type, source) |> # Include type/source, b/c of different bins
   group_modify(~ calculate_asmr_variants(.x), .keep = TRUE) |>
   ungroup() |>
+  distinct(iso3c, date, .keep_all = TRUE) |>
+  arrange(iso3c, date) |>
   mutate(iso = iso3c)
 
 save_dataset <- function(
@@ -99,10 +111,7 @@ save_dataset <- function(
     mutate(data = lapply(data, calculate_baseline_excess, "weekly")) |>
     unnest(cols = c(data)) |>
     select(-any_of(c("age_group", "iso")))
-  save_csv(
-    weekly,
-    paste0("mortality/world_weekly", postfix)
-  )
+  save_csv(weekly, paste0("mortality/world_weekly", postfix))
 
   print('Calculating "Weekly 104W SMA" dataset')
   weekly104wsma <- weekly_nested |>
@@ -114,10 +123,7 @@ save_dataset <- function(
     group_by(.data$iso3c) |>
     filter(!is.na(.data$deaths)) |>
     ungroup()
-  save_csv(
-    weekly104wsma,
-    paste0("mortality/world_weekly_104w_sma", postfix)
-  )
+  save_csv(weekly104wsma, paste0("mortality/world_weekly_104w_sma", postfix))
 
   print('Calculating "Weekly 52W SMA" dataset')
   weekly52wsma <- weekly_nested |>
@@ -129,10 +135,7 @@ save_dataset <- function(
     group_by(.data$iso3c) |>
     filter(!is.na(.data$deaths)) |>
     ungroup()
-  save_csv(
-    weekly52wsma,
-    paste0("mortality/world_weekly_52w_sma", postfix)
-  )
+  save_csv(weekly52wsma, paste0("mortality/world_weekly_52w_sma", postfix))
 
   print('Calculating "Weekly 26W SMA" dataset')
   weekly26wsma <- weekly_nested |>
@@ -144,10 +147,7 @@ save_dataset <- function(
     group_by(.data$iso3c) |>
     filter(!is.na(deaths)) |>
     ungroup()
-  save_csv(
-    weekly26wsma,
-    paste0("mortality/world_weekly_26w_sma", postfix)
-  )
+  save_csv(weekly26wsma, paste0("mortality/world_weekly_26w_sma", postfix))
 
   print('Calculating "Weekly 13W SMA" dataset')
   weekly13wsma <- weekly_nested |>
@@ -159,10 +159,7 @@ save_dataset <- function(
     group_by(.data$iso3c) |>
     filter(!is.na(deaths)) |>
     ungroup()
-  save_csv(
-    weekly13wsma,
-    paste0("mortality/world_weekly_13w_sma", postfix)
-  )
+  save_csv(weekly13wsma, paste0("mortality/world_weekly_13w_sma", postfix))
 
   print('Calculating "Monthly" dataset')
   monthly <- monthly_nested |>
@@ -170,10 +167,7 @@ save_dataset <- function(
     mutate(data = lapply(data, calculate_baseline_excess, "monthly")) |>
     unnest(cols = c(data)) |>
     select(-any_of(c("age_group", "iso")))
-  save_csv(
-    monthly,
-    paste0("mortality/world_monthly", postfix)
-  )
+  save_csv(monthly, paste0("mortality/world_monthly", postfix))
 
   print('Calculating "Quarterly" dataset')
   quarterly <- quarterly_nested |>
@@ -181,20 +175,15 @@ save_dataset <- function(
     mutate(data = lapply(data, calculate_baseline_excess, "quarterly")) |>
     unnest(cols = c(data)) |>
     select(-any_of(c("age_group", "iso")))
-  save_csv(
-    quarterly,
-    paste0("mortality/world_quarterly", postfix)
-  )
+  save_csv(quarterly, paste0("mortality/world_quarterly", postfix))
+
   print('Calculating "Yearly" dataset')
   yearly <- yearly_nested |>
     filter(age_group == ag) |>
     mutate(data = lapply(data, calculate_baseline_excess, "yearly")) |>
     unnest(cols = c(data)) |>
     select(-any_of(c("age_group", "iso")))
-  save_csv(
-    yearly,
-    paste0("mortality/world_yearly", postfix)
-  )
+  save_csv(yearly, paste0("mortality/world_yearly", postfix))
 
   print('Calculating "Fluseason" dataset')
   fluseason <- fluseason_nested |>
@@ -202,10 +191,7 @@ save_dataset <- function(
     mutate(data = lapply(data, calculate_baseline_excess, "fluseason")) |>
     unnest(cols = c(data)) |>
     select(-any_of(c("age_group", "iso")))
-  save_csv(
-    fluseason,
-    paste0("mortality/world_fluseason", postfix)
-  )
+  save_csv(fluseason, paste0("mortality/world_fluseason", postfix))
 
   print('Calculating "Midyear" dataset')
   midyear <- midyear_nested |>
@@ -213,14 +199,11 @@ save_dataset <- function(
     mutate(data = lapply(data, calculate_baseline_excess, "midyear")) |>
     unnest(cols = c(data)) |>
     select(-any_of(c("age_group", "iso")))
-  save_csv(
-    midyear,
-    paste0("mortality/world_midyear", postfix)
-  )
+  save_csv(midyear, paste0("mortality/world_midyear", postfix))
 }
 
 # Weekly
-weekly_nested_age <- get_nested_data_by_time_age(dd_age, fun_name = "yearweek")
+weekly_nested_age <- get_nested_data_by_time_age(dd_age, "yearweek")
 weekly_nested <- get_nested_data_by_time(dd_asmr, dd_all, "yearweek")
 weekly_nested$age_group <- "all"
 weekly_nested <- rbind(weekly_nested_age, weekly_nested)

@@ -16,25 +16,26 @@ population <- population |>
 wd <- deaths |>
   filter(time_unit == "weekly") |>
   mutate(
-    date = make_yearweek(year = year, week = time),
+    date = date_parse(paste(year, time, 1), format = "%G %V %u"),
     age_group = "all"
   ) |>
   select(iso3c, date, age_group, deaths) |>
   get_daily_from_weekly(c("deaths"))
-wd$type <- "weekly"
+wd$type <- 3
 
 md <- deaths |>
   filter(time_unit == "monthly") |>
   mutate(
-    date = make_yearmonth(year = year, month = time),
+    date = date_parse(paste(year, time, 1), format = "%Y %m %d"),
     age_group = "all"
   ) |>
   select(iso3c, date, age_group, deaths) |>
   get_daily_from_monthly(c("deaths"))
-md$type <- "monthly"
+md$type <- 2
 
 world_mortality <- rbind(wd, md) |>
   inner_join(population, by = c("iso3c", "date")) |>
   arrange(iso3c, date, age_group, type) |>
   distinct(iso3c, date, age_group, type, .keep_all = TRUE)
 world_mortality$source <- "world_mortality"
+world_mortality$n_age_groups <- 1
