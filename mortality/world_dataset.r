@@ -57,10 +57,8 @@ dd <- rbind(
   deu_mortality_states,
   usa_mortality_states,
   eurostat |> filter(iso3c != "SWE"),
-  world_mortality |> filter(!iso3c %in% unique(eurostat$iso3c)),
-  mortality_org |> filter(!iso3c %in% unique(eurostat$iso3c)),
-  world_mortality |> filter(iso3c == "SWE"),
-  mortality_org |> filter(iso3c == "SWE")
+  world_mortality,
+  mortality_org
 ) |>
   mutate(cmr = deaths / population * 100000) |>
   arrange(iso3c, date, age_group, type, n_age_groups)
