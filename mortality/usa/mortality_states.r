@@ -45,7 +45,7 @@ aggregate_80_plus <- function(df) {
         .default = age_group
       )
     ) |>
-    group_by(.data$iso3c, .data$date, .data$age_group) |>
+    group_by(.data$iso3c, .data$year, .data$age_group) |>
     summarise(deaths = sum(.data$deaths)) |>
     ungroup()
 }
@@ -58,8 +58,7 @@ wd_usa <- read_remote("deaths/usa/age_weekly_2015-n.csv") |>
 
 md_usa_10y <- read_remote("deaths/usa/monthly_10y_complete.csv") |>
   mutate(date = date_parse(paste(year, month, 1), format = "%Y %m %d")) |>
-  aggregate_80_plus() |>
-  filter(!is.na(deaths))
+  aggregate_80_plus()
 
 # CMR, Weekly
 dd_us1 <- wd_usa |>
@@ -84,7 +83,7 @@ dd_us$n_age_groups <- 1
 
 # ASMR
 ## Weekly
-n_ <- nrow(wd_usa |> filter(!is.na(deaths) & iso3c == "USA"))
+n_ <- nrow(wd_usa |> filter(iso3c == "USA"))
 complete_states_weekly <- wd_usa |>
   filter(!is.na(deaths)) |>
   group_by(iso3c) |>
@@ -126,10 +125,10 @@ deaths_yearly <- read_remote("deaths/usa/yearly_10y_complete.csv") |>
   aggregate_80_plus() |>
   filter(
     !iso3c %in% complete_states_monthly$iso3c,
-    age_group != "all",
-    !is.na(date)
+    age_group != "all"
   ) |>
-  mutate(date = as.Date(paste0(date, "-01-01"))) |>
+  mutate(date = as.Date(paste0(year, "-01-01"))) |>
+  select(-year) |>
   group_by(iso3c, age_group) |>
   group_modify(~ get_daily_from_yearly(.x, c("deaths"))) |>
   ungroup()

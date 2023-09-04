@@ -181,7 +181,7 @@ result_5y_complete <- rbind(
 
 # Impute NA's
 result_5y_complete <- result_5y_complete |>
-  filter(year <= 2022) |>
+  filter(year < max(result_5y_complete$year)) |>
   group_by(iso3c, year) |>
   group_modify(~ impute_single_na(.x)) |>
   group_modify(~ impute_from_aggregate(
@@ -192,19 +192,13 @@ result_5y_complete <- result_5y_complete |>
   ), .keep = TRUE) |>
   ungroup()
 
-save_csv(rbind(usa_10y, result_10y),
-  "deaths/usa/yearly_10y",
-  upload = TRUE
+save_csv(rbind(usa_10y, result_10y), "deaths/usa/yearly_10y")
+save_csv(
+  rbind(usa_10y_complete, result_10y_complete),
+  "deaths/usa/yearly_10y_complete"
 )
-save_csv(rbind(usa_10y_complete, result_10y_complete),
-  "deaths/usa/yearly_10y_complete",
-  upload = TRUE
-)
-save_csv(rbind(usa_5y, result_5y),
-  "deaths/usa/yearly_5y",
-  upload = TRUE
-)
-save_csv(rbind(usa_5y_complete, result_5y_complete),
-  "deaths/usa/yearly_5y_complete",
-  upload = TRUE
+save_csv(rbind(usa_5y, result_5y), "deaths/usa/yearly_5y")
+save_csv(
+  rbind(usa_5y_complete, result_5y_complete),
+  "deaths/usa/yearly_5y_complete"
 )
