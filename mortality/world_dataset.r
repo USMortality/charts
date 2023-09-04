@@ -74,11 +74,6 @@ dd_all <- dd |>
 
 dd_age <- dd |>
   filter(age_group != "all") |>
-  group_by(iso3c, date) |>
-  group_modify(~ slice_max(.x, type, n = 1, with_ties = TRUE)) |>
-  group_modify(~ slice_max(.x, n_age_groups, n = 1, with_ties = TRUE)) |>
-  ungroup() |>
-  distinct(iso3c, date, age_group, .keep_all = TRUE) |>
   mutate(iso = iso3c)
 
 save_info(
@@ -86,6 +81,11 @@ save_info(
 )
 
 dd_asmr <- dd_age |>
+  group_by(iso3c, date) |>
+  group_modify(~ slice_max(.x, type, n = 1, with_ties = TRUE)) |>
+  group_modify(~ slice_max(.x, n_age_groups, n = 1, with_ties = TRUE)) |>
+  ungroup() |>
+  distinct(iso3c, date, age_group, .keep_all = TRUE) |>
   group_by(iso3c, type, source) |> # Include type/source, b/c of different bins
   group_modify(~ calculate_asmr_variants(.x), .keep = TRUE) |>
   ungroup() |>

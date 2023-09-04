@@ -45,7 +45,7 @@ aggregate_80_plus <- function(df) {
         .default = age_group
       )
     ) |>
-    group_by(.data$iso3c, .data$year, .data$age_group) |>
+    group_by(.data$iso3c, .data$date, .data$age_group) |>
     summarise(deaths = sum(.data$deaths)) |>
     ungroup()
 }
@@ -122,13 +122,13 @@ deaths_monthly$n_age_groups <- 9
 
 ## Yearly
 deaths_yearly <- read_remote("deaths/usa/yearly_10y_complete.csv") |>
+  rename(date = year) |>
   aggregate_80_plus() |>
   filter(
     !iso3c %in% complete_states_monthly$iso3c,
     age_group != "all"
   ) |>
-  mutate(date = as.Date(paste0(year, "-01-01"))) |>
-  select(-year) |>
+  mutate(date = as.Date(paste0(date, "-01-01"))) |>
   group_by(iso3c, age_group) |>
   group_modify(~ get_daily_from_yearly(.x, c("deaths"))) |>
   ungroup()
