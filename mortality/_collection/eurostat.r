@@ -41,7 +41,7 @@ deaths_raw <- as_tibble(read.csv(
     sep = "\t"
 ))
 
-deaths_daily <- deaths_raw |>
+deaths <- deaths_raw |>
     pivot_longer(
         cols = 2:ncol(deaths_raw),
         names_to = "date",
@@ -81,8 +81,9 @@ deaths_daily <- deaths_raw |>
     ) |>
     select(iso3c, age_group, date, deaths) |>
     group_by(iso3c, age_group, date) |>
-    summarize(deaths = sum(deaths)) |>
-    get_daily_from_weekly(c("deaths"))
+    summarize(deaths = sum(deaths)) |> 
+    ungroup()
+rm(deaths_raw)
 
 # Population
 population_raw <- as_tibble(read.csv(
@@ -122,12 +123,13 @@ population <- population_raw |>
         )
     ) |>
     select(iso3c, age_group, date, population)
+rm(population_raw)
 
 population_all <- population |> filter(age_group == "all")
 
 # Summarize single ages to age groups.
 age_groups <- unique(
-    (deaths_daily |> filter(!age_group %in% c("all", "NS")))$age_group
+    (deaths |> filter(!age_group %in% c("all", "NS")))$age_group
 )
 population_age <- population |>
     filter(age_group != "all") |>
@@ -137,6 +139,7 @@ population_age <- population |>
     nest(data = !c("iso3c", "date")) |>
     mutate(data = lapply(data, get_population_by_age_group, age_groups)) |>
     unnest(cols = c(data))
+rm(population, age_groups)
 
 # Interpolate sub yearly population.
 population_daily <- rbind(population_all, population_age) |>
@@ -150,8 +153,9 @@ population_daily <- rbind(population_all, population_age) |>
             unnest(cols = "data"))
     ) |>
     unnest(cols = "data")
+rm(population_all, population_age)
 
-eurostat <- deaths_daily |>
+eurostat <- deaths |>
     inner_join(population_daily, by = c("iso3c", "age_group", "date")) |>
     mutate(iso3c = countrycode(
         iso3c,
@@ -165,3 +169,4 @@ eurostat <- deaths_daily |>
 eurostat$type <- 3
 eurostat$n_age_groups <- 9
 eurostat$source <- "eurostat"
+rm(deaths, population_daily)

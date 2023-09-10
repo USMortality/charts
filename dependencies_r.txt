@@ -18,3 +18,4 @@ rtweet
 rvest
 imputeTS
 countrycode
+pryr

@@ -113,6 +113,7 @@ esp2013 <- parse_seer_std_table(
   2,
   "European (EU-27 plus EFTA 2011-2030) Std Million"
 )
+rm(tables)
 
 get_esp2013_bins <- function(age_groups) {
   get_std_pop_weights(age_groups, esp2013)

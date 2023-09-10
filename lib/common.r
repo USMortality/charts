@@ -2,7 +2,7 @@
 options(dplyr.summarise.inform = FALSE)
 options(warn = 2)
 
-upload_files <- TRUE
+upload_files <- FALSE
 
 libs <- read.table("dependencies_r.txt")
 for (lib in libs$V1) {
@@ -87,12 +87,36 @@ save_csv <- function(df, name, upload = upload_files) {
   write.csv(df, local_file_name, na = "", row.names = FALSE)
 
   if (upload) {
-    aws.s3::put_object(
-      file = local_file_name,
-      object = file_name,
-      bucket = data_bucket
-    )
+    upload_csv(name)
   }
+}
+
+append_csv <- function(df, name) {
+  file_name <- paste0(name, ".csv")
+  local_file_name <- paste0("out/", file_name)
+  if (!dir.exists(dirname(local_file_name))) {
+    dir.create(dirname(local_file_name), recursive = TRUE)
+  }
+  reset <- !file.exists(local_file_name)
+  write.table(
+    df,
+    local_file_name,
+    append = !reset,
+    sep = ",",
+    na = "",
+    col.names = reset,
+    row.names = FALSE
+  )
+}
+
+upload_csv <- function(name) {
+  file_name <- paste0(name, ".csv")
+  local_file_name <- paste0("out/", file_name)
+  aws.s3::put_object(
+    file = local_file_name,
+    object = file_name,
+    bucket = data_bucket
+  )
 }
 
 save_chart <- function(chart, name, scale, upload = upload_files) {
@@ -246,6 +270,9 @@ get_usa_mortality <- function(age_group) {
 }
 
 get_daily_from_n <- function(wd, column_names, fun) { # nolint
+  if (nrow(wd) == 0) {
+    return(wd)
+  }
   df <- wd |>
     uncount(fun(.data$date), .id = "day") |>
     mutate(date = date(.data$date)) |>

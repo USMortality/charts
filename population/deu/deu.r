@@ -73,6 +73,8 @@ pop_states <- pop_raw |>
   ) |>
   relocate(jurisdiction, year, age_group, population)
 
+rm(pop_raw)
+
 pop2 <- pop |>
   mutate(
     age_group = case_when(
@@ -88,6 +90,8 @@ pop2 <- pop |>
   group_by(jurisdiction, year, age_group) |>
   summarise(population = sum(population)) |>
   ungroup()
+
+rm(pop)
 
 pop_states2 <- pop_states |>
   mutate(
@@ -105,6 +109,8 @@ pop_states2 <- pop_states |>
   summarise(population = sum(population)) |>
   ungroup()
 
+rm(pop_states)
+
 # Format: iso3c, jurisdiction, year, population, is_projection
 de_population <- rbind(pop2, pop_states2) |>
   inner_join(de_states, by = "jurisdiction") |>
@@ -115,3 +121,5 @@ de_population <- rbind(pop2, pop_states2) |>
   nest(data = c("year", "population")) |>
   mutate(data = lapply(data, forecast_population)) |>
   unnest(cols = "data")
+
+rm(de_states, pop2, pop_states2)

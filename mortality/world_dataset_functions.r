@@ -36,6 +36,7 @@ complete <- tidyr::complete
 case_when <- dplyr::case_when
 across <- dplyr::across
 left_join <- dplyr::left_join
+group_modify <- dplyr::group_modify
 
 filter_by_complete_temp_values <- function(data, fun_name, n) {
   start <- data |>
@@ -58,15 +59,15 @@ filter_by_complete_temp_values <- function(data, fun_name, n) {
     group_by(across(all_of(c("iso3c", fun_name))))
 }
 
-aggregate_data <- function(data, fun_name) {
+aggregate_data <- function(data, type) {
   # Filter ends
-  result <- switch(fun_name,
-    "yearweek" = filter_by_complete_temp_values(data, fun_name, 7),
-    "yearmonth" = filter_by_complete_temp_values(data, fun_name, 28),
-    "yearquarter" = filter_by_complete_temp_values(data, fun_name, 90),
-    "year" = filter_by_complete_temp_values(data, fun_name, 365),
-    "fluseason" = filter_by_complete_temp_values(data, fun_name, 365),
-    "midyear" = filter_by_complete_temp_values(data, fun_name, 365)
+  result <- switch(type,
+    "yearweek" = filter_by_complete_temp_values(data, type, 7),
+    "yearmonth" = filter_by_complete_temp_values(data, type, 28),
+    "yearquarter" = filter_by_complete_temp_values(data, type, 90),
+    "year" = filter_by_complete_temp_values(data, type, 365),
+    "fluseason" = filter_by_complete_temp_values(data, type, 365),
+    "midyear" = filter_by_complete_temp_values(data, type, 365)
   )
   if ("cmr" %in% names(data)) {
     result <- result |>
@@ -87,8 +88,8 @@ aggregate_data <- function(data, fun_name) {
   }
   result |>
     ungroup() |>
-    as_tibble() |>
-    dplyr::rename("date" = all_of(fun_name))
+    dplyr::rename("date" = all_of(type)) |>
+    select(-"iso3c")
 }
 
 sma <- function(vec, n) {
@@ -271,43 +272,22 @@ calculate_baseline_excess <- function(data, chart_type) {
   }
 }
 
-get_nested_data_by_time <- function(dd_asmr, dd_all, fun_name) {
-  fun <- get(fun_name)
-  df_asmr <- dd_asmr |>
-    mutate(!!fun_name := fun(date), .after = date) |>
-    nest(data = !c("iso")) |>
-    mutate(data = lapply(data, aggregate_data, fun_name)) |>
-    unnest(cols = c(data)) |>
-    arrange(.data$iso3c, .data$date) |>
-    distinct(.data$iso3c, .data$date, .keep_all = TRUE)
-  df_all <- dd_all |>
-    mutate(!!fun_name := fun(date), .after = date) |>
-    nest(data = !c("iso")) |>
-    mutate(data = lapply(data, aggregate_data, fun_name)) |>
-    unnest(cols = c(data)) |>
-    arrange(iso3c, date) |>
-    distinct(iso3c, date, .keep_all = TRUE)
-
-  df_all |>
-    left_join(df_asmr, by = c("iso3c", "date")) |>
-    select(!all_of("iso.y")) |>
-    setNames(c(
-      "iso", "iso3c", "date", "deaths", "population", "cmr",
-      asmr_types
-    )) |>
-    nest(data = !c("iso"))
+summarize_data_all <- function(dd_all, dd_asmr, type) {
+  a <- summarize_data_by_time(dd_all, type)
+  if (nrow(dd_asmr) == 0) {
+    return(a)
+  }
+  b <- summarize_data_by_time(dd_asmr, type)
+  a |> left_join(b, by = c("iso3c", "age_group", "date"))
 }
 
-get_nested_data_by_time_age <- function(dd_age, fun_name) {
-  fun <- get(fun_name)
-  dd_age |>
-    mutate(!!fun_name := fun(date), .after = date) |>
-    nest(data = !c("iso", "age_group")) |>
-    mutate(data = lapply(data, aggregate_data, fun_name)) |>
-    unnest(cols = c(data)) |>
-    arrange(.data$iso3c, date, .data$age_group) |>
-    distinct(iso3c, date, age_group, .keep_all = TRUE) |>
-    nest(data = !c("iso", "age_group"))
+summarize_data_by_time <- function(df, type) {
+  fun <- get(type)
+  df |>
+    mutate(!!type := fun(date), .after = date) |>
+    group_by(.data$iso3c, .data$age_group) |>
+    group_modify(~ aggregate_data(.x, type), .keep = TRUE) |>
+    ungroup()
 }
 
 fill_gaps_na <- function(df) {
@@ -348,4 +328,127 @@ save_info <- function(df) {
     }
   }
   save_csv(result, "mortality/world_meta")
+}
+
+expand_daily <- function(df) {
+  cols <- c("deaths", "cmr")
+  yearly <- df |>
+    filter(.data$type == 1) |>
+    get_daily_from_yearly(cols)
+  monthly <- df |>
+    filter(.data$type == 2) |>
+    get_daily_from_monthly(cols)
+  weekly <- df |>
+    filter(.data$type == 3) |>
+    get_daily_from_weekly(cols)
+
+  rbind(yearly, monthly, weekly)
+}
+
+append_dataset <- function(
+    weekly,
+    monthly,
+    quarterly,
+    yearly,
+    by_fluseason,
+    by_midyear,
+    ag) {
+  postfix <- ifelse(ag == "all", "", paste0("_", ag))
+
+  print('Calculating "Weekly" dataset')
+  append_csv(
+    df = weekly |>
+      calculate_baseline_excess("weekly") |>
+      select(-"age_group"),
+    name = paste0("mortality/world_weekly", postfix)
+  )
+
+  print('Calculating "Weekly 104W SMA" dataset')
+  weekly104wsma <- weekly |>
+    calc_sma(104) |>
+    calculate_baseline_excess("weekly_104w_sma") |>
+    select(-all_of("age_group")) |>
+    filter(!is.na(.data$deaths))
+  append_csv(
+    df = weekly104wsma,
+    name = paste0("mortality/world_weekly_104w_sma", postfix)
+  )
+
+  print('Calculating "Weekly 52W SMA" dataset')
+  weekly52wsma <- weekly |>
+    calc_sma(52) |>
+    calculate_baseline_excess("weekly_52w_sma") |>
+    select(-all_of("age_group")) |>
+    filter(!is.na(.data$deaths))
+  append_csv(
+    df = weekly52wsma,
+    name = paste0("mortality/world_weekly_52w_sma", postfix)
+  )
+
+  print('Calculating "Weekly 26W SMA" dataset')
+  weekly26wsma <- weekly |>
+    calc_sma(26) |>
+    calculate_baseline_excess("weekly_26w_sma") |>
+    select(-all_of("age_group")) |>
+    filter(!is.na(.data$deaths))
+  append_csv(
+    df = weekly26wsma,
+    name = paste0("mortality/world_weekly_26w_sma", postfix)
+  )
+
+  print('Calculating "Weekly 13W SMA" dataset')
+  weekly13wsma <- weekly |>
+    calc_sma(14) |>
+    calculate_baseline_excess("weekly_14w_sma") |>
+    select(-all_of("age_group")) |>
+    filter(!is.na(.data$deaths))
+  append_csv(
+    df = weekly13wsma,
+    name = paste0("mortality/world_weekly_13w_sma", postfix)
+  )
+
+  print('Calculating "Monthly" dataset')
+  monthly <- monthly |>
+    calculate_baseline_excess("monthly") |>
+    select(-all_of("age_group"))
+  append_csv(
+    df = monthly,
+    name = paste0("mortality/world_monthly", postfix)
+  )
+
+  print('Calculating "Quarterly" dataset')
+  quarterly <- quarterly |>
+    calculate_baseline_excess("quarterly") |>
+    select(-all_of("age_group"))
+  append_csv(
+    df = quarterly,
+    name = paste0("mortality/world_quarterly", postfix)
+  )
+
+  print('Calculating "Yearly" dataset')
+  yearly <- yearly |>
+    calculate_baseline_excess("yearly") |>
+    select(-all_of("age_group"))
+  append_csv(
+    df = yearly,
+    name = paste0("mortality/world_yearly", postfix)
+  )
+
+  print('Calculating "Fluseason" dataset')
+  by_fluseason <- by_fluseason |>
+    calculate_baseline_excess("fluseason") |>
+    select(-all_of("age_group"))
+  append_csv(
+    df = by_fluseason,
+    name = paste0("mortality/world_fluseason", postfix)
+  )
+
+  print('Calculating "Midyear" dataset')
+  by_midyear <- by_midyear |>
+    calculate_baseline_excess("midyear") |>
+    select(-all_of("age_group"))
+  append_csv(
+    df = by_midyear,
+    name = paste0("mortality/world_midyear", postfix)
+  )
 }

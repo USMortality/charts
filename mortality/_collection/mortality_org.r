@@ -1,14 +1,14 @@
 source("lib/common.r")
 
 # Load Data
-deaths <- as_tibble(read.csv("./data/mortality_org.csv", skip = 2))
+deaths_raw <- as_tibble(read.csv("./data/mortality_org.csv", skip = 2))
 
-deaths$CountryCode[deaths$CountryCode == "DEUTNP"] <- "DEU"
-deaths$CountryCode[deaths$CountryCode == "FRATNP"] <- "FRA"
-deaths$CountryCode[deaths$CountryCode == "NZL_NP"] <- "NZL"
-deaths$CountryCode[deaths$CountryCode == "GBR_NP"] <- "GBR"
+deaths_raw$CountryCode[deaths_raw$CountryCode == "DEUTNP"] <- "DEU"
+deaths_raw$CountryCode[deaths_raw$CountryCode == "FRATNP"] <- "FRA"
+deaths_raw$CountryCode[deaths_raw$CountryCode == "NZL_NP"] <- "NZL"
+deaths_raw$CountryCode[deaths_raw$CountryCode == "GBR_NP"] <- "GBR"
 
-df <- deaths |>
+df <- deaths_raw |>
   filter(.data$Sex == "b") |>
   mutate(
     P0_14 = .data$D0_14 / .data$R0_14 * 52,
@@ -69,10 +69,12 @@ mortality_org <- df |>
     names_to = "age_group",
     values_to = "deaths"
   ) |>
-  get_daily_from_weekly(c("deaths")) |>
   mutate(type = 3) |>
   inner_join(population, by = c("iso3c", "date", "age_group")) |>
   arrange(iso3c, date, age_group, type) |>
   distinct(iso3c, date, age_group, type, .keep_all = TRUE)
 mortality_org$source <- "mortality_org"
 mortality_org$n_age_groups <- 5
+
+rm(df)
+rm(population)

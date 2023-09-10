@@ -4,6 +4,8 @@ de_states <- as_tibble(read.csv("./data_static/deu_states_iso3c.csv"))
 df <- read_remote("deaths/deu/deaths.csv") |>
   inner_join(de_states, by = "jurisdiction")
 
+rm(de_states)
+
 # All Ages
 df_all <- df |>
   filter(age_group == "Insgesamt") |>
@@ -11,9 +13,7 @@ df_all <- df |>
     date = date_parse(paste(year, week, 1), format = "%G %V %u"),
     age_group = "all"
   ) |>
-  get_daily_from_weekly(c("deaths")) |>
-  select(iso3c, date, age_group, deaths) |>
-  arrange(iso3c, date)
+  select(iso3c, date, age_group, deaths)
 df_all$n_age_groups <- 1
 
 # By age group, national
@@ -41,8 +41,7 @@ df_age_d <- df |>
   ) |>
   group_by(iso3c, date, age_group) |>
   summarise(deaths = sum(deaths)) |>
-  ungroup() |>
-  get_daily_from_weekly(c("deaths"))
+  ungroup()
 df_age_d$n_age_groups <- 6
 
 # By age group, states
@@ -59,9 +58,10 @@ df_age_states <- df |>
   ) |>
   group_by(iso3c, date, age_group) |>
   summarise(deaths = sum(deaths)) |>
-  ungroup() |>
-  get_daily_from_weekly(c("deaths"))
+  ungroup()
 df_age_states$n_age_groups <- 4
+
+rm(df)
 
 # Population
 source("population/deu/deu.r")
@@ -79,6 +79,7 @@ population <- de_population |>
   ) |>
   unnest(cols = "data") |>
   select(iso3c, date, age_group, population)
+rm(de_population)
 
 deu_mortality_states <- rbind(df_all, df_age_d, df_age_states) |>
   inner_join(population, by = c("iso3c", "date", "age_group")) |>
@@ -87,3 +88,5 @@ deu_mortality_states <- rbind(df_all, df_age_d, df_age_states) |>
 
 deu_mortality_states$type <- 3
 deu_mortality_states$source <- "destatis"
+
+rm(df_all, df_age_d, df_age_states, population)
