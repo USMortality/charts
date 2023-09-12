@@ -81,8 +81,8 @@ for (code in unique(c("ALB", data$iso3c))) {
     expand_daily()
   dd_all <- dd |>
     filter(age_group == "all") |>
-    arrange(iso3c, date, type) |>
-    filter(row_number() == n(), .by = c(iso3c, date))
+    filter(row_number() == n(), .by = c(iso3c, date)) |>
+    arrange(date, type)
   dd_age <- dd |> filter(age_group != "all")
   dd_asmr <- dd_age
   if (nrow(dd_age)) {
@@ -92,7 +92,8 @@ for (code in unique(c("ALB", data$iso3c))) {
       ungroup() |>
       filter(type == max(type), .by = c(iso3c, date)) |>
       filter(n_age_groups == max(n_age_groups), .by = c(iso3c, date)) |>
-      distinct(iso3c, date, .keep_all = TRUE)
+      distinct(iso3c, date, .keep_all = TRUE) |>
+      arrange(date, type)
     dd_asmr$age_group <- "all"
   }
 

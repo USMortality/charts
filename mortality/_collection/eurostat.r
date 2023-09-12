@@ -157,6 +157,7 @@ rm(population_all, population_age)
 
 eurostat <- deaths |>
     inner_join(population_daily, by = c("iso3c", "age_group", "date")) |>
+    filter(nchar(iso3c) == 2) |>
     mutate(iso3c = countrycode(
         iso3c,
         origin = "iso2c",
