@@ -124,7 +124,8 @@ calculate_excess <- function(data, col_name) {
     "{col_name}_excess_lower" :=
       !!col - !!sym(paste0(col_name, "_baseline_lower")),
     "{col_name}_excess_upper" :=
-      !!col - !!sym(paste0(col_name, "_baseline_upper"))
+      !!col - !!sym(paste0(col_name, "_baseline_upper")),
+    .after = all_of(paste0(col_name, "_baseline_upper"))
   )
 }
 
@@ -182,12 +183,15 @@ calculate_baseline <- function(data, col_name, chart_type) {
 
   # No rows, return
   if (nrow(tidyr::drop_na(df |> select(!!col))) < bl_size) {
-    data[paste0(col, "_baseline")] <- NA
-    data[paste0(col, "_baseline_lower")] <- NA
-    data[paste0(col, "_baseline_upper")] <- NA
-    data[paste0(col, "_excess")] <- NA
-    data[paste0(col, "_excess_lower")] <- NA
-    data[paste0(col, "_excess_upper")] <- NA
+    data <- data |> mutate(
+      "{col_name}_baseline" := NA,
+      "{col_name}_baseline_lower" := NA,
+      "{col_name}_baseline_upper" := NA,
+      "{col_name}_excess" := NA,
+      "{col_name}_excess_lower" := NA,
+      "{col_name}_excess_upper" := NA,
+      .after = all_of(col)
+    )
 
     return(data)
   } else {
@@ -202,19 +206,27 @@ calculate_baseline <- function(data, col_name, chart_type) {
       forecast(new_data = bl_data)
     bl_hl <- fabletools::hilo(bl, 95) |> unpack_hilo(cols = `95%`)
 
-    result <- data.frame(date = c(bl$date, fc$date))
-    result[paste0(col, "_baseline")] <- c(bl$.mean, fc$.mean)
-    result[paste0(col, "_baseline_lower")] <- c(
-      bl_hl$`95%_lower`,
-      fc_hl$`95%_lower`
-    )
-    result[paste0(col, "_baseline_upper")] <- c(
-      bl_hl$`95%_upper`,
-      fc_hl$`95%_upper`
+    col <- sym(col_name)
+    result <- data.frame(date = c(bl$date, fc$date)) |> mutate(
+      "{col_name}_baseline" := c(bl$.mean, fc$.mean),
+      "{col_name}_baseline_lower" := c(
+        bl_hl$`95%_lower`,
+        fc_hl$`95%_lower`
+      ),
+      "{col_name}_baseline_upper" := c(
+        bl_hl$`95%_upper`,
+        fc_hl$`95%_upper`
+      )
     )
 
     data |>
       left_join(result, by = "date") |>
+      relocate(
+        paste0(col_name, "_baseline"),
+        paste0(col_name, "_baseline_lower"),
+        paste0(col_name, "_baseline_upper"),
+        .after = all_of(col_name)
+      ) |>
       calculate_excess(col_name) |>
       round_x(col_name, ifelse(col_name == "deaths", 0, 2))
   }
@@ -250,7 +262,6 @@ calculate_baseline_excess <- function(data, chart_type) {
     ts <- data |> as_tsibble(index = date)
   }
 
-  # print(paste("calculate_baseline_excess:", unique(ts$iso3c)))
   result <- ts |>
     calculate_baseline(col_name = "deaths", chart_type) |>
     calculate_baseline(col_name = "cmr", chart_type)
@@ -359,7 +370,7 @@ append_dataset <- function(
   append_csv(
     df = weekly |>
       calculate_baseline_excess("weekly") |>
-      select(-"age_group"),
+      select(-all_of("age_group")),
     name = paste0("mortality/world_weekly", postfix)
   )
 
