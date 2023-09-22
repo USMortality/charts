@@ -81,9 +81,11 @@ for (code in unique(c("ALB", data$iso3c))) {
     expand_daily()
   dd_all <- dd |>
     filter(age_group == "all") |>
-    filter(row_number() == n(), .by = c(iso3c, date)) |>
-    arrange(date, type)
-  dd_age <- dd |> filter(age_group != "all")
+    arrange(date, type) |>
+    distinct(iso3c, date, .keep_all = TRUE)
+  dd_age <- dd |>
+    filter(age_group != "all") |>
+    arrange(date, type, age_group)
   dd_asmr <- dd_age
   if (nrow(dd_age)) {
     dd_asmr <- dd_age |>
@@ -110,7 +112,9 @@ for (code in unique(c("ALB", data$iso3c))) {
         ag
       )
     } else {
-      dd_ag_f <- dd_age |> filter(age_group == ag)
+      dd_ag_f <- dd_age |>
+        filter(age_group == ag) |>
+        distinct(iso3c, date, age_group, .keep_all = TRUE)
       append_dataset(
         weekly = summarize_data_by_time(dd_ag_f, "yearweek"),
         monthly = summarize_data_by_time(dd_ag_f, "yearmonth"),

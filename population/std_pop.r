@@ -153,7 +153,14 @@ get_country2020_bins <- function(df) {
       summarise(population = mean(population))
   }
 
-  if (nrow(data1) == 0) stop("No ref data: ", df)
+  if (nrow(data1) == 0) {
+    stop(
+      "No ref data: ",
+      unique(df$iso3c),
+      unique(df$age_group),
+      unique(df$date)
+    )
+  }
   data <- data1 |>
     select("age_group", "population") |>
     mutate(
