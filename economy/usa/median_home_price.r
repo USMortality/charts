@@ -38,6 +38,14 @@ chart <-
     color = "black",
     linetype = "dashed"
   ) +
-  twitter_theme()
+  twitter_theme() +
+  ggrepel::geom_label_repel(
+    data = tail(data, n = 1) |> mutate(str = paste0(
+      date, ": ", as_usd(price)
+    )),
+    aes(label = str),
+    nudge_y = 0.1,
+    segment.color = "grey50",
+  )
 
 save_chart(chart, "economy/usa/median_home_price")

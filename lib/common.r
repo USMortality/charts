@@ -450,6 +450,10 @@ last_pct <- function(df) {
   sprintf("%0.1f%%", tail(df, n = 1) * 100)
 }
 
+as_usd <- function(x) {
+  scales::dollar(x)
+}
+
 first_usd <- function(df) {
   scales::dollar(head(df, n = 1))
 }

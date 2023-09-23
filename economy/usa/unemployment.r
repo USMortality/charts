@@ -23,9 +23,10 @@ df <- as_tibble(data$Results$series$data[[1]]) |>
 
 save_csv(df, "economy/usa/unemployment")
 
+ts <- as_tsibble(df, index = yearmonth)
 # Make Chart
 chart <-
-  ggplot(as_tsibble(df, index = yearmonth), aes(x = yearmonth, y = value_p)) +
+  ggplot(ts, aes(x = yearmonth, y = value_p)) +
   labs(
     title = "Unemployment Rate [USA]",
     subtitle = "Source: bls.gov",
@@ -35,7 +36,15 @@ chart <-
   geom_line(color = "#5383EC", linewidth = 1.5) +
   geom_hline(yintercept = 0) +
   twitter_theme() +
-  watermark(paste(max(df$yearmonth), first_pct(df$value_p))) +
-  scale_y_continuous(labels = scales::percent)
-
+  watermark() +
+  scale_y_continuous(labels = scales::percent) +
+  ggrepel::geom_label_repel(
+    data = tail(ts, n = 1) |> mutate(str = paste0(
+      yearmonth, ": ",
+      sprintf("%0.1f%%", value_p * 100)
+    )),
+    aes(label = str),
+    nudge_y = 0.1,
+    segment.color = "grey50",
+  )
 save_chart(chart, "economy/usa/unemployment")

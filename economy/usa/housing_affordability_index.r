@@ -1,4 +1,5 @@
 source("lib/common.r")
+options(warn = 1)
 
 # 30-Year Fixed Rate Mortgage Average in the United States (MORTGAGE30US)
 mortgage_rate <- read.csv(
@@ -33,7 +34,7 @@ chart <-
   ) +
   geom_line(color = "#5383EC", linewidth = 1.5) +
   twitter_theme() +
-  watermark(paste(max(mortgage_rate$date), last_pct(mortgage_rate$rate))) +
+  watermark() +
   expand_limits(x = 0, y = 0) +
   scale_y_continuous(
     labels = scales::percent_format()
@@ -44,7 +45,15 @@ chart <-
     color = "black",
     linetype = "dashed"
   ) +
-  scale_x_yearweek(date_breaks = "5 year", date_labels = "%Y")
+  scale_x_yearweek(date_breaks = "5 year", date_labels = "%Y") +
+  ggrepel::geom_label_repel(
+    data = tail(mortgage_rate, n = 1) |> mutate(str = paste0(
+      date, ": ", sprintf("%0.1f%%", rate * 100)
+    )),
+    aes(label = str),
+    nudge_y = 0.1,
+    segment.color = "grey50",
+  )
 
 save_chart(chart, "economy/usa/30y_fixed_mortgage", upload = TRUE)
 
@@ -81,10 +90,7 @@ chart <-
   ) +
   geom_line(color = "#5383EC", linewidth = 1.5) +
   twitter_theme() +
-  watermark(paste(
-    max(median_home_price$date),
-    last_usd(median_home_price$price)
-  )) +
+  watermark() +
   scale_y_continuous(
     trans = "log2",
     labels = scales::dollar_format()
@@ -95,7 +101,15 @@ chart <-
     color = "black",
     linetype = "dashed"
   ) +
-  scale_x_yearweek(date_breaks = "5 year", date_labels = "%Y")
+  scale_x_yearweek(date_breaks = "5 year", date_labels = "%Y") +
+  ggrepel::geom_label_repel(
+    data = tail(median_home_price, n = 1) |> mutate(str = paste0(
+      date, ": ", as_usd(price)
+    )),
+    aes(label = str),
+    nudge_y = 0.1,
+    segment.color = "grey50",
+  )
 
 save_chart(chart, "economy/usa/median_home_price", upload = TRUE)
 
@@ -130,7 +144,7 @@ chart <-
   ) +
   geom_line(color = "#5383EC", linewidth = 1.5) +
   twitter_theme() +
-  watermark(paste(max(ts$date), last_usd(ts$income))) +
+  watermark() +
   scale_y_continuous(
     trans = "log2",
     labels = scales::dollar_format()
@@ -141,7 +155,15 @@ chart <-
     color = "black",
     linetype = "dashed"
   ) +
-  scale_x_continuous(breaks = seq(min(ts$date), max(ts$date), by = 6))
+  scale_x_continuous(breaks = seq(min(ts$date), max(ts$date), by = 6)) +
+  ggrepel::geom_label_repel(
+    data = tail(ts, n = 1) |> mutate(str = paste0(
+      date, ": ", as_usd(income)
+    )),
+    aes(label = str),
+    nudge_y = 0.1,
+    segment.color = "grey50",
+  )
 
 save_chart(chart, "economy/usa/median_family_income", upload = TRUE)
 
@@ -196,13 +218,21 @@ chart <-
   ) +
   geom_line(color = "#5383EC", linewidth = 1.5) +
   twitter_theme() +
-  watermark(paste(max(ts$date), last_pct(ts$a_index))) +
+  watermark() +
   scale_y_continuous(labels = scales::percent, limits = c(0.25, 1.75)) +
-  scale_x_yearweek(date_breaks = "5 year", date_labels = "%Y")
+  scale_x_yearweek(date_breaks = "5 year", date_labels = "%Y") +
+  ggrepel::geom_label_repel(
+    data = tail(ts, n = 1) |> mutate(str = paste0(
+      date, ": ", sprintf("%0.1f%%", a_index * 100)
+    )),
+    aes(label = str),
+    nudge_y = 0.1,
+    segment.color = "grey50",
+  )
 
 save_chart(chart, "economy/usa/housing_affordability_index", upload = TRUE)
 
-rent <- read.csv(
+rent_raw <- read.csv(
   paste0(
     "https://fred.stlouisfed.org/graph/fredgraph.csv?bgcolor=%23e1e9f0&chart_type=line&drp=0&fo=open%20sans&graph_bgcolor=%23ffffff&height=450&mode=fred&recession_bars=on&txtcolor=%23444444&ts=12&tts=12&width=1138&nt=0&thu=0&trc=0&show_legend=yes&show_axis_titles=yes&show_tooltip=yes&id=CUUR0000SEHA&scale=left&cosd=1914-12-01&coed=",
     Sys.Date(),
@@ -214,7 +244,7 @@ rent <- read.csv(
   )
 )
 
-ts <- rent |>
+ts <- rent_raw |>
   setNames(c("date", "rent")) |>
   mutate(date = as.Date(date)) |>
   as_tsibble(index = date) |>
@@ -237,7 +267,7 @@ chart <-
   ) +
   geom_line(color = "#5383EC", linewidth = 1.5) +
   twitter_theme() +
-  watermark(paste(max(ts$date), last_pct(ts$rent))) +
+  watermark() +
   scale_y_continuous(
     trans = "log2"
   ) +
@@ -247,6 +277,14 @@ chart <-
     color = "black",
     linetype = "dashed"
   ) +
-  scale_x_yearweek(date_breaks = "10 year", date_labels = "%Y")
+  scale_x_yearweek(date_breaks = "10 year", date_labels = "%Y") +
+  ggrepel::geom_label_repel(
+    data = tail(ts, n = 1) |> mutate(str = paste0(
+      date, ": ", round(rent)
+    )),
+    aes(label = str),
+    nudge_y = 0.1,
+    segment.color = "grey50",
+  )
 
 save_chart(chart, "economy/usa/rent_index", upload = TRUE)
