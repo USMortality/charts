@@ -56,7 +56,7 @@ data <- rbind(
   eurostat |> filter(iso3c != "SWE"),
   world_mortality,
   mortality_org
-) |> arrange(iso3c, type, source)
+) |> arrange(iso3c, desc(type), source)
 
 rm(
   deu_mortality_states,
@@ -81,11 +81,11 @@ for (code in unique(c("ALB", data$iso3c))) {
     expand_daily()
   dd_all <- dd |>
     filter(age_group == "all") |>
-    arrange(date, type) |>
+    arrange(date, desc(type)) |>
     distinct(iso3c, date, .keep_all = TRUE)
   dd_age <- dd |>
     filter(age_group != "all") |>
-    arrange(date, type, age_group)
+    arrange(date, desc(type), age_group)
   dd_asmr <- dd_age
   if (nrow(dd_age)) {
     dd_asmr <- dd_age |>

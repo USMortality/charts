@@ -366,7 +366,6 @@ append_dataset <- function(
     ag) {
   postfix <- ifelse(ag == "all", "", paste0("_", ag))
 
-  print('Calculating "Weekly" dataset')
   append_csv(
     df = weekly |>
       calculate_baseline_excess("weekly") |>
@@ -374,7 +373,6 @@ append_dataset <- function(
     name = paste0("mortality/world_weekly", postfix)
   )
 
-  print('Calculating "Weekly 104W SMA" dataset')
   weekly104wsma <- weekly |>
     calc_sma(104) |>
     calculate_baseline_excess("weekly_104w_sma") |>
@@ -385,7 +383,6 @@ append_dataset <- function(
     name = paste0("mortality/world_weekly_104w_sma", postfix)
   )
 
-  print('Calculating "Weekly 52W SMA" dataset')
   weekly52wsma <- weekly |>
     calc_sma(52) |>
     calculate_baseline_excess("weekly_52w_sma") |>
@@ -396,7 +393,6 @@ append_dataset <- function(
     name = paste0("mortality/world_weekly_52w_sma", postfix)
   )
 
-  print('Calculating "Weekly 26W SMA" dataset')
   weekly26wsma <- weekly |>
     calc_sma(26) |>
     calculate_baseline_excess("weekly_26w_sma") |>
@@ -407,7 +403,6 @@ append_dataset <- function(
     name = paste0("mortality/world_weekly_26w_sma", postfix)
   )
 
-  print('Calculating "Weekly 13W SMA" dataset')
   weekly13wsma <- weekly |>
     calc_sma(14) |>
     calculate_baseline_excess("weekly_14w_sma") |>
@@ -418,7 +413,6 @@ append_dataset <- function(
     name = paste0("mortality/world_weekly_13w_sma", postfix)
   )
 
-  print('Calculating "Monthly" dataset')
   monthly <- monthly |>
     calculate_baseline_excess("monthly") |>
     select(-all_of("age_group"))
@@ -427,7 +421,6 @@ append_dataset <- function(
     name = paste0("mortality/world_monthly", postfix)
   )
 
-  print('Calculating "Quarterly" dataset')
   quarterly <- quarterly |>
     calculate_baseline_excess("quarterly") |>
     select(-all_of("age_group"))
@@ -436,7 +429,6 @@ append_dataset <- function(
     name = paste0("mortality/world_quarterly", postfix)
   )
 
-  print('Calculating "Yearly" dataset')
   yearly <- yearly |>
     calculate_baseline_excess("yearly") |>
     select(-all_of("age_group"))
@@ -445,7 +437,6 @@ append_dataset <- function(
     name = paste0("mortality/world_yearly", postfix)
   )
 
-  print('Calculating "Fluseason" dataset')
   by_fluseason <- by_fluseason |>
     calculate_baseline_excess("fluseason") |>
     select(-all_of("age_group"))
@@ -454,7 +445,6 @@ append_dataset <- function(
     name = paste0("mortality/world_fluseason", postfix)
   )
 
-  print('Calculating "Midyear" dataset')
   by_midyear <- by_midyear |>
     calculate_baseline_excess("midyear") |>
     select(-all_of("age_group"))
