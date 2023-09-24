@@ -19,6 +19,12 @@ usa_states <- as_tibble(read.csv("./data_static/usa_states_iso3c.csv")) |>
     paste0("USA - ", jurisdiction)
   ))
 
-iso3c_jurisdiction <- rbind(de_states, usa_states, country_codes) |>
+uk_states <- rbind(
+  data.frame(iso3c = "GBRTENW", jurisdiction = "England & Wales"),
+  data.frame(iso3c = "GBR_NIR", jurisdiction = "Northern Ireland"),
+  data.frame(iso3c = "GBR_SCO", jurisdiction = "Scotland")
+)
+
+iso3c_jurisdiction <- rbind(de_states, usa_states, uk_states, country_codes) |>
   distinct(iso3c, .keep_all = TRUE) |>
   arrange(iso3c)
