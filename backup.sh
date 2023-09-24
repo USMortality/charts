@@ -1,6 +1,7 @@
 #!/bin/sh
 
 cd backup
+rm -rf *
 wget https://s3.mortality.watch/data/mortality/world_fluseason.csv
 wget https://s3.mortality.watch/data/mortality/world_fluseason_0-14.csv
 wget https://s3.mortality.watch/data/mortality/world_fluseason_0-24.csv
