@@ -473,3 +473,16 @@ as_integer <- function(num) {
     NA
   }
 }
+
+aggregate_80_plus <- function(df) {
+  df |>
+    mutate(
+      age_group = case_when(
+        age_group %in% c("80-89", "90+") ~ "80+",
+        .default = age_group
+      )
+    ) |>
+    group_by(.data$iso3c, .data$date, .data$age_group) |>
+    summarise(deaths = sum(.data$deaths)) |>
+    ungroup()
+}

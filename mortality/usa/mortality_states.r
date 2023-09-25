@@ -37,19 +37,6 @@ distinct <- dplyr::distinct
 complete <- tidyr::complete
 case_when <- dplyr::case_when
 
-aggregate_80_plus <- function(df) {
-  df |>
-    mutate(
-      age_group = case_when(
-        age_group %in% c("80-89", "90+") ~ "80+",
-        .default = age_group
-      )
-    ) |>
-    group_by(.data$iso3c, .data$date, .data$age_group) |>
-    summarise(deaths = sum(.data$deaths)) |>
-    ungroup()
-}
-
 # Weekly 2017+
 wd_usa <- read_remote("deaths/usa/age_weekly_2015-n.csv") |>
   filter(year >= 2017) |> # Totals are only available from 2017.
