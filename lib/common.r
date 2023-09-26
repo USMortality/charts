@@ -462,6 +462,18 @@ last_usd <- function(df) {
   scales::dollar(tail(df, n = 1))
 }
 
+is_double <- function(num) {
+  grepl("^[0-9]+.[0-9]+$", num)
+}
+
+as_double <- function(num) {
+  if (is_double(num)) {
+    as.double(num)
+  } else {
+    NA
+  }
+}
+
 is_integer <- function(num) {
   grepl("^[0-9]+$", num)
 }

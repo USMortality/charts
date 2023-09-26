@@ -312,7 +312,7 @@ fill_gaps_na <- function(df) {
     fill(source, .direction = "down")
 }
 
-save_info <- function(df) {
+save_info <- function(df, upload) {
   result <- tibble()
   for (code in unique(df$iso3c)) {
     df_country <- df |> filter(.data$iso3c == code)
@@ -338,7 +338,7 @@ save_info <- function(df) {
       }
     }
   }
-  save_csv(result, "mortality/world_meta")
+  save_csv(result, "mortality/world_meta", upload)
 }
 
 expand_daily <- function(df) {

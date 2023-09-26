@@ -40,6 +40,7 @@ source("lib/common.r")
 source("lib/asmr.r")
 source("mortality/world_dataset_functions.r")
 
+source("mortality/_collection/un.r")
 source("mortality/_collection/mortality_org.r")
 source("mortality/_collection/world_mortality.r")
 source("mortality/_collection/eurostat.r")
@@ -55,7 +56,8 @@ data <- rbind(
   usa_mortality_states,
   eurostat |> filter(iso3c != "SWE"),
   world_mortality,
-  mortality_org
+  mortality_org,
+  un
 ) |> arrange(iso3c, desc(type), source)
 
 rm(
@@ -63,12 +65,16 @@ rm(
   usa_mortality_states,
   eurostat,
   world_mortality,
-  mortality_org
+  mortality_org,
+  un
 )
 
 # Country names are saved in meta data.
 source("mortality/world_iso.r")
-save_info(df = data |> inner_join(iso3c_jurisdiction, by = c("iso3c")))
+save_info(
+  df = data |> inner_join(iso3c_jurisdiction, by = c("iso3c")),
+  upload = FALSE
+)
 rm(iso3c_jurisdiction)
 
 # start with ALB, since it has ASMR for csv headers.
