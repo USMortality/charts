@@ -40,13 +40,12 @@ case_when <- dplyr::case_when
 forecast_len <- 3
 get_optimal_size <- function(df, type) {
   min <- Inf
-  optimal_size <- nrow(df)
+  optimal_size <- min(15, nrow(df))
   type <- sym(type)
-  if (nrow(na.omit(df)) < 3) {
-    return(optimal_size)
+  if (nrow(na.omit(df[type])) < 5 + forecast_len) {
+    return(NA)
   }
 
-  optimal_size <- nrow(df)
   for (size in 5:min(optimal_size - forecast_len, 15)) {
     acc <- df |>
       head(-forecast_len) |>
@@ -64,6 +63,16 @@ get_optimal_size <- function(df, type) {
   return(optimal_size)
 }
 
+filter_complete_latest <- function(df) {
+  gaps <- df |> scan_gaps()
+  if (nrow(gaps) == 0) {
+    return(df |> select(-iso3c))
+  }
+  df |>
+    filter(date > max(gaps)) |>
+    select(-iso3c)
+}
+
 get_baseline_size <- function(data) {
   result <- setNames(
     data.frame(matrix(ncol = 3, nrow = 0)),
@@ -75,12 +84,13 @@ get_baseline_size <- function(data) {
     for (iso in unique(data$iso3c)) {
       print(paste(iso, type))
       df <- data |>
-        filter(.data$iso3c == iso, date < 2020) |>
-        as_tsibble(index = date)
+        filter(.data$iso3c == iso, date < 2020, !is.na(!!sym(type))) |>
+        as_tsibble(index = date) |>
+        filter_complete_latest()
 
-      optimal_size <- ifelse(nrow(df) > 5,
+      optimal_size <- ifelse(nrow(na.omit(df[type])) > 5,
         get_optimal_size(df, type),
-        nrow(df)
+        NA
       )
 
       iso <- head(data |> filter(.data$iso3c == iso), 1)$iso3c
