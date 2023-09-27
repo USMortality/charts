@@ -157,12 +157,12 @@ get_baseline_length <- function(iso, ct, cn) {
   if (!ct %in% c("fluseason", "midyear")) ct <- "yearly"
   baseline <- baseline_size |>
     filter(.data$iso3c == iso & .data$chart_type == ct & .data$type == cn)
-  # Use at least 3 years baseline, if no ideal baseline size is available.
+  # Use at least five years baseline, if no ideal baseline size is available.
   if (nrow(baseline) == 0) {
-    return(3)
+    return(5)
   }
-  if (baseline$window < 3) {
-    return(3)
+  if (is.na(baseline$window)) {
+    return(5)
   } else {
     return(baseline$window)
   }
