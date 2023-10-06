@@ -204,17 +204,16 @@ calculate_baseline <- function(data, col_name, chart_type) {
     bl <- bl_data |>
       apply_model(col, chart_type) |>
       forecast(new_data = bl_data)
-    bl_hl <- fabletools::hilo(bl, 95) |> unpack_hilo(cols = `95%`)
 
     col <- sym(col_name)
     result <- data.frame(date = c(bl$date, fc$date)) |> mutate(
       "{col_name}_baseline" := c(bl$.mean, fc$.mean),
       "{col_name}_baseline_lower" := c(
-        bl_hl$`95%_lower`,
+        rep(NA, nrow(bl$.mean)),
         fc_hl$`95%_lower`
       ),
       "{col_name}_baseline_upper" := c(
-        bl_hl$`95%_upper`,
+        rep(NA, nrow(bl$.mean)),
         fc_hl$`95%_upper`
       )
     )
