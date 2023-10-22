@@ -1,125 +1,110 @@
 source("lib/common.r")
+options(warn = 1)
 
-# Define default functions
 select <- dplyr::select
-filter <- dplyr::filter
-mutate <- dplyr::mutate
-group_by <- dplyr::group_by
-ungroup <- dplyr::ungroup
-summarise <- dplyr::summarise
-inner_join <- dplyr::inner_join
-relocate <- dplyr::relocate
-year <- lubridate::year
-month <- lubridate::month
-week <- lubridate::week
-days <- lubridate::days
-days_in_month <- lubridate::days_in_month
-as_tibble <- tibble::as_tibble
-tibble <- tibble::tibble
-as_tsibble <- tsibble::as_tsibble
-str_replace <- stringr::str_replace
-uncount <- tidyr::uncount
-sym <- rlang::sym
-model <- fabletools::model
-date <- lubridate::date
-forecast <- fabletools::forecast
-select <- dplyr::select
-all_of <- dplyr::all_of
-nest <- tidyr::nest
-unnest <- tidyr::unnest
-.data <- dplyr::.data
-yearmonth <- tsibble::yearmonth
-yearweek <- tsibble::yearweek
-ggplot <- ggplot2::ggplot
-make_yearmonth <- tsibble::make_yearmonth
 arrange <- dplyr::arrange
 distinct <- dplyr::distinct
-complete <- tidyr::complete
+left_join <- dplyr::left_join
+mutate <- dplyr::mutate
+tibble <- tibble::tibble
+read_csv <- readr::read_csv
 
-us_states_iso3c <- as_tibble(read.csv("./data_static/usa_states_iso3c.csv"))
+last_complete_year <- 2022
 
-usa_10y <- read_remote("deaths/usa/monthly_10y.csv") |>
-  filter(iso3c == "USA") |>
-  group_by(iso3c, year, age_group) |>
-  summarise(deaths = sum(deaths)) |>
-  ungroup()
-usa_10y_complete <- read_remote("deaths/usa/monthly_10y_complete.csv") |>
-  filter(iso3c == "USA") |>
-  group_by(iso3c, year, age_group) |>
-  summarise(deaths = sum(deaths)) |>
-  ungroup()
-usa_5y <- read_remote("deaths/usa/monthly_5y.csv") |>
-  filter(iso3c == "USA") |>
-  group_by(iso3c, year, age_group) |>
-  summarise(deaths = sum(deaths)) |>
-  ungroup()
-usa_5y_complete <- read_remote("deaths/usa/monthly_5y_complete.csv") |>
-  filter(iso3c == "USA") |>
-  group_by(iso3c, year, age_group) |>
-  summarise(deaths = sum(deaths)) |>
-  ungroup()
+us_states_iso3c <- read_csv("./data_static/usa_states_iso3c.csv")
 
-data1 <- read.csv("../wonder_dl/out/yearly/us_states_1999_2020_all.csv")
-data2 <- read.csv("../wonder_dl/out/yearly/us_states_2021_n_all.csv")
+data1 <- read_csv("../wonder_dl/out/usa_year_all_1999_2020.csv")
+data2 <- read_csv("../wonder_dl/out/usa_year_all_2018_2021.csv")
+data3 <- read_csv("../wonder_dl/out/usa_year_all_2022_2023.csv")
+data4 <- read_csv("../wonder_dl/out/usa_state_year_all_1999_2020.csv")
+data5 <- read_csv("../wonder_dl/out/usa_state_year_all_2018_2021.csv")
+data6 <- read_csv("../wonder_dl/out/usa_state_year_all_2022_2023.csv")
 
 parse_data <- function(df, jurisdiction_column, age_group) {
-  df |>
-    select(!!jurisdiction_column, "Year.Code", "Deaths") |>
-    setNames(c("jurisdiction", "year", "deaths")) |>
-    dplyr::left_join(us_states_iso3c, by = "jurisdiction") |>
-    filter(!is.na(.data$iso3c), !is.na(year)) |>
-    select("iso3c", "year", "deaths") |>
-    mutate(age_group = gsub("_", "-", age_group), .after = year)
+  df <- df |> mutate(date = `Year Code`)
+  if (nchar(jurisdiction_column) == 0) {
+    df <- df |>
+      select("date", "Deaths") |>
+      setNames(c("date", "deaths"))
+    df$iso3c <- "USA"
+    df |>
+      filter(!is.na(date)) |>
+      select("iso3c", "date", "deaths") |>
+      mutate(age_group = gsub("_", "-", age_group), .after = date)
+  } else {
+    df |>
+      select(!!jurisdiction_column, "date", "Deaths") |>
+      setNames(c("jurisdiction", "date", "deaths")) |>
+      left_join(us_states_iso3c, by = "jurisdiction") |>
+      filter(!is.na(iso3c), !is.na(date)) |>
+      select("iso3c", "date", "deaths") |>
+      mutate(age_group = gsub("_", "-", age_group), .after = date)
+  }
 }
 
-totals <- rbind(
-  parse_data(
-    df = data1,
-    jurisdiction_column = "State",
-    age_group = "all"
-  ),
-  parse_data(
-    df = data2,
-    jurisdiction_column = "Residence.State",
-    age_group = "all"
-  )
+result_all <- rbind(
+  parse_data(data1, "", "all"),
+  parse_data(data2, "", "all"),
+  parse_data(data3, "", "all"),
+  parse_data(data4, "State", "all"),
+  parse_data(data5, "Residence State", "all"),
+  parse_data(data6, "Residence State", "all")
 ) |>
-  as_tibble() |>
-  arrange(iso3c, year) |>
-  distinct(iso3c, year, .keep_all = TRUE)
+  arrange(iso3c, date) |>
+  distinct(iso3c, date, .keep_all = TRUE) |>
+  filter(!is.na(deaths))
 
-process_age_groups <- function(age_groups) {
+stopifnot(nrow(result_all |> filter(is.na(deaths))) == 0)
+
+process_age_groups <- function(prefix, age_groups) {
   # 1999-2020
-  ag1 <- data.frame()
+  ag1 <- tibble()
   for (age_group in age_groups) {
-    data <- read.csv(paste0(
-      "../wonder_dl/out/yearly/us_states_1999_2020_",
+    data <- read_csv(paste0(
+      "../wonder_dl/out/usa", prefix, "_year_",
       age_group,
-      ".csv"
+      "_1999_2020.csv"
     ))
-    ag1 <- rbind(ag1, parse_data(data, "State", age_group))
+    if (nchar(prefix) == 0) {
+      ag1 <- rbind(ag1, parse_data(data, "", age_group))
+    } else {
+      ag1 <- rbind(ag1, parse_data(data, "State", age_group))
+    }
   }
 
-  # 2020+
-  ag2 <- data.frame()
+  # 2018-2021
+  ag2 <- tibble()
   for (age_group in age_groups) {
-    data <- read.csv(paste0(
-      "../wonder_dl/out/yearly/us_states_2021_n_",
+    data <- read_csv(paste0(
+      "../wonder_dl/out/usa", prefix, "_year_",
       age_group,
-      ".csv"
+      "_2018_2021.csv"
     ))
-    ag2 <- rbind(ag2, parse_data(data, "Residence.State", age_group))
+    if (nchar(prefix) == 0) {
+      ag2 <- rbind(ag2, parse_data(data, "", age_group))
+    } else {
+      ag2 <- rbind(ag2, parse_data(data, "Residence State", age_group))
+    }
   }
 
-  totals_ag <- rbind(ag1, ag2) |>
-    as_tibble() |>
-    arrange("iso3c", "year", "age_group") |>
-    distinct(.data$iso3c, .data$year, .data$age_group, .keep_all = TRUE)
+  # 2022+
+  ag3 <- tibble()
+  for (age_group in age_groups) {
+    data <- read_csv(paste0(
+      "../wonder_dl/out/usa", prefix, "_year_",
+      age_group,
+      "_2022_2023.csv"
+    ))
+    if (nchar(prefix) == 0) {
+      ag3 <- rbind(ag3, parse_data(data, "", age_group))
+    } else {
+      ag3 <- rbind(ag3, parse_data(data, "Residence State", age_group))
+    }
+  }
 
-  rbind(totals, totals_ag) |>
-    arrange("iso3c", "year", "age_group") |>
-    distinct(.data$iso3c, .data$year, .data$age_group, .keep_all = TRUE) |>
-    complete(iso3c, year, age_group)
+  rbind(ag1, ag2, ag3) |>
+    arrange(iso3c, date, age_group) |>
+    distinct(iso3c, date, age_group, .keep_all = TRUE)
 }
 
 # By 10y age group
@@ -136,15 +121,40 @@ age_groups <- c(
   "90_100",
   "NS"
 )
-result_10y <- process_age_groups(age_groups) |>
-  mutate(age_group = ifelse(age_group == "90-100", "90+", age_group))
+result_10y <- rbind(
+  process_age_groups(prefix = "", age_groups),
+  process_age_groups(prefix = "_state", age_groups)
+) |>
+  mutate(
+    age_group = ifelse(age_group == "90-100", "90+", age_group),
+    deaths = as.integer(ifelse(deaths == "Suppressed", NA, deaths))
+  ) |>
+  complete(iso3c, date, age_group)
 
-# Impute NA's
-result_10y_complete <- result_10y |>
-  filter(year <= 2022) |>
-  group_by(iso3c, year) |>
-  group_modify(~ impute_single_na(.x)) |>
+# year/10y must be already complete, except NS
+result_10y_completed <- result_10y |>
+  filter(date <= last_complete_year) |>
+  group_by(iso3c, date) |>
+  group_modify(
+    ~ complete_single_na(
+      .x,
+      df2 = result_all,
+      col = "deaths",
+      groups = colnames(.y)
+    ),
+    .keep = TRUE
+  ) |>
   ungroup()
+
+result_10y <- rbind(result_all, result_10y) |> arrange(iso3c, date, age_group)
+result_10y_completed <- rbind(
+  result_all |> mutate(comment = NA),
+  result_10y_completed
+) |>
+  arrange(iso3c, date, age_group)
+stopifnot(nrow(
+  result_10y_completed |> filter(date <= last_complete_year, is.na(deaths))
+) == 0)
 
 # By 5y age group
 age_groups <- c(
@@ -170,35 +180,74 @@ age_groups <- c(
   "95_100",
   "NS"
 )
-result_5y <- process_age_groups(age_groups) |>
-  mutate(age_group = ifelse(age_group == "95-100", "95+", age_group))
+result_5y <- rbind(
+  process_age_groups(prefix = "", age_groups),
+  process_age_groups(prefix = "_state", age_groups)
+) |>
+  mutate(
+    age_group = ifelse(age_group == "95-100", "95+", age_group),
+    deaths = as.integer(ifelse(deaths == "Suppressed", NA, deaths))
+  ) |>
+  complete(iso3c, date, age_group)
 
 # Use NS from 10y
-result_5y_complete <- rbind(
-  result_10y_complete |> filter(age_group == "NS"),
-  result_5y |> filter(age_group != "NS")
-) |> arrange(iso3c, year, age_group)
+result_5y_completed <- rbind(
+  result_10y_completed |> filter(age_group == "NS"),
+  result_5y |> filter(age_group != "NS") |> mutate(comment = NA)
+) |> arrange(iso3c, date, age_group)
 
-# Impute NA's
-result_5y_complete <- result_5y_complete |>
-  filter(year < max(result_5y_complete$year)) |>
-  group_by(iso3c, year) |>
-  group_modify(~ impute_single_na(.x)) |>
-  group_modify(~ impute_from_aggregate(
-    .x, result_10y_complete, "0-9", c("0-4", "5-9")
-  ), .keep = TRUE) |>
-  group_modify(~ impute_from_aggregate(
-    .x, result_10y_complete, "10-19", c("10-14", "15-19")
-  ), .keep = TRUE) |>
+# Complete NA's
+result_5y_completed <- result_5y_completed |>
+  filter(date <= last_complete_year) |>
+  group_by(iso3c, date) |>
+  group_modify(
+    ~ complete_single_na(
+      .x,
+      df2 = result_all,
+      col = "deaths",
+      groups = colnames(.y)
+    ),
+    .keep = TRUE
+  ) |>
+  group_modify(
+    ~ complete_from_aggregate(
+      df = .x,
+      df2 = result_10y_completed,
+      aggregate_group = "0-9",
+      target_groups = c("0-4", "5-9"),
+      groups = colnames(.y)
+    ),
+    .keep = TRUE
+  ) |>
+  group_modify(
+    ~ complete_from_aggregate(
+      df = .x,
+      df2 = result_10y_completed,
+      aggregate_group = "10-19",
+      target_groups = c("10-14", "15-19"),
+      groups = colnames(.y)
+    ),
+    .keep = TRUE
+  ) |>
   ungroup()
 
-save_csv(rbind(usa_10y, result_10y), "deaths/usa/yearly_10y")
+result_5y <- rbind(result_all, result_5y) |> arrange(iso3c, date, age_group)
+result_5y_completed <- rbind(
+  result_all |> mutate(comment = NA),
+  result_5y_completed
+) |>
+  arrange(iso3c, date, age_group)
+stopifnot(nrow(
+  result_5y_completed |> filter(date <= last_complete_year, is.na(deaths))
+) == 0)
+
+save_csv(result_10y, "deaths/usa/yearly_10y", upload = FALSE)
 save_csv(
-  rbind(usa_10y_complete, result_10y_complete),
-  "deaths/usa/yearly_10y_complete"
+  result_10y_completed,
+  "deaths/usa/yearly_10y_completed",
+  upload = FALSE
 )
-save_csv(rbind(usa_5y, result_5y), "deaths/usa/yearly_5y")
-save_csv(
-  rbind(usa_5y_complete, result_5y_complete),
-  "deaths/usa/yearly_5y_complete"
-)
+save_csv(result_5y, "deaths/usa/yearly_5y", upload = FALSE)
+save_csv(result_5y_completed, "deaths/usa/yearly_5y_completed", upload = FALSE)
+
+# source("mortality/usa/deaths_yearly.r")

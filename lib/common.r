@@ -1,6 +1,7 @@
 # group_by, "drop_last" by default
 options(dplyr.summarise.inform = FALSE)
 options(warn = 2)
+options(readr.show_col_types = FALSE)
 
 upload_files <- TRUE
 
@@ -396,52 +397,6 @@ print_info <- function(df) {
   }
 }
 
-impute_single_na <- function(df) {
-  # Count NAs
-  n <- sum(is.na(df$deaths))
-
-  # No need for imputation or too many.
-  if (n != 1) {
-    return(df)
-  }
-
-  # Find sum target
-  target <- df$deaths[df$age_group == "all"] -
-    sum(df$deaths[df$age_group != "all"], na.rm = TRUE)
-
-  df$deaths[is.na(df$deaths)] <- target
-  return(df)
-}
-
-impute_from_aggregate <- function(df1, df2, aggregate_group, groups) {
-  df <- df1 |> filter("age_group" %in% groups)
-  if (sum(is.na(df$deaths)) == 0) { # No NA
-    return(df1[(ncol(df1) - 1):ncol(df1)])
-  }
-
-  if (sum(is.na(df$deaths)) > 1) { # More than 1 NA
-    return(df1[(ncol(df1) - 1):ncol(df1)])
-  }
-
-  sum_groups <- sum(df$deaths, na.rm = TRUE)
-  sum_aggregate <- (df2 |> filter(
-    "iso3c" == unique(df1$iso3c),
-    "year" == unique(df1$year),
-    "month" == unique(df1$month),
-    "age_group" == aggregate_group
-  ))$deaths
-  target <- sum_aggregate - sum_groups
-  if (target > 9) {
-    stop(paste(
-      "imputed value is >9:", target,
-      unique(df1$iso3c), unique(df1$year), unique(df1$month)
-    ))
-  }
-
-  df1$deaths[df1$age_group %in% df$age_group & is.na(df1$deaths)] <- target
-  df1[(ncol(df1) - 1):ncol(df1)]
-}
-
 first_pct <- function(df) {
   sprintf("%0.1f%%", head(df, n = 1) * 100)
 }
@@ -497,4 +452,169 @@ aggregate_80_plus <- function(df) {
     group_by(.data$iso3c, .data$date, .data$age_group) |>
     summarise(deaths = sum(.data$deaths)) |>
     ungroup()
+}
+
+smart_round <- function(x) {
+  y <- floor(x)
+  indices <- tail(order(x - y), round(sum(x)) - sum(y))
+  y[indices] <- y[indices] + 1
+  as.integer(y)
+}
+
+complete_single_na <- function(df, df2, col, groups) {
+  # Debug
+  # print(paste(unique(df$iso3c), unique(df$year), unique(df$age_group)))
+
+  # No need for imputation or too many.
+  if (sum(is.na(df[[col]])) != 1) {
+    return(df |> select(-all_of(groups)))
+  }
+
+  # Filter the reference.
+  total <- df2
+  for (group in groups) {
+    total <- total |> filter(.data[[group]] == unique(df[[group]]))
+  }
+
+  # Find sum target.
+  if (nrow(total) == 0 || is.na(total[[col]])) {
+    return(df |> select(-all_of(groups)))
+  }
+  remainder <- total[[col]] - sum(df[[col]], na.rm = TRUE)
+
+  # Guard against wrong result.
+  if (remainder < 0 || remainder > 9) {
+    msg <- paste("completed value is out of valid range:", remainder)
+    for (group in groups) {
+      msg <- paste(msg, ", ", group, ": ", df[[group]])
+    }
+    stop(msg)
+  }
+
+  # Store completed result including comment.
+  if (!"comment" %in% colnames(df)) {
+    df$comment <- NA
+  }
+  new_comment <- paste0(col, "__completed_total")
+  df <- df |> mutate(comment = ifelse(is.na(!!sym(col)),
+    ifelse(is.na(comment),
+      new_comment,
+      paste(comment, new_comment, sep = ",")
+    ),
+    comment
+  ))
+  df[[col]][is.na(df[[col]])] <- remainder
+
+  return(df |> select(-all_of(groups)))
+}
+
+complete_from_aggregate <- function(
+    df, df2, aggregate_group, target_groups, groups) {
+  df_ag <- df |> filter(age_group %in% target_groups)
+  # No NA or more than 1 NA
+  if (sum(is.na(df_ag$deaths)) == 0 || sum(is.na(df_ag$deaths)) > 1) {
+    return(df |> select(-all_of(groups)))
+  }
+
+  # Debug
+  # print(paste(unique(df$iso3c), unique(df$date), unique(df$age_group)))
+
+  # Find sum target.
+  sum_groups <- sum(df_ag$deaths, na.rm = TRUE)
+  sum_aggregate <- (df2 |> filter(
+    iso3c == unique(df$iso3c),
+    date == unique(df$date),
+    age_group == aggregate_group
+  ))$deaths
+  if (is.na(sum_aggregate)) {
+    return(df |> select(-all_of(groups)))
+  }
+  target <- sum_aggregate - sum_groups
+
+  # Guard against wrong result.
+  if (target < 0 || target > 9) {
+    stop(paste(
+      "completed value is invalid:",
+      target, unique(df$iso3c), unique(df$date)
+    ))
+  }
+
+  # Store completed result including comment.
+  if (!"comment" %in% colnames(df)) {
+    df$comment <- NA
+  }
+  new_comment <- "deaths__completed_aggregate"
+  position <- df$age_group %in% df_ag$age_group & is.na(df$deaths)
+  old_comment <- df$comment[position]
+  df$comment[position] <- ifelse(is.na(old_comment),
+    new_comment,
+    paste(old_comment, new_comment, sep = ",")
+  )
+  df$deaths[position] <- target
+
+  return(df |> select(-all_of(groups)))
+}
+
+impute_weighted_sum <- function(df, df2, nom_col, denom_col, groups) {
+  # Debug
+  # print(paste(unique(df$year), unique(df$iso3c), unique(df$age_group)))
+
+  na_rows <- sum(is.na(df$deaths))
+  # No need for imputation.
+  if (na_rows == 0) {
+    return(df |> select(-all_of(groups)))
+  }
+
+  # Filter the reference.
+  total <- df2
+  for (group in groups) {
+    total <- total |> filter(.data[[group]] == unique(df[[group]]))
+  }
+
+  # Find sum target.
+  if (nrow(total) == 0 || is.na(total[[nom_col]])) {
+    return(df |> select(-all_of(groups)))
+  }
+  remainder <- total[[nom_col]] - sum(df[[nom_col]], na.rm = TRUE)
+
+  # Guard against wrong result.
+  if (remainder < 0 || remainder > na_rows * 9) {
+    msg <- paste("completed value is out of valid range:", remainder)
+    for (group in groups) {
+      msg <- paste(msg, ", ", group, ": ", df[[group]])
+    }
+    stop(msg)
+  }
+
+  # Spread remainder based on population
+  if (!"comment" %in% colnames(df)) {
+    df$comment <- NA
+  }
+  new_comment <- paste0(nom_col, "__imputed_weighted_sum")
+  df <- df |> mutate(comment = ifelse(is.na(!!sym(nom_col)),
+    ifelse(is.na(comment),
+      new_comment,
+      paste(comment, new_comment, sep = ",")
+    ),
+    comment
+  ))
+  total_denom <- ifelse(
+    is.na(denom_col),
+    NA,
+    sum(df[[denom_col]][is.na(df[[nom_col]])])
+  )
+  if (!is.na(total_denom) && total_denom > 0) {
+    df_est <- df |>
+      filter(is.na(.data[[nom_col]])) |>
+      mutate(deaths = remainder * .data[[denom_col]] / total_denom)
+  } else { # If denominator is zero, spread evenly.
+    df_est <- df |>
+      filter(is.na(.data[[nom_col]])) |>
+      mutate(deaths = remainder / na_rows)
+  }
+  # Round to full integer, maintaining sum
+  df_est[[nom_col]] <- smart_round(df_est[[nom_col]])
+
+  rbind(df |> filter(!is.na(.data[[nom_col]])), df_est) |>
+    select(-all_of(groups))
 }
