@@ -241,13 +241,13 @@ stopifnot(nrow(
   result_5y_completed |> filter(date <= last_complete_year, is.na(deaths))
 ) == 0)
 
-save_csv(result_10y, "deaths/usa/yearly_10y", upload = FALSE)
+save_csv(result_10y, "deaths/usa/yearly_10y", upload = TRUE)
 save_csv(
   result_10y_completed,
   "deaths/usa/yearly_10y_completed",
-  upload = FALSE
+  upload = TRUE
 )
-save_csv(result_5y, "deaths/usa/yearly_5y", upload = FALSE)
-save_csv(result_5y_completed, "deaths/usa/yearly_5y_completed", upload = FALSE)
+save_csv(result_5y, "deaths/usa/yearly_5y", upload = TRUE)
+save_csv(result_5y_completed, "deaths/usa/yearly_5y_completed", upload = TRUE)
 
 # source("mortality/usa/deaths_yearly.r")

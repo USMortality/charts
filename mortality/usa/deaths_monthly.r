@@ -352,37 +352,37 @@ stopifnot(nrow(
 save_csv(
   rbind(result_10y, result_all) |> arrange(iso3c, date, age_group),
   "deaths/usa/monthly_10y",
-  upload = FALSE
+  upload = TRUE
 )
 save_csv(
   rbind(result_10y_completed, result_all |> mutate(comment = NA)) |>
     arrange(iso3c, date, age_group),
   "deaths/usa/monthly_10y_completed",
-  upload = FALSE
+  upload = TRUE
 )
 save_csv(
   rbind(result_10y_imputed, result_all |> mutate(comment = NA)) |>
     arrange(iso3c, date, age_group),
   "deaths/usa/monthly_10y_imputed",
-  upload = FALSE
+  upload = TRUE
 )
 save_csv(
   rbind(result_5y, result_all |> mutate(comment = NA)) |>
     arrange(iso3c, date, age_group),
   "deaths/usa/monthly_5y",
-  upload = FALSE
+  upload = TRUE
 )
 save_csv(
   rbind(result_5y_completed, result_all |> mutate(comment = NA)) |>
     arrange(iso3c, date, age_group),
   "deaths/usa/monthly_5y_completed",
-  upload = FALSE
+  upload = TRUE
 )
 save_csv(
   rbind(result_5y_imputed, result_all |> mutate(comment = NA)) |>
     arrange(iso3c, date, age_group),
   "deaths/usa/monthly_5y_imputed",
-  upload = FALSE
+  upload = TRUE
 )
 
 # source("mortality/usa/deaths_monthly.r")
