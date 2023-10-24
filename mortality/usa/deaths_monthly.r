@@ -143,34 +143,39 @@ year_10y <- read_csv(
   col_types = "cicic"
 ) |>
   rename(year = date)
-result_10y_completed <-
-  result_10y |>
-  # Complete via state/date totals
-  group_by(iso3c, date) |>
-  group_modify(
-    ~ complete_single_na(
-      .x,
-      df2 = result_all,
-      col = "deaths",
-      groups = colnames(.y)
-    ),
-    .keep = TRUE
-  ) |>
-  ungroup() |>
-  # Complete via state/year/age_group totals
-  mutate(year = year(date)) |>
-  group_by(iso3c, year, age_group) |>
-  group_modify(
-    ~ complete_single_na(
-      .x,
-      df2 = year_10y,
-      col = "deaths",
-      groups = colnames(.y)
-    ),
-    .keep = TRUE
-  ) |>
-  ungroup() |>
-  select(-year)
+result_10y_completed <- repeat_until_stable(
+  df = result_10y,
+  col = "deaths",
+  fun = function(df) {
+    df |>
+      # Complete via state/date totals
+      group_by(iso3c, date) |>
+      group_modify(
+        ~ complete_single_na(
+          .x,
+          df2 = result_all,
+          col = "deaths",
+          groups = colnames(.y)
+        ),
+        .keep = TRUE
+      ) |>
+      ungroup() |>
+      # Complete via state/year/age_group totals
+      mutate(year = year(date)) |>
+      group_by(iso3c, year, age_group) |>
+      group_modify(
+        ~ complete_single_na(
+          .x,
+          df2 = year_10y,
+          col = "deaths",
+          groups = colnames(.y)
+        ),
+        .keep = TRUE
+      ) |>
+      ungroup() |>
+      select(-year)
+  }
+)
 
 # Impute rest via state/year/age_group totals
 result_10y_imputed <- result_10y_completed |>
@@ -243,34 +248,41 @@ year_5y <- read_csv(
   col_types = "cicic"
 ) |>
   rename(year = date)
-result_5y_completed <-
-  result_5y |>
-  # Complete via state/date totals
-  group_by(iso3c, date) |>
-  group_modify(
-    ~ complete_single_na(
-      .x,
-      df2 = result_all,
-      col = "deaths",
-      groups = colnames(.y)
-    ),
-    .keep = TRUE
-  ) |>
-  ungroup() |>
-  # Complete via state/year/age_group totals
-  mutate(year = year(date)) |>
-  group_by(iso3c, year, age_group) |>
-  group_modify(
-    ~ complete_single_na(
-      .x,
-      df2 = year_5y,
-      col = "deaths",
-      groups = colnames(.y)
-    ),
-    .keep = TRUE
-  ) |>
-  ungroup() |>
-  select(-year) |>
+result_5y_completed <- repeat_until_stable(
+  df = result_5y,
+  col = "deaths",
+  fun = function(df) {
+    df |>
+      # Complete via state/date totals
+      group_by(iso3c, date) |>
+      group_modify(
+        ~ complete_single_na(
+          .x,
+          df2 = result_all,
+          col = "deaths",
+          groups = colnames(.y)
+        ),
+        .keep = TRUE
+      ) |>
+      ungroup() |>
+      # Complete via state/year/age_group totals
+      mutate(year = year(date)) |>
+      group_by(iso3c, year, age_group) |>
+      group_modify(
+        ~ complete_single_na(
+          .x,
+          df2 = year_5y,
+          col = "deaths",
+          groups = colnames(.y)
+        ),
+        .keep = TRUE
+      ) |>
+      ungroup() |>
+      select(-year)
+  }
+)
+
+result_5y_completed <- result_5y_completed |>
   # Complete via 10y aggregate
   group_by(iso3c, date) |>
   group_modify(

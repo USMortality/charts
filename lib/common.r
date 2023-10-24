@@ -618,3 +618,14 @@ impute_weighted_sum <- function(df, df2, nom_col, denom_col, groups) {
   rbind(df |> filter(!is.na(.data[[nom_col]])), df_est) |>
     select(-all_of(groups))
 }
+
+repeat_until_stable <- function(df, col, fun) {
+  prev_na <- 0
+  while (TRUE) {
+    df <- df |> fun()
+    curr_na <- sum(is.na(df[[col]]))
+    if (curr_na == prev_na) break
+    prev_na <- curr_na
+  }
+  return(df)
+}
