@@ -557,7 +557,7 @@ complete_from_aggregate <- function(
 
 impute_weighted_sum <- function(df, df2, nom_col, denom_col, groups) {
   # Debug
-  # print(paste(unique(df$year), unique(df$iso3c), unique(df$age_group)))
+  # print(paste(unique(df$year), unique(df$fips_state), unique(df$age_group)))
 
   na_rows <- sum(is.na(df$deaths))
   # No need for imputation.
@@ -598,25 +598,53 @@ impute_weighted_sum <- function(df, df2, nom_col, denom_col, groups) {
     ),
     comment
   ))
-  total_denom <- ifelse(
-    is.na(denom_col),
-    NA,
-    sum(df[[denom_col]][is.na(df[[nom_col]])])
-  )
-  if (!is.na(total_denom) && total_denom > 0) {
-    df_est <- df |>
-      filter(is.na(.data[[nom_col]])) |>
-      mutate(deaths = remainder * .data[[denom_col]] / total_denom)
+  if (!is.na(denom_col) &&
+    sum(is.na(df[[denom_col]])) == 0 &&
+    sum(df[[denom_col]]) > 0
+  ) {
+    # If denominator is available, spread proportionally, only limited by
+    # <10 constraint.
+    df_est <- spread(
+      df2 = df |> filter(is.na(.data[[nom_col]])),
+      remainder,
+      nom_col,
+      denom_col
+    )
   } else { # If denominator is zero, spread evenly.
     df_est <- df |>
       filter(is.na(.data[[nom_col]])) |>
       mutate(deaths = remainder / na_rows)
+    # Round to full integer, maintaining sum
+    df_est[[nom_col]] <- smart_round(df_est[[nom_col]])
   }
-  # Round to full integer, maintaining sum
-  df_est[[nom_col]] <- smart_round(df_est[[nom_col]])
 
   rbind(df |> filter(!is.na(.data[[nom_col]])), df_est) |>
     select(-all_of(groups))
+}
+
+spread <- function(df2, remainder, nom_col, denom_col) {
+  if (nrow(df2) == 0) {
+    return
+  }
+  total_denom <- sum(df2[[denom_col]])
+  est <- df2 |> mutate(deaths = remainder * .data[[denom_col]] / total_denom)
+  est[[nom_col]] <- smart_round(est[[nom_col]])
+  overflown <- est |> filter(.data[[nom_col]] > 9)
+
+  if (nrow(overflown) == 0) {
+    return(est)
+  }
+
+  overflown[[nom_col]] <- 9
+  return(rbind(
+    overflown,
+    spread(
+      est |> filter(.data[[nom_col]] <= 9),
+      remainder - nrow(overflown) * 9,
+      nom_col,
+      denom_col
+    )
+  ))
 }
 
 repeat_until_stable <- function(df, col, fun) {
