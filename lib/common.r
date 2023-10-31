@@ -509,33 +509,35 @@ complete_single_na <- function(df, df2, col, groups) {
 }
 
 complete_from_aggregate <- function(
-    df, df2, aggregate_group, target_groups, groups) {
-  df_ag <- df |> filter(age_group %in% target_groups)
+    df, df2, col, aggregate_group, target_groups, groups) {
+  df_ag <- df |> filter(.data$age_group %in% target_groups)
   # No NA or more than 1 NA
-  if (sum(is.na(df_ag$deaths)) == 0 || sum(is.na(df_ag$deaths)) > 1) {
+  if (sum(is.na(df_ag[[col]])) == 0 || sum(is.na(df_ag[[col]])) > 1) {
     return(df |> select(-all_of(groups)))
   }
 
-  # Debug
-  # print(paste(unique(df$iso3c), unique(df$date), unique(df$age_group)))
+  # Filter the reference.
+  total <- df2
+  for (group in groups) {
+    total <- total |> filter(.data[[group]] == unique(df[[group]]))
+  }
+  total <- total |> filter(.data$age_group == aggregate_group)
+
+  if (is.na(total[[col]])) {
+    return(df |> select(-all_of(groups)))
+  }
 
   # Find sum target.
-  sum_groups <- sum(df_ag$deaths, na.rm = TRUE)
-  sum_aggregate <- (df2 |> filter(
-    iso3c == unique(df$iso3c),
-    date == unique(df$date),
-    age_group == aggregate_group
-  ))$deaths
-  if (is.na(sum_aggregate)) {
+  if (nrow(total) == 0 || is.na(total[[col]])) {
     return(df |> select(-all_of(groups)))
   }
-  target <- sum_aggregate - sum_groups
+  remainder <- total[[col]] - sum(df_ag[[col]], na.rm = TRUE)
 
   # Guard against wrong result.
-  if (target < 0 || target > 9) {
+  if (remainder < 0 || remainder > 9) {
     stop(paste(
       "completed value is invalid:",
-      target, unique(df$iso3c), unique(df$date)
+      remainder, unique(df$iso3c), unique(df$date)
     ))
   }
 
@@ -543,14 +545,14 @@ complete_from_aggregate <- function(
   if (!"comment" %in% colnames(df)) {
     df$comment <- NA
   }
-  new_comment <- "deaths__completed_aggregate"
-  position <- df$age_group %in% df_ag$age_group & is.na(df$deaths)
+  new_comment <- paste0(col, "__completed_aggregate")
+  position <- df$age_group %in% df_ag$age_group & is.na(df[[col]])
   old_comment <- df$comment[position]
   df$comment[position] <- ifelse(is.na(old_comment),
     new_comment,
     paste(old_comment, new_comment, sep = ",")
   )
-  df$deaths[position] <- target
+  df[[col]][position] <- remainder
 
   return(df |> select(-all_of(groups)))
 }
@@ -559,7 +561,7 @@ impute_weighted_sum <- function(df, df2, nom_col, denom_col, groups) {
   # Debug
   # print(paste(unique(df$year), unique(df$fips_state), unique(df$age_group)))
 
-  na_rows <- sum(is.na(df$deaths))
+  na_rows <- sum(is.na(df[[nom_col]]))
   # No need for imputation.
   if (na_rows == 0) {
     return(df |> select(-all_of(groups)))
@@ -586,7 +588,7 @@ impute_weighted_sum <- function(df, df2, nom_col, denom_col, groups) {
     stop(msg)
   }
 
-  # Spread remainder based on population
+  # Spread remainder based on denom_col
   if (!"comment" %in% colnames(df)) {
     df$comment <- NA
   }
@@ -605,7 +607,7 @@ impute_weighted_sum <- function(df, df2, nom_col, denom_col, groups) {
     # If denominator is available, spread proportionally, only limited by
     # <10 constraint.
     df_est <- spread(
-      df2 = df |> filter(is.na(.data[[nom_col]])),
+      df |> filter(is.na(.data[[nom_col]])),
       remainder,
       nom_col,
       denom_col
@@ -613,7 +615,7 @@ impute_weighted_sum <- function(df, df2, nom_col, denom_col, groups) {
   } else { # If denominator is zero, spread evenly.
     df_est <- df |>
       filter(is.na(.data[[nom_col]])) |>
-      mutate(deaths = remainder / na_rows)
+      mutate(!!nom_col := remainder / na_rows)
     # Round to full integer, maintaining sum
     df_est[[nom_col]] <- smart_round(df_est[[nom_col]])
   }
@@ -622,12 +624,13 @@ impute_weighted_sum <- function(df, df2, nom_col, denom_col, groups) {
     select(-all_of(groups))
 }
 
-spread <- function(df2, remainder, nom_col, denom_col) {
-  if (nrow(df2) == 0) {
+spread <- function(df, remainder, nom_col, denom_col) {
+  if (nrow(df) == 0) {
     return
   }
-  total_denom <- sum(df2[[denom_col]])
-  est <- df2 |> mutate(deaths = remainder * .data[[denom_col]] / total_denom)
+  total_denom <- sum(df[[denom_col]])
+  est <- df |>
+    mutate(!!nom_col := remainder * .data[[denom_col]] / total_denom)
   est[[nom_col]] <- smart_round(est[[nom_col]])
   overflown <- est |> filter(.data[[nom_col]] > 9)
 

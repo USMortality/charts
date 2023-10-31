@@ -289,6 +289,7 @@ result_5y_completed <- result_5y_completed |>
     ~ complete_from_aggregate(
       df = .x,
       df2 = result_10y_completed,
+      col = "deaths",
       aggregate_group = "0-9",
       target_groups = c("0-4", "5-9"),
       groups = colnames(.y)
@@ -299,6 +300,7 @@ result_5y_completed <- result_5y_completed |>
     ~ complete_from_aggregate(
       df = .x,
       df2 = result_10y_completed,
+      col = "deaths",
       aggregate_group = "10-19",
       target_groups = c("10-14", "15-19"),
       groups = colnames(.y)
@@ -309,6 +311,7 @@ result_5y_completed <- result_5y_completed |>
     ~ complete_from_aggregate(
       df = .x,
       df2 = result_10y_completed,
+      col = "deaths",
       aggregate_group = "20-29",
       target_groups = c("20-24", "25-29"),
       groups = colnames(.y)
@@ -319,6 +322,7 @@ result_5y_completed <- result_5y_completed |>
     ~ complete_from_aggregate(
       df = .x,
       df2 = result_10y_completed,
+      col = "deaths",
       aggregate_group = "30-39",
       target_groups = c("30-34", "35-39"),
       groups = colnames(.y)
@@ -329,6 +333,7 @@ result_5y_completed <- result_5y_completed |>
     ~ complete_from_aggregate(
       df = .x,
       df2 = result_10y_completed,
+      col = "deaths",
       aggregate_group = "40-49",
       target_groups = c("40-44", "45-49"),
       groups = colnames(.y)
