@@ -22,7 +22,11 @@ fun <- function(a) {
 
 df <- data |>
   as_tibble() |>
-  filter(!is.na(as.numeric(name))) |>
+  mutate(name = suppress_warnings(
+    as.integer(name),
+    "NAs introduced by coercion"
+  )) |>
+  filter(!is.na(name)) |>
   unnest(cols = c(data)) |>
   mutate(date = name) |>
   nest(data = !c(name)) |>
@@ -50,7 +54,7 @@ chart <- ts |>
   forecast(h = 4 * 12) |>
   autoplot(ts) +
   labs(
-    y = "Temperature (⁰C)",
+    y = "Temperature (C)",
     x = "Month",
     title = "North Atlantic Sea Surface Temperature",
     subtitle = paste(
@@ -78,7 +82,7 @@ chart <- ts |>
   forecast(h = 4) |>
   autoplot(ts) +
   labs(
-    y = "Temperature (⁰C)",
+    y = "Temperature (C)",
     x = "Year",
     title = "North Atlantic Sea Surface Temperature",
     subtitle = paste(
