@@ -53,10 +53,13 @@ options(vsc.dev.args = list(width = 600 * sf, height = 335 * sf, res = 72 * sf))
 charts_bucket <- "charts"
 data_bucket <- "data"
 
-watermark <- function(latest = "") {
-  ggplot2::annotate("text",
-    y = Inf,
+watermark <- function(
     x = structure(Inf, class = "Date"),
+    y = Inf,
+    latest = "") {
+  ggplot2::annotate("text",
+    y = y,
+    x = x,
     label = paste("@USMortality", latest),
     vjust = 1,
     hjust = 1,
