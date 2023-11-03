@@ -24,7 +24,7 @@ chart <-
   geom_line(color = "#5383EC", linewidth = 1.5) +
   geom_hline(yintercept = 0) +
   twitter_theme() +
-  watermark(max(df$yearmonth)) +
+  watermark() +
   scale_y_continuous(labels = label_number(suffix = "K", scale = 1e-3))
 
 save_chart(chart, "population/usa/live_births")

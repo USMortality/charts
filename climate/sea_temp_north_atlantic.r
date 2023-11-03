@@ -60,7 +60,7 @@ chart <- ts |>
     )
   ) +
   twitter_theme() +
-  watermark(max(ts$date))
+  watermark()
 
 save_chart(chart, "climate/sea_temp_north_atlantic_monthly")
 
@@ -88,6 +88,6 @@ chart <- ts |>
     )
   ) +
   twitter_theme() +
-  watermark(max(ts$date))
+  watermark()
 
 save_chart(chart, "climate/sea_temp_north_atlantic_yearly")

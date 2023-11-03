@@ -145,7 +145,7 @@ ggplot(ts, aes(x = year, y = deaths)) +
     size = 0.8,
     method = "lm"
   ) +
-  watermark(max(ts$year)) +
+  watermark() +
   geom_line(color = "#5383EC", linewidth = 1) +
   twitter_theme() +
   scale_y_continuous(labels = label_number(suffix = "K", scale = 1e-3)) +
@@ -175,7 +175,7 @@ ggplot(ts, aes(x = year, y = cmr)) +
     size = 0.8,
     method = "lm"
   ) +
-  watermark(max(ts$year)) +
+  watermark() +
   geom_line(color = "#5383EC", linewidth = 1) +
   twitter_theme() +
   facet_wrap(vars(age_group), scales = "free") +
@@ -231,7 +231,7 @@ ggplot(asmr |> filter(year >= start_year), aes(x = date)) +
     method = "lm",
     level = 0.95
   ) +
-  watermark(max(asmr$date)) +
+  watermark() +
   scale_x_date(date_breaks = "1 year", date_labels = "%Y") +
   geom_line(aes(y = asmr_esp), color = "#5383EC", linewidth = 1) +
   twitter_theme()
@@ -261,7 +261,7 @@ ggplot(asmr |> filter(date >= start_year), aes(x = date)) +
     method = "lm",
     level = 0.95
   ) +
-  watermark(max(asmr$date)) +
+  watermark() +
   geom_line(aes(y = asmr_who), color = "#5383EC", linewidth = 1) +
   twitter_theme()
 
@@ -290,7 +290,7 @@ ggplot(asmr |> filter(date >= start_year), aes(x = date)) +
     method = "lm",
     level = 0.999
   ) +
-  watermark(max(asmr$date)) +
+  watermark() +
   geom_line(aes(y = asmr_esp), color = "#5383EC", linewidth = 1) +
   twitter_theme()
 
@@ -319,7 +319,7 @@ ggplot(asmr |> filter(date >= start_year), aes(x = date)) +
     method = "lm",
     level = 0.95
   ) +
-  watermark(max(asmr$date)) +
+  watermark() +
   geom_line(aes(y = asmr_esp), color = "#5383EC", linewidth = 1) +
   twitter_theme()
 
@@ -339,7 +339,7 @@ ggplot(asmr |> filter(date >= 1990), aes(x = date)) +
     x = "Year",
     y = "Deaths/100k"
   ) +
-  watermark(max(asmr$date)) +
+  watermark() +
   scale_y_continuous(trans = "log2") +
   geom_line(aes(y = asmr_esp), color = "#5383EC", linewidth = 1) +
   twitter_theme()
@@ -441,7 +441,7 @@ make_chart <- function(df) {
       method = "lm",
       level = 0.95
     ) +
-    watermark(max(df$date)) +
+    watermark() +
     ggplot2::geom_line(aes(y = asmr_esp), color = "#5383EC", linewidth = 1) +
     ggplot2::scale_x_continuous(breaks = df$date) +
     twitter_theme()

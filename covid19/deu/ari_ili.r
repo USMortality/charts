@@ -69,7 +69,7 @@ chart <- fc_ari |> autoplot(ari_all, level = 99.9) +
     scale_x_yearmonth(date_breaks = "1 year", date_labels = "%Y W01") +
     scale_y_continuous(labels = label_number(suffix = "k", scale = 1e-3)) +
     coord_cartesian(ylim = c(0, max(ari_all$incidence)))
-save_chart(chart, "covid19/ger/ari")
+save_chart(chart, "covid19/deu/ari")
 
 ## ILI
 fit_ili <- ili_all |>
@@ -94,4 +94,4 @@ chart <- fc_ili |> autoplot(ili_all, level = 99.9) +
     scale_x_yearmonth(date_breaks = "1 year", date_labels = "%Y W01") +
     scale_y_continuous(labels = label_number(suffix = "k", scale = 1e-3)) +
     coord_cartesian(ylim = c(0, max(ili_all$incidence)))
-save_chart(chart, "covid19/ger/ili")
+save_chart(chart, "covid19/deu/ili")

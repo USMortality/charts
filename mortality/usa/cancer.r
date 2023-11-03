@@ -49,7 +49,7 @@ chart1 <-
   geom_line(color = "#5383EC", linewidth = 0.5) +
   twitter_theme() +
   scale_x_yearweek(date_breaks = "1 year", date_labels = "%Y") +
-  watermark(max(w_data$date)) +
+  watermark() +
   geom_smooth(span = 52 / count(w_data), level = FALSE, color = "#000000")
 
 # STL
@@ -62,7 +62,7 @@ chart2 <-
     title = "Weekly Cancer Mortality - STL Decomposition [USA]",
     subtitle = "Source: CDC"
   ) + twitter_theme() +
-  watermark(max(w_data$date)) +
+  watermark() +
   scale_x_yearweek(date_breaks = "1 year", date_labels = "%Y")
 
 # Monthly
@@ -85,7 +85,7 @@ chart3 <-
   geom_point(color = "#bbbbbb") +
   twitter_theme() +
   scale_x_yearmonth(date_breaks = "1 year", date_labels = "%Y") +
-  watermark(max(m_data$date)) +
+  watermark() +
   geom_smooth(
     data = m_data |> filter(year(date) %in% seq(2015, 2020)),
     method = "lm_right",
@@ -118,7 +118,7 @@ chart4 <- q_data |>
   geom_point(color = "#5383EC") +
   twitter_theme() +
   scale_x_yearquarter(date_breaks = "1 year", date_labels = "%Y") +
-  watermark(max(q_data$date)) +
+  watermark() +
   geom_smooth(
     data = q_data |> filter(year(date) %in% seq(2015, 2020)),
     method = "lm_right",
