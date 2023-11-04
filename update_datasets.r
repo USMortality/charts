@@ -50,7 +50,7 @@ urls <- list(
     "uk_acm_vaxx_old2.xlsx"
   ),
   c(
-    "https://www.ons.gov.uk/file?uri=/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths/datasets/weeklyprovisionalfiguresondeathsregisteredinenglandandwales/2022/publicationfileweek522022.xlsx",
+    "https://www.ons.gov.uk/file?uri=/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths/datasets/deathsbyvaccinationstatusengland/deathsoccurringbetween1april2021and31may2023/referencetableaug2023.xlsx",
     "uk_acm.xlsx"
   )
 )
