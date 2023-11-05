@@ -1,7 +1,7 @@
 source("lib/common.r")
 
-data1 <- as_tibble(read.csv("./data/usa_states_excess_weekly.csv"))
-data2 <- as_tibble(read.csv("./data/usa_states_age_weekly.csv"))
+data1 <- as_tibble(read.csv("./data_static/usa_states_excess_weekly.csv"))
+data2 <- as_tibble(read.csv("./data_static/usa_states_age_weekly.csv"))
 us_states_iso3c <- as_tibble(read.csv("./data_static/usa_states_iso3c.csv"))
 
 df1 <- data1 |>

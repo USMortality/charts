@@ -6,27 +6,11 @@ urls <- list(
     "covid19_usa_live_births.csv"
   ),
   c(
-    "https://mortality.org/File/GetDocument/Public/STMF/Outputs/stmf.csv",
-    "mortality_org.csv"
-  ),
-  c(
-    "https://github.com/akarlinsky/world_mortality/raw/main/world_mortality.csv",
-    "world_mortality.csv"
-  ),
-  c(
-    "https://data.cdc.gov/api/views/muzy-jte6/rows.csv?accessType=DOWNLOAD&bom=true&format=true",
-    "usa_deaths_causes_2020_n.csv"
-  ),
-  c(
-    "https://data.cdc.gov/api/views/y5bj-9g5w/rows.csv?accessType=DOWNLOAD",
-    "usa_states_age_weekly.csv"
-  ),
-  c(
-    "https://data.cdc.gov/api/views/muzy-jte6/rows.csv?accessType=DOWNLOAD",
-    "usa_states_cause_weekly.csv"
-  ),
-  c(
-    "https://www.destatis.de/DE/Themen/Gesellschaft-Umwelt/Bevoelkerung/Sterbefaelle-Lebenserwartung/Tabellen/sonderauswertung-sterbefaelle.xlsx?__blob=publicationFile",
+    paste0(
+      "https://www.destatis.de/DE/Themen/Gesellschaft-Umwelt/Bevoelkerung/",
+      "Sterbefaelle-Lebenserwartung/Tabellen/sonderauswertung-sterbefaelle",
+      ".xlsx?__blob=publicationFile"
+    ),
     "sonderauswertung-sterbefaelle.xlsx"
   ),
   c(
@@ -34,20 +18,29 @@ urls <- list(
     "owid.csv"
   ),
   c(
-    "https://data.cdc.gov/api/views/xkkf-xrst/rows.csv?accessType=DOWNLOAD",
-    "usa_states_excess_weekly.csv"
-  ),
-  c(
-    "https://data.cdc.gov/api/views/unsk-b7fc/rows.csv?accessType=DOWNLOAD",
-    "usa_states_vaccination.csv"
-  ),
-  c(
-    "https://ec.europa.eu/eurostat/estat-navtree-portlet-prod/BulkDownloadListing?file=data/demo_r_mwk_10.tsv.gz",
+    paste0(
+      "https://ec.europa.eu/eurostat/estat-navtree-portlet-prod/",
+      "BulkDownloadListing?file=data/demo_r_mwk_10.tsv.gz"
+    ),
     "eurostat_weekly.tsv.gz"
   ),
   c(
-    "https://ec.europa.eu/eurostat/estat-navtree-portlet-prod/BulkDownloadListing?file=data/demo_pjan.tsv.gz",
+    paste0(
+      "https://ec.europa.eu/eurostat/estat-navtree-portlet-prod/",
+      "BulkDownloadListing?file=data/demo_pjan.tsv.gz"
+    ),
     "eurostat_population.tsv.gz"
+  ),
+  c(
+    "https://mortality.org/File/GetDocument/Public/STMF/Outputs/stmf.csv",
+    "mortality_org.csv"
+  ),
+  c(
+    paste0(
+      "https://github.com/akarlinsky/world_mortality/raw/main/",
+      "world_mortality.csv"
+    ),
+    "world_mortality.csv"
   )
 )
 
