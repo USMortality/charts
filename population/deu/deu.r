@@ -23,13 +23,14 @@ pop <- pop_raw |>
     values_to = "population"
   ) |>
   setNames(c("age_group", "year", "population")) |>
+  rowwise() |>
   mutate(
     age_group = case_when(
       age_group == "unter 1 Jahr" ~ "0",
       age_group == "85 Jahre und mehr" ~ "85+",
       age_group == "Alter unbekannt" ~ "NS",
       age_group == "Insgesamt" ~ "all",
-      .default = str_replace(age_group, "-Jährige", "")
+      .default = str_split(age_group, "-")[[1]][1]
     ),
     year = as.integer(right(year, 4)),
     population = as.integer(population)
@@ -59,6 +60,7 @@ pop_states <- pop_raw |>
     values_to = "deaths"
   ) |>
   setNames(c("year", "age_group", "jurisdiction", "population")) |>
+  rowwise() |>
   mutate(
     jurisdiction = gsub("\\.", "-", jurisdiction),
     age_group = case_when(
@@ -66,7 +68,7 @@ pop_states <- pop_raw |>
       age_group == "90 Jahre und mehr" ~ "90+",
       age_group == "Alter unbekannt" ~ "NS",
       age_group == "Insgesamt" ~ "all",
-      .default = str_replace(age_group, "-Jährige", "")
+      .default = str_split(age_group, "-")[[1]][1]
     ),
     year = as.integer(right(year, 4)),
     population = as.integer(population)
