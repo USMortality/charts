@@ -208,14 +208,8 @@ calculate_baseline <- function(data, col_name, chart_type) {
     col <- sym(col_name)
     result <- data.frame(date = c(bl$date, fc$date)) |> mutate(
       "{col_name}_baseline" := c(bl$.mean, fc$.mean),
-      "{col_name}_baseline_lower" := c(
-        rep(NA, nrow(bl$.mean)),
-        fc_hl$`95%_lower`
-      ),
-      "{col_name}_baseline_upper" := c(
-        rep(NA, nrow(bl$.mean)),
-        fc_hl$`95%_upper`
-      )
+      "{col_name}_baseline_lower" := c(rep(NA, nrow(bl)), fc_hl$`95%_lower`),
+      "{col_name}_baseline_upper" := c(rep(NA, nrow(bl)), fc_hl$`95%_upper`)
     )
 
     data |>
