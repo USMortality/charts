@@ -1,7 +1,7 @@
 source("lib/common.r")
 source("lib/asmr.r")
 
-deaths <- read_remote("deaths/usa/yearly_5y_complete.csv") |>
+deaths <- read_remote("deaths/usa/yearly_5y_completed.csv") |>
   mutate(age_group = ifelse(
     age_group %in% c("85-89", "90-94", "95+"), "85+", age_group
   )) |>

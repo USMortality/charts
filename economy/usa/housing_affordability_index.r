@@ -55,7 +55,7 @@ chart <-
     segment.color = "grey50",
   )
 
-save_chart(chart, "economy/usa/30y_fixed_mortgage", upload = TRUE)
+save_chart(chart, "economy/usa/30y_fixed_mortgage")
 
 # Median Home Prices
 median_home_price <- read.csv(
@@ -111,7 +111,7 @@ chart <-
     segment.color = "grey50",
   )
 
-save_chart(chart, "economy/usa/median_home_price", upload = TRUE)
+save_chart(chart, "economy/usa/median_home_price")
 
 # Median Family Income in the United States (MEFAINUSA646N)
 median_income <- read.csv(
@@ -165,7 +165,7 @@ chart <-
     segment.color = "grey50",
   )
 
-save_chart(chart, "economy/usa/median_family_income", upload = TRUE)
+save_chart(chart, "economy/usa/median_family_income")
 
 median_income_fc <- tibble(date = fc$date, income = fc$.mean)
 median_income <- rbind(median_income, median_income_fc) |>
@@ -230,7 +230,7 @@ chart <-
     segment.color = "grey50",
   )
 
-save_chart(chart, "economy/usa/housing_affordability_index", upload = TRUE)
+save_chart(chart, "economy/usa/housing_affordability_index")
 
 rent_raw <- read.csv(
   paste0(
@@ -287,4 +287,4 @@ chart <-
     segment.color = "grey50",
   )
 
-save_chart(chart, "economy/usa/rent_index", upload = TRUE)
+save_chart(chart, "economy/usa/rent_index")

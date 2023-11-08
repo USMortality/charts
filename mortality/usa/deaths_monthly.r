@@ -22,27 +22,26 @@ data6 <- read_csv("../wonder_dl/out/usa_state_month_all_2022_2023.csv")
 parse_data <- function(df, jurisdiction_column, age_group) {
   df <- df |>
     mutate(
-      date = make_yearmonth(
-        year = as.numeric(left(`Month Code`, 4)),
-        month = as.numeric(right(`Month Code`, 2))
-      )
-    )
+      year = as.numeric(left(`Month Code`, 4)),
+      month = as.numeric(right(`Month Code`, 2))
+    ) |>
+    mutate(date = make_yearmonth(year, month))
   if (nchar(jurisdiction_column) == 0) {
     df <- df |>
-      select("date", "Deaths") |>
-      setNames(c("date", "deaths"))
+      select("date", "year", "month", "Deaths") |>
+      setNames(c("date", "year", "month", "deaths"))
     df$iso3c <- "USA"
     df |>
       filter(!is.na(date)) |>
-      select("iso3c", "date", "deaths") |>
+      select("iso3c", "date", "year", "month", "deaths") |>
       mutate(age_group = gsub("_", "-", age_group), .after = date)
   } else {
     df |>
-      select(!!jurisdiction_column, "date", "Deaths") |>
-      setNames(c("jurisdiction", "date", "deaths")) |>
+      select(!!jurisdiction_column, "date", "year", "month", "Deaths") |>
+      setNames(c("jurisdiction", "date", "year", "month", "deaths")) |>
       left_join(us_states_iso3c, by = "jurisdiction") |>
       filter(!is.na(iso3c), !is.na(date)) |>
-      select("iso3c", "date", "deaths") |>
+      select("iso3c", "date", "year", "month", "deaths") |>
       mutate(age_group = gsub("_", "-", age_group), .after = date)
   }
 }
@@ -133,6 +132,8 @@ result_10y <- rbind(
   process_age_groups(prefix = "_state", age_groups)
 ) |>
   mutate(
+    year = year(date),
+    month = month(date),
     age_group = ifelse(age_group == "90-100", "90+", age_group),
     deaths = as.integer(ifelse(deaths == "Suppressed", NA, deaths))
   ) |>
@@ -161,7 +162,6 @@ result_10y_completed <- repeat_until_stable(
       ) |>
       ungroup() |>
       # Complete via state/year/age_group totals
-      mutate(year = year(date)) |>
       group_by(iso3c, year, age_group) |>
       group_modify(
         ~ complete_single_na(
@@ -172,14 +172,12 @@ result_10y_completed <- repeat_until_stable(
         ),
         .keep = TRUE
       ) |>
-      ungroup() |>
-      select(-year)
+      ungroup()
   }
 )
 
 # Impute rest via state/year/age_group totals
 result_10y_imputed <- result_10y_completed |>
-  mutate(year = year(date)) |>
   group_by(iso3c, year, age_group) |>
   group_modify(
     ~ impute_weighted_sum(
@@ -191,8 +189,7 @@ result_10y_imputed <- result_10y_completed |>
     ),
     .keep = TRUE
   ) |>
-  ungroup() |>
-  select(-year)
+  ungroup()
 
 stopifnot(nrow(
   result_10y_imputed |> filter(
@@ -230,6 +227,8 @@ result_5y <- rbind(
   process_age_groups("_state", age_groups) # States
 ) |>
   mutate(
+    year = year(date),
+    month = month(date),
     age_group = ifelse(age_group == "95-100", "95+", age_group),
     deaths = as.integer(ifelse(deaths == "Suppressed", NA, deaths))
   ) |>
@@ -266,7 +265,6 @@ result_5y_completed <- repeat_until_stable(
       ) |>
       ungroup() |>
       # Complete via state/year/age_group totals
-      mutate(year = year(date)) |>
       group_by(iso3c, year, age_group) |>
       group_modify(
         ~ complete_single_na(
@@ -277,8 +275,7 @@ result_5y_completed <- repeat_until_stable(
         ),
         .keep = TRUE
       ) |>
-      ungroup() |>
-      select(-year)
+      ungroup()
   }
 )
 
@@ -356,8 +353,7 @@ result_5y_imputed <- result_5y_completed |>
     ),
     .keep = TRUE
   ) |>
-  ungroup() |>
-  select(-year)
+  ungroup()
 
 stopifnot(nrow(
   result_5y_imputed |> filter(
@@ -368,38 +364,32 @@ stopifnot(nrow(
 
 save_csv(
   rbind(result_10y, result_all) |> arrange(iso3c, date, age_group),
-  "deaths/usa/monthly_10y",
-  upload = TRUE
+  "deaths/usa/monthly_10y"
 )
 save_csv(
   rbind(result_10y_completed, result_all |> mutate(comment = NA)) |>
     arrange(iso3c, date, age_group),
-  "deaths/usa/monthly_10y_completed",
-  upload = TRUE
+  "deaths/usa/monthly_10y_completed"
 )
 save_csv(
   rbind(result_10y_imputed, result_all |> mutate(comment = NA)) |>
     arrange(iso3c, date, age_group),
-  "deaths/usa/monthly_10y_imputed",
-  upload = TRUE
+  "deaths/usa/monthly_10y_imputed"
 )
 save_csv(
   rbind(result_5y, result_all |> mutate(comment = NA)) |>
     arrange(iso3c, date, age_group),
-  "deaths/usa/monthly_5y",
-  upload = TRUE
+  "deaths/usa/monthly_5y"
 )
 save_csv(
   rbind(result_5y_completed, result_all |> mutate(comment = NA)) |>
     arrange(iso3c, date, age_group),
-  "deaths/usa/monthly_5y_completed",
-  upload = TRUE
+  "deaths/usa/monthly_5y_completed"
 )
 save_csv(
   rbind(result_5y_imputed, result_all |> mutate(comment = NA)) |>
     arrange(iso3c, date, age_group),
-  "deaths/usa/monthly_5y_imputed",
-  upload = TRUE
+  "deaths/usa/monthly_5y_imputed"
 )
 
 # source("mortality/usa/deaths_monthly.r")

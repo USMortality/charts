@@ -22,7 +22,7 @@ df <- data |>
 
 save_csv(df, "deaths/usa/yearly_6bins")
 
-data <- read_remote("deaths/usa/yearly_5y_complete.csv")
+data <- read_remote("deaths/usa/yearly_5y_completed.csv")
 
 df <- data |>
   mutate(

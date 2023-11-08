@@ -37,13 +37,12 @@ distinct <- dplyr::distinct
 complete <- tidyr::complete
 case_when <- dplyr::case_when
 
-# Weekly 2017+
-wd_usa <- read_remote("deaths/usa/age_weekly_2015-n.csv") |>
-  filter(year >= 2017) |> # Totals are only available from 2017.
+# Weekly 2015+
+wd_usa <- read_remote("deaths/usa/deaths_weekly.csv") |>
   mutate(date = date_parse(paste(year, week, 1), format = "%G %V %u")) |>
   filter(!is.na(deaths))
 
-md_usa_10y <- read_remote("deaths/usa/monthly_10y_complete.csv") |>
+md_usa_10y <- read_remote("deaths/usa/monthly_10y_imputed.csv") |>
   mutate(date = date_parse(paste(year, month, 1), format = "%Y %m %d")) |>
   aggregate_80_plus()
 
@@ -62,72 +61,54 @@ dd_us2$age_group <- "all"
 dd_us2$type <- 2
 
 dd_us <- rbind(dd_us1, dd_us2) |>
-  distinct(iso3c, date, type, .keep_all = TRUE) |>
-  arrange(iso3c, date, age_group, type)
+  arrange(iso3c, date, age_group, desc(type)) |>
+  distinct(iso3c, date, .keep_all = TRUE)
 dd_us$n_age_groups <- 1
 
 rm(dd_us1, dd_us2)
 
 # ASMR
 ## Weekly
-n_ <- nrow(wd_usa |> filter(iso3c == "USA"))
-complete_states_weekly <- wd_usa |>
-  filter(!is.na(deaths)) |>
-  group_by(iso3c) |>
-  count(iso3c) |>
-  filter(n == n_)
+gapped_states_weekly <- wd_usa |>
+  filter(age_group != "NS") |>
+  group_by(.data$iso3c, .data$age_group) |>
+  group_modify(~ as_tsibble(.x, index = date) |> has_gaps(), .keep = TRUE) |>
+  ungroup() |>
+  filter(.gaps == TRUE)
+complete_states_weekly <- setdiff(
+  unique(wd_usa$iso3c),
+  unique(gapped_states_weekly$iso3c)
+)
+
 deaths_weekly <- wd_usa |>
   filter(
-    iso3c %in% complete_states_weekly$iso3c,
-    age_group != "all",
-    !is.na(date)
+    iso3c %in% complete_states_weekly, age_group != "all", !is.na(date)
   )
 deaths_weekly$type <- 3
 deaths_weekly$n_age_groups <- 6
 
-rm(wd_usa, n_)
-
 ## Monthly
-n_ <- nrow(md_usa_10y |> filter(iso3c == "USA"))
-# Use USA national data as reference for completeness.
-complete_states_monthly <- md_usa_10y |>
-  filter(!is.na(deaths)) |>
-  group_by(iso3c) |>
-  count(iso3c) |>
-  filter(n == n_)
-deaths_monthly <- md_usa_10y |>
-  filter(
-    iso3c %in% complete_states_monthly$iso3c,
-    age_group != "all", !is.na(date)
-  )
+deaths_monthly <- md_usa_10y |> filter(age_group != "all", !is.na(date))
 deaths_monthly$type <- 2
 deaths_monthly$n_age_groups <- 9
 
-rm(md_usa_10y, n_)
+rm(md_usa_10y)
 
 ## Yearly
-deaths_yearly <- read_remote("deaths/usa/yearly_10y_complete.csv") |>
-  rename(date = year) |>
+deaths_yearly <- read_remote("deaths/usa/yearly_10y_completed.csv") |>
   aggregate_80_plus() |>
-  filter(
-    !iso3c %in% complete_states_monthly$iso3c,
-    age_group != "all"
-  ) |>
+  filter(age_group != "all") |>
   mutate(date = as.Date(paste0(date, "-01-01")))
 deaths_yearly$type <- 1
 deaths_yearly$n_age_groups <- 9
 
-rm(complete_states_monthly)
-
+cols <- c("iso3c", "date", "age_group", "type", "n_age_groups", "deaths")
 dd_us_age <- rbind(
-  deaths_monthly,
-  deaths_yearly
+  deaths_weekly |> select(all_of(cols)),
+  deaths_monthly |> select(all_of(cols)),
+  deaths_yearly |> select(all_of(cols))
 ) |>
-  filter(!(iso3c %in% complete_states_weekly$iso3c) |
-    iso3c %in% complete_states_weekly$iso3c) |>
-  rbind(deaths_weekly |> select(-year, -week)) |>
-  relocate(iso3c, date, age_group, deaths) |>
-  arrange(iso3c, date, age_group)
+  arrange(iso3c, date, age_group, type, age_group)
 
 rm(deaths_weekly, deaths_monthly, complete_states_weekly)
 
@@ -144,7 +125,7 @@ population <- read_remote("population/usa/10y.csv") |>
       unnest(cols = "data"))
   ) |>
   unnest(cols = "data") |>
-  select(iso3c, date, age_group, population)
+  select(all_of(c("iso3c", "date", "age_group", "population")))
 
 population2 <- read_remote("population/usa/5y.csv") |>
   mutate(
@@ -184,22 +165,16 @@ population2 <- read_remote("population/usa/5y.csv") |>
       unnest(cols = "data"))
   ) |>
   unnest(cols = "data") |>
-  select(iso3c, date, age_group, population)
+  select(all_of(c("iso3c", "date", "age_group", "population")))
 
 usa_mortality_states <- rbind(dd_us, dd_us_age) |>
   left_join(
-    population,
+    rbind(population, population2),
     by = c("iso3c", "date", "age_group")
   ) |>
-  left_join(
-    population2,
-    by = c("iso3c", "date", "age_group")
-  ) |>
-  mutate(
-    population =
-      ifelse(is.na(population.x), population.y, population.x)
-  ) |>
-  select(iso3c, date, age_group, deaths, population, type, n_age_groups) |>
+  select(all_of(c(
+    "iso3c", "date", "age_group", "deaths", "population", "type", "n_age_groups"
+  ))) |>
   arrange(iso3c, date, age_group) |>
   distinct(iso3c, date, age_group, type, .keep_all = TRUE) |>
   filter(age_group != "NS", !is.na(population))
@@ -207,3 +182,5 @@ usa_mortality_states <- rbind(dd_us, dd_us_age) |>
 usa_mortality_states$source <- "cdc"
 
 rm(dd_us, dd_us_age, population, population2)
+
+# source("mortality/usa/mortality_states.r")

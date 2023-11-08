@@ -6,7 +6,7 @@ wd_usa <- read_remote("deaths/usa/age_weekly_2015-n.csv") |>
     mutate(date = date_parse(paste(year, week, 1), format = "%G %V %u")) |>
     filter(!is.na(deaths))
 
-md_usa_10y <- read_remote("deaths/usa/monthly_10y_complete.csv") |>
+md_usa_10y <- read_remote("deaths/usa/monthly_10y_completed.csv") |>
     mutate(date = date_parse(paste(year, month, 1), format = "%Y %m %d")) |>
     aggregate_80_plus()
 

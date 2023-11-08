@@ -452,7 +452,7 @@ aggregate_80_plus <- function(df) {
         .default = age_group
       )
     ) |>
-    group_by(.data$iso3c, .data$date, .data$age_group) |>
+    group_by(across(-deaths)) |>
     summarise(deaths = sum(.data$deaths)) |>
     ungroup()
 }
@@ -464,7 +464,8 @@ smart_round <- function(x) {
   as.integer(y)
 }
 
-complete_single_na <- function(df, df2, col, groups) {
+complete_single_na <- function(
+    df, df2, col, groups, guard_limit = 9, should_guard = TRUE) {
   # Debug
   # print(paste(unique(df$iso3c), unique(df$year), unique(df$age_group)))
 
@@ -484,14 +485,21 @@ complete_single_na <- function(df, df2, col, groups) {
     return(df |> select(-all_of(groups)))
   }
   remainder <- total[[col]] - sum(df[[col]], na.rm = TRUE)
-
   # Guard against wrong result.
-  if (remainder < 0 || remainder > 9) {
+  if (should_guard && remainder < 0 || remainder > guard_limit) {
     msg <- paste("completed value is out of valid range:", remainder)
     for (group in groups) {
       msg <- paste(msg, ", ", group, ": ", df[[group]])
     }
     stop(msg)
+  }
+  if (!should_guard && remainder < 0) {
+    print(paste(
+      unique(df$fips_state),
+      unique(df$year),
+      unique(df$age_group)
+    ))
+    remainder <- 0
   }
 
   # Store completed result including comment.
@@ -513,6 +521,9 @@ complete_single_na <- function(df, df2, col, groups) {
 
 complete_from_aggregate <- function(
     df, df2, col, aggregate_group, target_groups, groups) {
+  # Debug
+  # print(paste(unique(df$year), unique(df$fips)))
+
   df_ag <- df |> filter(.data$age_group %in% target_groups)
   # No NA or more than 1 NA
   if (sum(is.na(df_ag[[col]])) == 0 || sum(is.na(df_ag[[col]])) > 1) {
@@ -525,10 +536,6 @@ complete_from_aggregate <- function(
     total <- total |> filter(.data[[group]] == unique(df[[group]]))
   }
   total <- total |> filter(.data$age_group == aggregate_group)
-
-  if (is.na(total[[col]])) {
-    return(df |> select(-all_of(groups)))
-  }
 
   # Find sum target.
   if (nrow(total) == 0 || is.na(total[[col]])) {

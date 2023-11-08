@@ -135,3 +135,5 @@ for (code in unique(c("ALB", data$iso3c))) {
 }
 
 print("Finished.")
+
+# source("mortality/world_dataset.r")

@@ -47,8 +47,7 @@ for (type in types) {
       theme(axis.text.x = element_text(angle = 30, hjust = 0.5, vjust = 0.5))
     save_chart(
       chart1,
-      paste("mortality", type, country, "weekly_line", sep = "/"),
-      upload = TRUE
+      paste("mortality", type, country, "weekly_line", sep = "/")
     )
 
     print("2) Monthly")
@@ -72,8 +71,7 @@ for (type in types) {
       theme(axis.text.x = element_text(angle = 30, hjust = 0.5, vjust = 0.5))
     save_chart(
       chart2,
-      paste("mortality", type, country, "monthly_line", sep = "/"),
-      upload = TRUE
+      paste("mortality", type, country, "monthly_line", sep = "/")
     )
 
     print("3) Quarterly")
@@ -99,8 +97,7 @@ for (type in types) {
       theme(axis.text.x = element_text(angle = 30, hjust = 0.5, vjust = 0.5))
     save_chart(
       chart3,
-      paste("mortality", type, country, "quarterly_line", sep = "/"),
-      upload = TRUE
+      paste("mortality", type, country, "quarterly_line", sep = "/")
     )
 
     print("4) Yearly")
@@ -122,8 +119,7 @@ for (type in types) {
       theme(axis.text.x = element_text(angle = 30, hjust = 0.5, vjust = 0.5))
     save_chart(
       chart4,
-      paste("mortality", type, country, "yearly_line", sep = "/"),
-      upload = TRUE
+      paste("mortality", type, country, "yearly_line", sep = "/")
     )
 
     print("5) Flu Season")
@@ -146,8 +142,7 @@ for (type in types) {
       theme(axis.text.x = element_text(angle = 30, hjust = 0.5, vjust = 0.5))
     save_chart(
       chart5,
-      paste("mortality", type, country, "fluseason_line", sep = "/"),
-      upload = TRUE
+      paste("mortality", type, country, "fluseason_line", sep = "/")
     )
 
     print("6) STL Decomposition")
@@ -181,8 +176,7 @@ for (type in types) {
       theme(axis.text.x = element_text(angle = 30, hjust = 0.5, vjust = 0.5))
     save_chart(
       chart6,
-      paste("mortality", type, country, "stl_line", sep = "/"),
-      upload = TRUE
+      paste("mortality", type, country, "stl_line", sep = "/")
     )
 
     print("7) Yearly (Bar)")
@@ -207,8 +201,7 @@ for (type in types) {
       theme(axis.text.x = element_text(angle = 30, hjust = 0.5, vjust = 0.5))
     save_chart(
       chart7,
-      paste("mortality", type, country, "yearly_bar", sep = "/"),
-      upload = TRUE
+      paste("mortality", type, country, "yearly_bar", sep = "/")
     )
 
     print("8) Flu Season (Bar)")
@@ -235,8 +228,7 @@ for (type in types) {
       theme(axis.text.x = element_text(angle = 30, hjust = 0.5, vjust = 0.5))
     save_chart(
       chart8,
-      paste("mortality", type, country, "fluseason_bar", sep = "/"),
-      upload = TRUE
+      paste("mortality", type, country, "fluseason_bar", sep = "/")
     )
 
     print("9) Weekly (52W SMA)")
@@ -267,8 +259,7 @@ for (type in types) {
       theme(axis.text.x = element_text(angle = 30, hjust = 0.5, vjust = 0.5))
     save_chart(
       chart9,
-      paste("mortality", type, country, "weekly_52w_sma_line", sep = "/"),
-      upload = TRUE
+      paste("mortality", type, country, "weekly_52w_sma_line", sep = "/")
     )
 
     save_collage(
