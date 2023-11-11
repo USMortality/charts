@@ -37,7 +37,8 @@ w_data <- data |>
   summarise(sum(mortality)) |>
   head(-1) |>
   tail(-1) |>
-  setNames(c("date", "mortality"))
+  setNames(c("date", "mortality")) |>
+  mutate(date = date(date))
 chart1 <-
   ggplot(w_data, aes(x = date, y = mortality)) +
   labs(
@@ -48,7 +49,7 @@ chart1 <-
   ) +
   geom_line(color = "#5383EC", linewidth = 0.5) +
   twitter_theme() +
-  scale_x_yearweek(date_breaks = "1 year", date_labels = "%Y") +
+  scale_x_date(date_breaks = "1 year", date_labels = "%Y") +
   watermark() +
   geom_smooth(span = 52 / count(w_data), level = FALSE, color = "#000000")
 
@@ -63,7 +64,7 @@ chart2 <-
     subtitle = "Source: CDC"
   ) + twitter_theme() +
   watermark() +
-  scale_x_yearweek(date_breaks = "1 year", date_labels = "%Y")
+  scale_x_date(date_breaks = "1 year", date_labels = "%Y")
 
 # Monthly
 m_data <- data |>
@@ -71,7 +72,8 @@ m_data <- data |>
   summarise(sum(mortality)) |>
   ungroup() |>
   head(-1) |>
-  setNames(c("date", "mortality"))
+  setNames(c("date", "mortality")) |>
+  mutate(date = date(date))
 
 chart3 <-
   m_data |>
@@ -84,7 +86,7 @@ chart3 <-
   ) +
   geom_point(color = "#bbbbbb") +
   twitter_theme() +
-  scale_x_yearmonth(date_breaks = "1 year", date_labels = "%Y") +
+  scale_x_date(date_breaks = "1 year", date_labels = "%Y") +
   watermark() +
   geom_smooth(
     data = m_data |> filter(year(date) %in% seq(2015, 2020)),
@@ -102,7 +104,8 @@ chart3 <-
 q_data <- data |>
   index_by(yearquarter(date)) |>
   summarise(sum(mortality)) |>
-  setNames(c("date", "mortality"))
+  setNames(c("date", "mortality")) |>
+  mutate(date = date(date))
 
 chart4 <- q_data |>
   setNames(c("date", "mortality")) |>
@@ -152,7 +155,8 @@ m_data <- data |>
 c_data <- m_data |>
   model(STL(mortality)) |>
   components() |>
-  select(date, trend)
+  select(date, trend) |>
+  mutate(date = date(date))
 
 chart5 <- ggplot(c_data, aes(
   x = date, y = trend
@@ -166,8 +170,9 @@ chart5 <- ggplot(c_data, aes(
   ) +
   twitter_theme() +
   watermark() +
+  scale_x_date(date_breaks = "1 year", date_labels = "%Y") +
   geom_smooth(
-    data = subset(c_data, date < make_yearmonth(year = 2020, month = 3)),
+    data = subset(c_data, date < as.Date("2020-03-11")),
     method = lm,
     fullrange = TRUE
   ) +
@@ -175,5 +180,97 @@ chart5 <- ggplot(c_data, aes(
     # panel.spacing = unit(0.3, "in"),
     legend.position = "none"
   )
+save_chart(
+  chart5,
+  paste("mortality", "usa", "cancer", "monthly_trend", sep = "/")
+)
 
-save_chart(chart5, paste("mortality", "usa", "cancer", "monthly_trend", sep = "/"))
+# Weekly Trend Forecast
+df <- data |>
+  index_by(yearweek(date)) |>
+  summarise(sum(mortality)) |>
+  head(-1) |>
+  tail(-1) |>
+  setNames(c("date", "mortality"))
+baseline_df <- df |> filter(date < make_yearweek(year = 2020, week = 11))
+fit <- baseline_df |> model(TSLM(mortality ~ trend() + season()))
+fc <- forecast(fit, h = "4 years")
+chart6 <- fc |>
+  autoplot(df, level = 95) +
+  labs(
+    title = "Forecast of Weekly Cancer Mortality [USA]",
+    subtitle = "Source: cdc.gov; 95% PI",
+    x = "Week of Year",
+    y = "Deaths/100k"
+  ) +
+  theme_bw() +
+  theme(legend.position = "none") +
+  watermark() +
+  theme(axis.text.x = element_text(angle = 30, hjust = 0.5, vjust = 0.5)) +
+  scale_x_yearweek(date_breaks = "1 year", date_labels = "%Y W01")
+save_chart(
+  chart6,
+  paste("mortality", "usa", "cancer", "weekly_trend_fc", sep = "/")
+)
+
+# Monthly Trend Forecast
+df <- data |>
+  index_by(yearmonth(date)) |>
+  summarise(sum(mortality)) |>
+  head(-1) |>
+  tail(-1) |>
+  setNames(c("date", "mortality"))
+baseline_df <- df |> filter(date < make_yearmonth(year = 2020, month = 3))
+fit <- baseline_df |> model(TSLM(mortality ~ trend() + season()))
+fc <- forecast(fit, h = "4 years")
+chart7 <- fc |>
+  autoplot(df, level = 95) +
+  labs(
+    title = "Forecast of Monthly Cancer Mortality [USA]",
+    subtitle = "Source: cdc.gov; 95% PI",
+    x = "Week of Year",
+    y = "Deaths/100k"
+  ) +
+  theme_bw() +
+  theme(legend.position = "none") +
+  watermark() +
+  theme(axis.text.x = element_text(angle = 30, hjust = 0.5, vjust = 0.5)) +
+  scale_x_yearmonth(date_breaks = "1 year", date_labels = "%Y W01")
+save_chart(
+  chart7,
+  paste("mortality", "usa", "cancer", "monthly_trend_fc", sep = "/")
+)
+
+# Quarterly Trend Forecast
+df <- data |>
+  index_by(yearquarter(date)) |>
+  summarise(sum(mortality)) |>
+  head(-1) |>
+  tail(-1) |>
+  setNames(c("date", "mortality"))
+baseline_df <- df |> filter(date < make_yearquarter(year = 2020, quarter = 1))
+fit <- baseline_df |> model(TSLM(mortality ~ trend() + season()))
+fc <- forecast(fit, h = "4 years")
+chart8 <- fc |>
+  autoplot(df, level = 95) +
+  labs(
+    title = "Forecast of Quarterly Cancer Mortality [USA]",
+    subtitle = "Source: cdc.gov; 95% PI",
+    x = "Week of Year",
+    y = "Deaths/100k"
+  ) +
+  theme_bw() +
+  theme(legend.position = "none") +
+  watermark() +
+  theme(axis.text.x = element_text(angle = 30, hjust = 0.5, vjust = 0.5)) +
+  scale_x_yearquarter(date_breaks = "1 year", date_labels = "%Y W01")
+
+save_chart(
+  chart8,
+  paste("mortality", "usa", "cancer", "quarterly_trend_fc", sep = "/")
+)
+
+save_collage(
+  chart5, chart6, chart7, chart8,
+  path = paste("mortality", "usa", "cancer2", sep = "/")
+)
