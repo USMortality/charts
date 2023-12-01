@@ -114,7 +114,7 @@ rm(deaths_weekly, deaths_monthly, complete_states_weekly)
 
 # Population
 population <- read_remote("population/usa/10y.csv") |>
-  mutate(date = date(sprintf("%d-01-01", year)), .after = iso3c) |>
+  mutate(date = date(sprintf("%d-07-01", year)), .after = iso3c) |>
   group_by(iso3c) |>
   nest() |>
   mutate(
