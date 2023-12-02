@@ -40,7 +40,7 @@ b <- data1 |>
 c <- data2 |>
   filter(SEX == 0) |>
   select(
-    NAME, AGE, POPEST2020_CIV, POPEST2021_CIV
+    NAME, AGE, POPEST2020_CIV, POPEST2021_CIV, POPEST2022_CIV
   ) |>
   pivot_longer(
     cols = starts_with("POPEST"), names_to = "year", values_to = "population"
