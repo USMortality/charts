@@ -42,7 +42,7 @@ pop <- pop |> relocate(jurisdiction, year, age_group, population)
 # Genesis 12411-0005: Bevölkerung: Deutschland, Stichtag, Altersjahre
 pop_raw <- as_tibble(
   head(
-    read.csv("./data_static/12411-0012-DLAND_$F.csv",
+    read.csv("./data_static/12411-0012.csv",
       sep = ";",
       skip = 5,
       colClasses = c("character"),
@@ -62,7 +62,7 @@ pop_states <- pop_raw |>
   setNames(c("year", "age_group", "jurisdiction", "population")) |>
   rowwise() |>
   mutate(
-    jurisdiction = gsub("\\.", "-", jurisdiction),
+    jurisdiction = str_replace_all(jurisdiction, "\\.", "-"),
     age_group = case_when(
       age_group == "unter 1 Jahr" ~ "0",
       age_group == "90 Jahre und mehr" ~ "90+",
@@ -71,7 +71,10 @@ pop_states <- pop_raw |>
       .default = str_split(age_group, "-")[[1]][1]
     ),
     year = as.integer(right(year, 4)),
-    population = as.integer(population)
+    population = suppress_warnings(
+      as.integer(population),
+      "NAs introduced by coercion"
+    )
   ) |>
   relocate(jurisdiction, year, age_group, population)
 
@@ -115,6 +118,7 @@ rm(pop_states)
 
 # Format: iso3c, jurisdiction, year, population, is_projection
 de_population <- rbind(pop2, pop_states2) |>
+  filter(!is.na(population)) |>
   inner_join(de_states, by = "jurisdiction") |>
   select(iso3c, jurisdiction, year, age_group, population) |>
   group_by(iso3c, jurisdiction, year, age_group) |>
@@ -124,4 +128,8 @@ de_population <- rbind(pop2, pop_states2) |>
   mutate(data = lapply(data, forecast_population)) |>
   unnest(cols = "data")
 
+stopifnot(length(unique(de_population$iso3c)) == 17)
+
 rm(de_states, pop2, pop_states2)
+
+# source("./population/deu/deu.r")

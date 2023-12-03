@@ -67,6 +67,7 @@ rm(df)
 source("population/deu/deu.r")
 
 population <- de_population |>
+  filter(year >= min(year(df_age_states$date))) |>
   mutate(date = date(sprintf("%d-01-01", year)), .after = iso3c) |>
   group_by(iso3c) |>
   nest() |>
@@ -90,3 +91,5 @@ deu_mortality_states$type <- 3
 deu_mortality_states$source <- "destatis"
 
 rm(df_all, df_age_d, df_age_states, population)
+
+# source("./mortality/deu/mortality_states.r")
