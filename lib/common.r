@@ -670,3 +670,61 @@ repeat_until_stable <- function(df, col, fun) {
   }
   return(df)
 }
+
+# https://stackoverflow.com/a/39338512/2302437
+lm_predict <- function(lmObject, newdata, diag = TRUE) {
+  ## input checking
+  if (!inherits(lmObject, "lm")) stop("'lmObject' is not a valid 'lm' object!")
+  ## extract "terms" object from the fitted model, but delete response variable
+  tm <- delete.response(terms(lmObject))
+  ## linear predictor matrix
+  Xp <- model.matrix(tm, newdata)
+  ## predicted values by direct matrix-vector multiplication
+  pred <- c(Xp %*% coef(lmObject))
+  ## efficiently form the complete variance-covariance matrix
+  QR <- lmObject$qr ## qr object of fitted model
+  piv <- QR$pivot ## pivoting index
+  r <- QR$rank ## model rank / numeric rank
+  if (is.unsorted(piv)) {
+    ## pivoting has been done
+    B <- forwardsolve(t(QR$qr), t(Xp[, piv]), r)
+  } else {
+    ## no pivoting is done
+    B <- forwardsolve(t(QR$qr), t(Xp), r)
+  }
+  ## residual variance
+  sig2 <- c(crossprod(residuals(lmObject))) / df.residual(lmObject)
+  if (diag) {
+    ## return point-wise prediction variance
+    VCOV <- colSums(B^2) * sig2
+  } else {
+    ## return full variance-covariance matrix of predicted values
+    VCOV <- crossprod(B) * sig2
+  }
+  list(fit = pred, var.fit = VCOV, df = lmObject$df.residual, residual.var = sig2)
+}
+
+# https://stackoverflow.com/a/39338512/2302437
+agg_pred <- function(w, predObject, alpha = 0.95) {
+  ## input checing
+  if (length(w) != length(predObject$fit)) stop("'w' has wrong length!")
+  if (!is.matrix(predObject$var.fit)) stop("'predObject' has no variance-covariance matrix!")
+  ## mean of the aggregation
+  agg_mean <- c(crossprod(predObject$fit, w))
+  ## variance of the aggregation
+  agg_variance <- c(crossprod(w, predObject$var.fit %*% w))
+  ## adjusted variance-covariance matrix
+  VCOV_adj <- with(predObject, var.fit + diag(residual.var, nrow(var.fit)))
+  ## adjusted variance of the aggregation
+  agg_variance_adj <- c(crossprod(w, VCOV_adj %*% w))
+  ## t-distribution quantiles
+  Qt <- c(-1, 1) * qt((1 - alpha) / 2, predObject$df, lower.tail = FALSE)
+  ## names of CI and PI
+  NAME <- c("lower", "upper")
+  ## CI
+  CI <- setNames(agg_mean + Qt * sqrt(agg_variance), NAME)
+  ## PI
+  PI <- setNames(agg_mean + Qt * sqrt(agg_variance_adj), NAME)
+  ## return
+  list(mean = agg_mean, var = agg_variance, CI = CI, PI = PI)
+}
