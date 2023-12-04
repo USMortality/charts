@@ -20,17 +20,17 @@ model <- lm(deaths ~ year, data = df_train)
 oo <- lm_predict(model, df_test, FALSE)
 fc_sum_mean <- sum(oo$fit)
 fc_sum_variance <- sum(oo$var.fit)
-alpha <- 0.999
-Qt <- c(-1, 1) * qt((1 - alpha) / 2, model$df.residual, lower.tail = FALSE)
-ci <- fc_sum_mean + Qt * sqrt(fc_sum_variance)
+
+n <- ncol(lengths(oo$var.fit))
+res <- agg_pred(rep.int(x = 1, 3), oo, alpha = .99)
 
 print(paste0(
     "Actual: ", sum(df_test$deaths),
     ", Expected: ", round(fc_sum_mean),
-    ", 99.9%CI[", round(ci[1]), ",", round(ci[2]), "]"
+    ", 99%PI[", round(res$PI[1]), ",", round(res$PI[2]), "]"
 ))
 print(paste0(
     "Excess: ", round(sum(df_test$deaths) - fc_sum_mean),
-    ", 99.9%CI[", sum(df_test$deaths) - round(ci[1]), ",",
-    sum(df_test$deaths) - round(ci[2]), "]"
+    ", 99%CI[", sum(df_test$deaths) - round(res$PI[2]), ",",
+    sum(df_test$deaths) - round(res$PI[1]), "]"
 ))
