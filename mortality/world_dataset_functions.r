@@ -176,20 +176,13 @@ get_baseline_length <- function(iso, ct, cn) {
 }
 
 calculate_baseline <- function(data, col_name, chart_type) {
-  iso <- unique(data$iso3c)
+  iso <- data[1, ]$iso3c
   multiplier <- get_period_multiplier(chart_type)
   bl_size <- round(get_baseline_length(iso, chart_type, col_name) * multiplier)
-  forecast_interval <- round(4 * multiplier)
-
   col <- sym(col_name)
-  if (chart_type %in% c("yearly", "fluseason", "midyear")) {
-    df <- data |> filter(date < 2020)
-  } else {
-    df <- data |> filter(year(date) < 2020)
-  }
 
-  # No rows, return
-  if (nrow(tidyr::drop_na(df |> select(!!col))) < bl_size) {
+  # Not enough rows, return
+  if (sum(!is.na(data[col_name])) < bl_size) {
     data <- data |> mutate(
       "{col_name}_baseline" := NA,
       "{col_name}_baseline_lower" := NA,
@@ -201,35 +194,43 @@ calculate_baseline <- function(data, col_name, chart_type) {
     )
 
     return(data)
-  } else {
-    bl_data <- tail(df, bl_size)
-    fc <- bl_data |>
-      apply_model(col, chart_type) |>
-      forecast(h = forecast_interval)
-    fc_hl <- fabletools::hilo(fc, 95) |> unpack_hilo(cols = `95%`)
-
-    bl <- bl_data |>
-      apply_model(col, chart_type) |>
-      forecast(new_data = bl_data)
-
-    col <- sym(col_name)
-    result <- data.frame(date = c(bl$date, fc$date)) |> mutate(
-      "{col_name}_baseline" := c(bl$.mean, fc$.mean),
-      "{col_name}_baseline_lower" := c(rep(NA, nrow(bl)), fc_hl$`95%_lower`),
-      "{col_name}_baseline_upper" := c(rep(NA, nrow(bl)), fc_hl$`95%_upper`)
-    )
-
-    data |>
-      left_join(result, by = "date") |>
-      relocate(
-        paste0(col_name, "_baseline"),
-        paste0(col_name, "_baseline_lower"),
-        paste0(col_name, "_baseline_upper"),
-        .after = all_of(col_name)
-      ) |>
-      calculate_excess(col_name) |>
-      round_x(col_name, ifelse(col_name == "deaths", 0, 2))
   }
+
+  forecast_interval <- round(4 * multiplier)
+
+  if (chart_type %in% c("yearly", "fluseason", "midyear")) {
+    df <- data |> filter(date < 2020)
+  } else {
+    df <- data |> filter(year(date) < 2020)
+  }
+
+  bl_data <- tail(df, bl_size)
+  fc <- bl_data |>
+    apply_model(col, chart_type) |>
+    forecast(h = forecast_interval)
+  fc_hl <- fabletools::hilo(fc, 95) |> unpack_hilo(cols = `95%`)
+
+  bl <- bl_data |>
+    apply_model(col, chart_type) |>
+    forecast(new_data = bl_data)
+
+  col <- sym(col_name)
+  result <- data.frame(date = c(bl$date, fc$date)) |> mutate(
+    "{col_name}_baseline" := c(bl$.mean, fc$.mean),
+    "{col_name}_baseline_lower" := c(rep(NA, nrow(bl)), fc_hl$`95%_lower`),
+    "{col_name}_baseline_upper" := c(rep(NA, nrow(bl)), fc_hl$`95%_upper`)
+  )
+
+  data |>
+    left_join(result, by = "date") |>
+    relocate(
+      paste0(col_name, "_baseline"),
+      paste0(col_name, "_baseline_lower"),
+      paste0(col_name, "_baseline_upper"),
+      .after = all_of(col_name)
+    ) |>
+    calculate_excess(col_name) |>
+    round_x(col_name, ifelse(col_name == "deaths", 0, 2))
 }
 
 round_x <- function(data, col_name, digits = 0) {
@@ -265,7 +266,7 @@ calculate_baseline_excess <- function(data, chart_type) {
   result <- ts |>
     calculate_baseline(col_name = "deaths", chart_type) |>
     calculate_baseline(col_name = "cmr", chart_type)
-  if ("asmr_who" %in% colnames(ts) && sum(!is.na(ts$asmr_who)) > 0) {
+  if ("asmr_who" %in% colnames(ts)) {
     result <- result |>
       calculate_baseline(col_name = "asmr_who", chart_type) |>
       calculate_baseline(col_name = "asmr_esp", chart_type) |>
@@ -286,6 +287,10 @@ calculate_baseline_excess <- function(data, chart_type) {
 summarize_data_all <- function(dd_all, dd_asmr, type) {
   a <- summarize_data_by_time(dd_all, type)
   if (nrow(dd_asmr) == 0) {
+    a$asmr_who <- NA
+    a$asmr_esp <- NA
+    a$asmr_usa <- NA
+    a$asmr_country <- NA
     return(a)
   }
   b <- summarize_data_by_time(dd_asmr, type)
