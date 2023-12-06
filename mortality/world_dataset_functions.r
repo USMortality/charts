@@ -95,15 +95,15 @@ aggregate_data <- function(data, type) {
 sma <- function(vec, n) {
   vec_len <- length(vec)
   sma <- numeric(vec_len)
-  sma[1:(n - 1)] <- NA
-  na_tail_count <- sum(is.na(tail(vec, vec_len - n + 1)))
-  if (na_tail_count > 0) {
-    sma[(vec_len - na_tail_count):vec_len] <- NA
-  }
 
-  for (i in n:(vec_len - na_tail_count)) {
+  # Calculate SMA
+  for (i in (1 + n):vec_len) {
     sma[i] <- mean(vec[(i - n + 1):i], na.rm = TRUE)
   }
+  na_indices <- which(is.na(vec))
+
+  # Set NA values in df2 at the same indices
+  sma[na_indices] <- NA
 
   xts::reclass(sma, vec)
 }
