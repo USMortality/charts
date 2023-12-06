@@ -670,3 +670,27 @@ repeat_until_stable <- function(df, col, fun) {
   }
   return(df)
 }
+
+retry_download <- function(url, dir, retry = 3) {
+  success <- FALSE
+
+  for (i in 1:retry) {
+    tryCatch(
+      {
+        download.file(url, dir)
+        success <- TRUE
+      },
+      error = function(e) {
+        if (i < retry) {
+          message(paste0("Download attempt ", i, " failed. Retrying..."))
+        } else {
+          stop("Download failed after ", retry, " attempts.")
+        }
+      }
+    )
+
+    if (success) {
+      break
+    }
+  }
+}

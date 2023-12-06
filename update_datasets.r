@@ -1,3 +1,4 @@
+source("./lib/common.r")
 options(timeout = 600)
 
 urls <- list(
@@ -47,5 +48,7 @@ urls <- list(
 dir <- "data/"
 for (url in urls) {
   print(paste0(dir, url[2]))
-  download.file(url[1], paste0(dir, url[2]))
+  retry_download(url[1], paste0(dir, url[2]))
 }
+
+# source("./update_datasets.r")

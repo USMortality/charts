@@ -93,11 +93,18 @@ aggregate_data <- function(data, type) {
 }
 
 sma <- function(vec, n) {
-  sma <- c()
+  vec_len <- length(vec)
+  sma <- numeric(vec_len)
   sma[1:(n - 1)] <- NA
-  for (i in n:length(vec)) {
+  na_tail_count <- sum(is.na(tail(vec, vec_len - n + 1)))
+  if (na_tail_count > 0) {
+    sma[(vec_len - na_tail_count):vec_len] <- NA
+  }
+
+  for (i in n:(vec_len - na_tail_count)) {
     sma[i] <- mean(vec[(i - n + 1):i], na.rm = TRUE)
   }
+
   xts::reclass(sma, vec)
 }
 
