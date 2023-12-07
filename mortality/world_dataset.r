@@ -3,7 +3,12 @@ source("lib/asmr.r")
 
 # Multithreading
 options(progressr.enable = TRUE)
-plan(multisession, workers = max(1, detectCores() - 1))
+n_cores <- detectCores()
+if (n_cores > 2) {
+  plan(multisession, workers = max(1, cores - 1))
+} else {
+  plan(sequential)
+}
 
 source("mortality/world_dataset_functions.r")
 
