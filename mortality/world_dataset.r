@@ -1,6 +1,10 @@
 source("lib/common.r")
 source("lib/asmr.r")
 
+# Multithreading
+options(progressr.enable = TRUE)
+plan(multisession, workers = max(1, detectCores() - 1))
+
 source("mortality/world_dataset_functions.r")
 
 source("mortality/_collection/un.r")
@@ -9,10 +13,6 @@ source("mortality/_collection/world_mortality.r")
 source("mortality/_collection/eurostat.r")
 source("mortality/usa/mortality_states.r")
 source("mortality/deu/mortality_states.r")
-
-# Multithreading
-options(progressr.enable = TRUE)
-plan(multisession, workers = max(1, detectCores() - 1))
 
 # Load Data
 baseline_size <- read_remote("mortality/world_baseline.csv")
@@ -36,6 +36,10 @@ rm(
   un
 )
 
+if (Sys.getenv("STAGE") != "") {
+  data <- data |> filter(iso3c %in% c("USA", "SWE", "JPN", "GER", "AFG"))
+}
+
 # Country names are saved in meta data.
 source("mortality/world_iso.r")
 save_info(
@@ -43,8 +47,6 @@ save_info(
   upload = FALSE
 )
 rm(iso3c_jurisdiction)
-
-# start with ALB, since it has ASMR for csv headers.
 countries <- unique(data$iso3c)
 with_progress({
   p <- progressor(steps = length(countries))
@@ -52,8 +54,9 @@ with_progress({
     group_split(iso3c) |>
     future_walk(
       ~ {
-        p()
-        # Make furr has these functions available
+        iso3c <- .x[1, ]$iso3c
+        print(paste0("ISO: ", iso3c))
+        # Make furr pull in these functions
         fluseason <- fluseason
         midyear <- midyear
         dd <- .x |>
@@ -82,30 +85,31 @@ with_progress({
         for (ag in unique(dd$age_group)) {
           print(paste0("Age Group: ", ag))
           if (ag == "all") {
-            append_dataset(
+            write_dataset(
+              iso3c, ag,
               weekly = summarize_data_all(dd_all, dd_asmr, "yearweek"),
               monthly = summarize_data_all(dd_all, dd_asmr, "yearmonth"),
               quarterly = summarize_data_all(dd_all, dd_asmr, "yearquarter"),
               yearly = summarize_data_all(dd_all, dd_asmr, "year"),
               by_fluseason <- summarize_data_all(dd_all, dd_asmr, "fluseason"),
-              by_midyear = summarize_data_all(dd_all, dd_asmr, "midyear"),
-              ag
+              by_midyear = summarize_data_all(dd_all, dd_asmr, "midyear")
             )
           } else {
             dd_ag_f <- dd_age |>
               filter(age_group == ag) |>
               distinct(iso3c, date, age_group, .keep_all = TRUE)
-            append_dataset(
+            write_dataset(
+              iso3c, ag,
               weekly = summarize_data_by_time(dd_ag_f, "yearweek"),
               monthly = summarize_data_by_time(dd_ag_f, "yearmonth"),
               quarterly = summarize_data_by_time(dd_ag_f, "yearquarter"),
               yearly = summarize_data_by_time(dd_ag_f, "year"),
               by_fluseason = summarize_data_by_time(dd_ag_f, "fluseason"),
-              by_midyear = summarize_data_by_time(dd_ag_f, "midyear"),
-              ag
+              by_midyear = summarize_data_by_time(dd_ag_f, "midyear")
             )
           }
         }
+        p()
       }
     )
 })

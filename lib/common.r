@@ -95,20 +95,19 @@ save_csv <- function(df, name, upload = upload_files) {
   }
 }
 
-append_csv <- function(df, name) {
+write_csv <- function(df, name, append = FALSE) {
   file_name <- paste0(name, ".csv")
   local_file_name <- paste0("out/", file_name)
   if (!dir.exists(dirname(local_file_name))) {
     dir.create(dirname(local_file_name), recursive = TRUE)
   }
-  reset <- !file.exists(local_file_name)
   write.table(
     df,
     local_file_name,
-    append = !reset,
+    append = FALSE,
     sep = ",",
     na = "",
-    col.names = reset,
+    col.names = TRUE,
     row.names = FALSE
   )
 }

@@ -287,10 +287,6 @@ calculate_baseline_excess <- function(data, chart_type) {
 summarize_data_all <- function(dd_all, dd_asmr, type) {
   a <- summarize_data_by_time(dd_all, type)
   if (nrow(dd_asmr) == 0) {
-    a$asmr_who <- NA
-    a$asmr_esp <- NA
-    a$asmr_usa <- NA
-    a$asmr_country <- NA
     return(a)
   }
   b <- summarize_data_by_time(dd_asmr, type)
@@ -361,21 +357,22 @@ expand_daily <- function(df) {
   rbind(yearly, monthly, weekly)
 }
 
-append_dataset <- function(
+write_dataset <- function(
+    iso3c,
+    ag,
     weekly,
     monthly,
     quarterly,
     yearly,
     by_fluseason,
-    by_midyear,
-    ag) {
+    by_midyear) {
   postfix <- ifelse(ag == "all", "", paste0("_", ag))
 
-  append_csv(
+  write_csv(
     df = weekly |>
       calculate_baseline_excess("weekly") |>
       select(-all_of("age_group")),
-    name = paste0("mortality/world_weekly", postfix)
+    name = paste0("mortality/", iso3c, "/weekly", postfix)
   )
 
   weekly104wsma <- weekly |>
@@ -383,9 +380,9 @@ append_dataset <- function(
     calculate_baseline_excess("weekly_104w_sma") |>
     select(-all_of("age_group")) |>
     filter(!is.na(.data$deaths))
-  append_csv(
+  write_csv(
     df = weekly104wsma,
-    name = paste0("mortality/world_weekly_104w_sma", postfix)
+    name = paste0("mortality/", iso3c, "/weekly_104w_sma", postfix)
   )
 
   weekly52wsma <- weekly |>
@@ -393,9 +390,9 @@ append_dataset <- function(
     calculate_baseline_excess("weekly_52w_sma") |>
     select(-all_of("age_group")) |>
     filter(!is.na(.data$deaths))
-  append_csv(
+  write_csv(
     df = weekly52wsma,
-    name = paste0("mortality/world_weekly_52w_sma", postfix)
+    name = paste0("mortality/", iso3c, "/weekly_52w_sma", postfix)
   )
 
   weekly26wsma <- weekly |>
@@ -403,9 +400,9 @@ append_dataset <- function(
     calculate_baseline_excess("weekly_26w_sma") |>
     select(-all_of("age_group")) |>
     filter(!is.na(.data$deaths))
-  append_csv(
+  write_csv(
     df = weekly26wsma,
-    name = paste0("mortality/world_weekly_26w_sma", postfix)
+    name = paste0("mortality/", iso3c, "/weekly_26w_sma", postfix)
   )
 
   weekly13wsma <- weekly |>
@@ -413,48 +410,48 @@ append_dataset <- function(
     calculate_baseline_excess("weekly_14w_sma") |>
     select(-all_of("age_group")) |>
     filter(!is.na(.data$deaths))
-  append_csv(
+  write_csv(
     df = weekly13wsma,
-    name = paste0("mortality/world_weekly_13w_sma", postfix)
+    name = paste0("mortality/", iso3c, "/weekly_13w_sma", postfix)
   )
 
   monthly <- monthly |>
     calculate_baseline_excess("monthly") |>
     select(-all_of("age_group"))
-  append_csv(
+  write_csv(
     df = monthly,
-    name = paste0("mortality/world_monthly", postfix)
+    name = paste0("mortality/", iso3c, "/monthly", postfix)
   )
 
   quarterly <- quarterly |>
     calculate_baseline_excess("quarterly") |>
     select(-all_of("age_group"))
-  append_csv(
+  write_csv(
     df = quarterly,
-    name = paste0("mortality/world_quarterly", postfix)
+    name = paste0("mortality/", iso3c, "/quarterly", postfix)
   )
 
   yearly <- yearly |>
     calculate_baseline_excess("yearly") |>
     select(-all_of("age_group"))
-  append_csv(
+  write_csv(
     df = yearly,
-    name = paste0("mortality/world_yearly", postfix)
+    name = paste0("mortality/", iso3c, "/yearly", postfix)
   )
 
   by_fluseason <- by_fluseason |>
     calculate_baseline_excess("fluseason") |>
     select(-all_of("age_group"))
-  append_csv(
+  write_csv(
     df = by_fluseason,
-    name = paste0("mortality/world_fluseason", postfix)
+    name = paste0("mortality/", iso3c, "/fluseason", postfix)
   )
 
   by_midyear <- by_midyear |>
     calculate_baseline_excess("midyear") |>
     select(-all_of("age_group"))
-  append_csv(
+  write_csv(
     df = by_midyear,
-    name = paste0("mortality/world_midyear", postfix)
+    name = paste0("mortality/", iso3c, "/midyear", postfix)
   )
 }

@@ -19,3 +19,6 @@ rvest
 imputeTS
 countrycode
 pryr
+parallel
+progressr
+furrr
