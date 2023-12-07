@@ -74,7 +74,8 @@ aggregate_data <- function(data, type) {
       summarise(
         deaths = round(sum_if_not_empty(deaths)),
         population = round(mean(.data$population)),
-        cmr = round(sum_if_not_empty(.data$cmr), digits = 1)
+        cmr = round(sum_if_not_empty(.data$cmr), digits = 1),
+        .groups = "drop"
       )
   }
   if ("asmr_who" %in% names(data)) {
@@ -83,29 +84,28 @@ aggregate_data <- function(data, type) {
         asmr_who = round(sum_if_not_empty(.data$asmr_who), digits = 1),
         asmr_esp = round(sum_if_not_empty(.data$asmr_esp), digits = 1),
         asmr_usa = round(sum_if_not_empty(.data$asmr_usa), digits = 1),
-        asmr_country = round(sum_if_not_empty(.data$asmr_country), digits = 1)
+        asmr_country = round(sum_if_not_empty(.data$asmr_country), digits = 1),
+        .groups = "drop"
       )
   }
   result |>
-    ungroup() |>
     dplyr::rename("date" = all_of(type)) |>
     select(-"iso3c")
 }
 
 sma <- function(vec, n) {
   vec_len <- length(vec)
-  sma <- numeric(vec_len)
+  res <- rep(NA, vec_len)
+  if (n > vec_len) {
+    return(res)
+  }
 
   # Calculate SMA
-  for (i in (1 + n):vec_len) {
-    sma[i] <- mean(vec[(i - n + 1):i], na.rm = TRUE)
+  for (i in min(vec_len, (1 + n)):vec_len) {
+    res[i] <- mean(vec[(i - n + 1):i])
   }
-  na_indices <- which(is.na(vec))
 
-  # Set NA values in df2 at the same indices
-  sma[na_indices] <- NA
-
-  xts::reclass(sma, vec)
+  xts::reclass(res, vec)
 }
 
 calc_sma <- function(data, n) {

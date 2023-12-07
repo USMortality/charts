@@ -35,8 +35,7 @@ calculate_asmr <- function(df, pop, col_name) { # nolint: object_usage_linter.
     inner_join(pop, by = "age_group") |>
     mutate(!!col_name := .data$cmr * .data$weight) |>
     group_by(.data$iso3c, .data$date) |>
-    summarise(!!col_name := sum(!!col)) |>
-    ungroup()
+    summarise(!!col_name := sum(!!col), .groups = "drop")
 }
 
 calculate_asmr_variants <- function(df) {
