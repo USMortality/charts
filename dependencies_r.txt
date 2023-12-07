@@ -22,3 +22,4 @@ pryr
 parallel
 progressr
 furrr
+future.apply
