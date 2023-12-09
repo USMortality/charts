@@ -1,10 +1,5 @@
 tidyverse
-readxl
-jsonlite
-dplyr
-httr
 tsibble
-ggplot2
 aws.s3
 quantmod
 scales
@@ -14,7 +9,6 @@ feasts
 ggpubr
 fabletools
 lubridate
-rtweet
 rvest
 imputeTS
 countrycode
