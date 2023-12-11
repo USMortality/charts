@@ -1,4 +1,5 @@
 source("./lib/common.r")
+options(warn = 1)
 
 make_chart <- function(df, fc) {
     fc |> autoplot(df, level = 95) +
@@ -20,8 +21,7 @@ make_excess_chart <- function(df) {
         theme(axis.text.x = element_text(
             angle = 30, hjust = 0.5, vjust = 0.5
         )) +
-        scale_x_yearmonth(date_breaks = "3 month") +
-        scale_y_continuous(labels = label_number(suffix = "M", scale = 1e-6))
+        scale_x_yearmonth(date_breaks = "3 month")
 }
 
 # Read source data
@@ -131,5 +131,55 @@ chart <- make_excess_chart(
         ),
         x = "Month of Year",
         y = "People"
-    )
+    ) +
+    scale_y_continuous(labels = label_number(suffix = "M", scale = 1e-6))
 save_chart(chart, "covid19/usa/disability_excess_adj")
+
+# Excess + Vaxx
+owid <- read.csv("./data/owid.csv") |> as_tibble()
+
+vaxx <- owid |>
+    filter(
+        iso_code == "USA",
+        !is.na(people_vaccinated)
+    ) |>
+    select(date, people_vaccinated) |>
+    mutate(date = yearmonth(date(date))) |>
+    group_by(date) |>
+    summarize(people_vaccinated = mean(people_vaccinated), .groups = "drop") |>
+    as_tsibble(index = date) |>
+    mutate(people_vaccinated = people_vaccinated / 100)
+
+chart <-
+    make_excess_chart(
+        ts |>
+            inner_join(fc, by = c("date")) |>
+            mutate(
+                date = date - 3,
+                excess = (rate.x - .mean) * population / 1000
+            ) |>
+            select(date, excess) |> left_join(vaxx)
+    ) +
+    geom_line(aes(x = date, y = people_vaccinated)) +
+    labs(
+        title = paste0(
+            "Excess Disability vs COVID-19 Vaccination, >15 Years [USA]"
+        ),
+        subtitle = paste0(
+            "Disability shifted -3m · ",
+            "Source: FRED/LNU00074597 · ",
+            "Baseline: 2015/1-2019/12 · ",
+            "Adj. for pop. growth"
+        ),
+        x = "Month of Year",
+        y = "People"
+    ) +
+    scale_y_continuous(
+        labels = label_number(suffix = "M", scale = 1e-6),
+        sec.axis = sec_axis(
+            ~ . * 100,
+            name = "People Vaccinated",
+            labels = label_number(suffix = "M", scale = 1e-6)
+        )
+    )
+save_chart(chart, "covid19/usa/disability_excess_adj_vaxx")

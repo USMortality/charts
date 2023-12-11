@@ -11,6 +11,18 @@ make_chart <- function(df, fc) {
         scale_x_yearmonth(date_breaks = "1 year", date_labels = "%Y Jan")
 }
 
+make_excess_chart <- function(df) {
+    ggplot(df, aes(x = date, y = excess)) +
+        geom_col(aes(y = excess), fill = "#5383EC") +
+        theme_bw() +
+        theme(legend.position = "none") +
+        watermark() +
+        theme(axis.text.x = element_text(
+            angle = 30, hjust = 0.5, vjust = 0.5
+        )) +
+        scale_x_yearmonth(date_breaks = "3 month")
+}
+
 # Read source data
 df <- read.csv(
     paste0(
@@ -66,7 +78,8 @@ chart <- make_excess_chart(
         ),
         x = "Month of Year",
         y = "People"
-    )
+    ) +
+    scale_y_continuous(labels = label_number(suffix = "M", scale = 1e-6))
 save_chart(chart, "covid19/usa/disability_lf_excess")
 
 # Rate
@@ -118,5 +131,6 @@ chart <- make_excess_chart(
         ),
         x = "Month of Year",
         y = "People"
-    )
+    ) +
+    scale_y_continuous(labels = label_number(suffix = "M", scale = 1e-6))
 save_chart(chart, "covid19/usa/disability_lf_excess_adj")
