@@ -5,8 +5,8 @@ df <- read.csv(
         "https://fred.stlouisfed.org/graph/fredgraph.csv?bgcolor=%23e1e9f0&",
         "chart_type=line&drp=0&fo=open%20sans&graph_bgcolor=%23ffffff&",
         "height=450&mode=fred&recession_bars=on&txtcolor=%23444444&ts=12&",
-        "tts=12&width=1318&nt=0&thu=0&trc=0&show_legend=yes&show_axis_titles=",
-        "yes&show_tooltip=yes&id=LNU00074597&scale=left&cosd=2008-06-01&coed=",
+        "tts=12&width=1138&nt=0&thu=0&trc=0&show_legend=yes&show_axis_titles",
+        "=yes&show_tooltip=yes&id=LNU01074597&scale=left&cosd=2008-06-01&coed=",
         Sys.Date(),
         "&line_color=%234572a7&link_values=false&line_style=solid&mark_type=",
         "none&mw=3&lw=2&ost=-99999&oet=99999&mma=0&fml=a&fq=Weekly%2C%20Ending",
@@ -26,15 +26,14 @@ fit <- df |>
     filter(date < make_yearmonth(2020, 3)) |>
     model(TSLM(incidence ~ season() + trend()))
 fc <- forecast(fit, h = "48 months")
-chart <-
-    fc |> autoplot(df, level = 95) +
+chart <- fc |> autoplot(df, level = 95) +
     labs(
         title = paste0(
-            "Actual & Forecasts of Population - With a Disability, ",
+            "Actual & Forecasts of Civilian Labor Force - With a Disability, ",
             "16 Years and over [USA]"
         ),
         subtitle = paste0(
-            "Source: fred.stlouisfed.org/series/LNU00074597",
+            "Source: fred.stlouisfed.org/series/LNU01074597",
             "; Baseline Period: 2008 Jun - 2020 Feb; ",
             "95% PI"
         ),
@@ -47,7 +46,7 @@ chart <-
     theme(axis.text.x = element_text(angle = 30, hjust = 0.5, vjust = 0.5)) +
     scale_x_yearmonth(date_breaks = "1 year", date_labels = "%Y W01")
 # + coord_cartesian(ylim = c(0, max(df$incidence)))
-save_chart(chart, "covid19/usa/disability")
+save_chart(chart, "covid19/usa/disability_lf")
 
 # By year
 pop <- read_csv("https://s3.mortality.watch/data/population/usa/5y.csv")
@@ -70,11 +69,11 @@ chart <-
     fc |> autoplot(ts, level = 95) +
     labs(
         title = paste0(
-            "Actual & Forecasts of Population - With a ",
+            "Actual & Forecasts of Civilian Labor Force Rate - With a ",
             "Disability, 16 Years and over [USA]"
         ),
         subtitle = paste0(
-            "Source: fred.stlouisfed.org/series/LNU00074597",
+            "Source: fred.stlouisfed.org/series/LNU01074597",
             "; Baseline Period: 2008 Jun - 2020 Feb; ",
             "95% PI"
         ),
@@ -88,4 +87,4 @@ chart <-
     scale_x_yearmonth(date_breaks = "1 year", date_labels = "%Y W01")
 # + coord_cartesian(ylim = c(0, max(ts$rate)))
 
-save_chart(chart, "covid19/usa/disability_rate")
+save_chart(chart, "covid19/usa/disability_lf_rate")
