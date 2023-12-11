@@ -11,6 +11,19 @@ make_chart <- function(df, fc) {
         scale_x_yearmonth(date_breaks = "1 year", date_labels = "%Y Jan")
 }
 
+make_excess_chart <- function(df) {
+    ggplot(df, aes(x = date, y = excess)) +
+        geom_col(aes(y = excess), fill = "#5383EC") +
+        theme_bw() +
+        theme(legend.position = "none") +
+        watermark() +
+        theme(axis.text.x = element_text(
+            angle = 30, hjust = 0.5, vjust = 0.5
+        )) +
+        scale_x_yearmonth(date_breaks = "3 month") +
+        scale_y_continuous(labels = label_number(suffix = "M", scale = 1e-6))
+}
+
 # Read source data
 df <- read.csv(
     paste0(
@@ -28,7 +41,7 @@ df <- read.csv(
 # Months to forecast
 fc_months <- max(df$date) - make_yearmonth(year = 2020, month = 1)
 
-# Absolute
+## Absolute
 fit <- df |>
     filter_index("2015 Jan" ~ "2019 Dec") |>
     model(TSLM(value ~ season()))
@@ -49,7 +62,27 @@ chart <- make_chart(df, fc) + labs(
 
 save_chart(chart, "covid19/usa/disability")
 
-# Rate
+# Excess
+chart <- make_excess_chart(
+    df |>
+        inner_join(fc, by = c("date")) |>
+        mutate(excess = (value.x - .mean)) |>
+        select(date, excess)
+) +
+    labs(
+        title = paste0(
+            "Change in Population - With a Disability, 16 Years and over [USA]"
+        ),
+        subtitle = paste0(
+            "Source: fred.stlouisfed.org/series/LNU00074597",
+            " · Baseline Period: 2015 Jan - 2019 Dec"
+        ),
+        x = "Month of Year",
+        y = "People"
+    )
+save_chart(chart, "covid19/usa/disability_excess")
+
+## Rate
 pop <- read_csv("https://s3.mortality.watch/data/population/usa/5y.csv")
 pop_16_plus <- pop |>
     filter(iso3c == "USA", !age_group %in% c("0-4", "5-9", "10-14", "all")) |>
@@ -80,3 +113,23 @@ chart <- make_chart(ts, fc) + labs(
 )
 
 save_chart(chart, "covid19/usa/disability_rate")
+
+# Excess
+chart <- make_excess_chart(
+    ts |>
+        inner_join(fc, by = c("date")) |>
+        mutate(excess = (rate.x - .mean) * population / 1000) |>
+        select(date, excess)
+) +
+    labs(
+        title = paste0(
+            "Change in Population - With a Disability, 16 Years and over [USA]"
+        ),
+        subtitle = paste0(
+            "Source: fred.stlouisfed.org/series/LNU00074597",
+            " · Baseline Period: 2015 Jan - 2019 Dec · Adj. for pop. growth"
+        ),
+        x = "Month of Year",
+        y = "People"
+    )
+save_chart(chart, "covid19/usa/disability_excess_adj")

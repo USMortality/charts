@@ -49,6 +49,26 @@ chart <- make_chart(df, fc) + labs(
 
 save_chart(chart, "covid19/usa/disability_lf")
 
+# Excess
+chart <- make_excess_chart(
+    df |>
+        inner_join(fc, by = c("date")) |>
+        mutate(excess = (value.x - .mean)) |>
+        select(date, excess)
+) +
+    labs(
+        title = paste0(
+            "Change in Population - With a Disability, 16 Years and over [USA]"
+        ),
+        subtitle = paste0(
+            "Source: fred.stlouisfed.org/series/LNU00074597",
+            " · Baseline Period: 2015 Jan - 2019 Dec"
+        ),
+        x = "Month of Year",
+        y = "People"
+    )
+save_chart(chart, "covid19/usa/disability_lf_excess")
+
 # Rate
 pop <- read_csv("https://s3.mortality.watch/data/population/usa/5y.csv")
 pop_16_plus <- pop |>
@@ -80,3 +100,23 @@ chart <- make_chart(ts, fc) + labs(
 )
 
 save_chart(chart, "covid19/usa/disability_lf_rate")
+
+# Excess
+chart <- make_excess_chart(
+    ts |>
+        inner_join(fc, by = c("date")) |>
+        mutate(excess = (rate.x - .mean) * population / 1000) |>
+        select(date, excess)
+) +
+    labs(
+        title = paste0(
+            "Change in Population - With a Disability, 16 Years and over [USA]"
+        ),
+        subtitle = paste0(
+            "Source: fred.stlouisfed.org/series/LNU00074597",
+            " · Baseline Period: 2015 Jan - 2019 Dec · Adj. for pop. growth"
+        ),
+        x = "Month of Year",
+        y = "People"
+    )
+save_chart(chart, "covid19/usa/disability_lf_excess_adj")
