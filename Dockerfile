@@ -31,7 +31,7 @@ ENV CRONICLE_manager 1
 ENV CRONICLE_secret_key=
 ENV CRONICLE_Storage__engine=S3
 ENV CRONICLE_Storage__S3__params__Bucket=cronicle
-ENV CRONICLE_Storage__AWS__endpoint=https://s3.mortality.watch
+ENV CRONICLE_Storage__AWS__endpoint=http://s3-gate.mortality.watch
 ENV CRONICLE_Storage__AWS__forcePathStyle=true
 ENV CRONICLE_Storage__AWS__region=us-east-1
 ENV CRONICLE_Storage__AWS__credentials__secretAccessKey=${S3_SECRET}
@@ -51,7 +51,7 @@ ENV OPENSSL_CONF=/opt/cronicle/openssl.cnf
 RUN curl https://dl.min.io/client/mc/release/linux-amd64/mc --create-dirs -o minio-binaries/mc
 RUN chmod +x minio-binaries/mc
 RUN echo "export PATH=$PATH:$(pwd)/minio-binaries/" >>~/.bashrc
-RUN minio-binaries/mc alias set minio https://s3.mortality.watch minio $S3_SECRET
+RUN minio-binaries/mc alias set minio http://s3-gate.mortality.watch minio $S3_SECRET
 
 # R deps
 ADD dependencies_r.txt .

@@ -15,7 +15,6 @@ types <- c(
     "weekly_26w_sma",
     "weekly_13w_sma"
 )
-
 for (code in codes) {
     for (type in types) {
         file <- paste0(
@@ -25,7 +24,6 @@ for (code in codes) {
             ".csv"
         )
         print(file)
-        file <- "alb/weekly.csv"
         df <- read_csv(
             paste0("./out/mortality/", file),
             col_types = "cciiiiiiiiddddddddddddddddddddddddddddddddddd"
