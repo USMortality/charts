@@ -84,14 +84,36 @@ pop2 <- pop |>
   mutate(
     age_group = case_when(
       age_group %in% 0:29 ~ "0-29",
-      age_group %in% 30:44 ~ "30-44",
-      age_group %in% 45:64 ~ "45-64",
-      age_group %in% 65:74 ~ "65-74",
-      age_group %in% 75:84 ~ "75-84",
+      age_group %in% 30:34 ~ "30-34",
+      age_group %in% 35:39 ~ "35-39",
+      age_group %in% 40:44 ~ "40-44",
+      age_group %in% 45:49 ~ "45-49",
+      age_group %in% 50:54 ~ "50-54",
+      age_group %in% 55:59 ~ "55-59",
+      age_group %in% 60:64 ~ "60-64",
+      age_group %in% 65:69 ~ "65-69",
+      age_group %in% 70:74 ~ "70-74",
+      age_group %in% 75:79 ~ "75-79",
+      age_group %in% 80:84 ~ "80-84",
       age_group == "85+" ~ "85+",
       age_group == "all" ~ "all"
     )
   ) |>
+  group_by(jurisdiction, year, age_group) |>
+  summarise(population = sum(population)) |>
+  ungroup()
+
+# Additional larger groups
+pop3 <- pop |>
+  mutate(
+    age_group = case_when(
+      age_group %in% 30:44 ~ "30-44",
+      age_group %in% 45:64 ~ "45-64",
+      age_group %in% 65:74 ~ "65-74",
+      age_group %in% 75:84 ~ "75-84"
+    )
+  ) |>
+  filter(!is.na(age_group)) |>
   group_by(jurisdiction, year, age_group) |>
   summarise(population = sum(population)) |>
   ungroup()
@@ -117,7 +139,7 @@ pop_states2 <- pop_states |>
 rm(pop_states)
 
 # Format: iso3c, jurisdiction, year, population, is_projection
-de_population <- rbind(pop2, pop_states2) |>
+de_population <- rbind(pop2, pop3, pop_states2) |>
   filter(!is.na(population)) |>
   inner_join(de_states, by = "jurisdiction") |>
   select(iso3c, jurisdiction, year, age_group, population) |>
