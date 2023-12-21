@@ -45,7 +45,7 @@ df_age_d_6 <- df |>
 df_age_d_6$n_age_groups <- 6
 
 # By age group, national
-df_age_d_15 <- df |>
+df_age_d_13 <- df |>
   filter(jurisdiction == "Deutschland" & age_group != "Insgesamt") |>
   mutate(
     date = date_parse(paste(year, week, 1), format = "%G %V %u"),
@@ -62,15 +62,15 @@ df_age_d_15 <- df |>
       age_group %in% c("70-75") ~ "70-74",
       age_group %in% c("75-80") ~ "75-79",
       age_group %in% c("80-85") ~ "80-84",
-      age_group %in% c("85-90") ~ "85-89",
-      age_group %in% c("90-95") ~ "90-94",
-      age_group %in% c("95 u. mehr") ~ "95+"
+      age_group %in% c("85-90") ~ "85+",
+      age_group %in% c("90-95") ~ "85+",
+      age_group %in% c("95 u. mehr") ~ "85+"
     )
   ) |>
   group_by(iso3c, date, age_group) |>
   summarise(deaths = sum(deaths)) |>
   ungroup()
-df_age_d_15$n_age_groups <- 15
+df_age_d_13$n_age_groups <- 13
 
 # By age group, states
 df_age_states <- df |>
@@ -110,14 +110,14 @@ population <- de_population |>
   select(iso3c, date, age_group, population)
 rm(de_population)
 
-deu_mortality_states <- rbind(df_all, df_age_d_15, df_age_d_6, df_age_states) |>
+deu_mortality_states <- rbind(df_all, df_age_d_13, df_age_d_6, df_age_states) |>
   inner_join(population, by = c("iso3c", "date", "age_group")) |>
   arrange(iso3c, date, age_group) |>
-  distinct(iso3c, date, age_group, .keep_all = TRUE)
+  distinct(iso3c, date, age_group, n_age_groups, .keep_all = TRUE)
 
 deu_mortality_states$type <- 3
 deu_mortality_states$source <- "destatis"
 
-rm(df_all, df_age_d_15, df_age_d_6, df_age_states, population)
+rm(df_all, df_age_d_13, df_age_d_6, df_age_states, population)
 
 # source("./mortality/deu/mortality_states.r")
