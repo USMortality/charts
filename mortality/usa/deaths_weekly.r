@@ -207,6 +207,7 @@ result_2 <- rbind(
     age_group = "all"
   )
 ) |>
+  filter(week != 99) |>
   mutate(
     year = as.integer(year),
     week = as.integer(week),
