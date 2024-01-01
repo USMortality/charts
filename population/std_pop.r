@@ -181,3 +181,5 @@ get_country2020_bins <- function(df) {
   }
   get_std_pop_weights(unique(df$age_group), data)
 }
+
+# source("population/std_pop.r")
