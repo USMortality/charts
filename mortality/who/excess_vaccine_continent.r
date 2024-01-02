@@ -61,7 +61,7 @@ ggplot(df, aes(x = date)) +
   geom_col(aes(y = excess_deaths), fill = "red") +
   geom_line(
     aes(y = new_vaccinations_smoothed / coeff),
-    color = "black", size = 2
+    color = "black", linewidth = 2
   ) +
   twitter_theme() +
   watermark() +

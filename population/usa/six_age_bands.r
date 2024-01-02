@@ -173,7 +173,7 @@ for (j in unique(population_grouped_forecasted$jurisdiction)) {
       y = "Population",
       x = "Year"
     ) +
-    geom_line(aes(color = age_group), size = 1) +
+    geom_line(aes(color = age_group), linewidth = 1) +
     twitter_theme() +
     watermark() +
     scale_y_continuous(labels = label_number(suffix = "M", scale = 1e-6))
