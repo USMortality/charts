@@ -31,7 +31,8 @@ data <- rbind(
   world_mortality,
   mortality_org,
   un
-) |> arrange(iso3c, desc(type), source)
+) |>
+  arrange(iso3c, desc(type), source)
 
 rm(
   deu_mortality_states,
@@ -88,12 +89,12 @@ process_country <- function(df) {
     if (ag == "all") {
       write_dataset(
         iso3c, ag,
-        weekly = summarize_data_all(dd_all, dd_asmr, "yearweek"),
-        monthly = summarize_data_all(dd_all, dd_asmr, "yearmonth"),
-        quarterly = summarize_data_all(dd_all, dd_asmr, "yearquarter"),
-        yearly = summarize_data_all(dd_all, dd_asmr, "year"),
-        by_fluseason <- summarize_data_all(dd_all, dd_asmr, "fluseason"),
-        by_midyear = summarize_data_all(dd_all, dd_asmr, "midyear")
+        weekly = summarize_data_all(dd_all, dd_asmr, type = "yearweek"),
+        monthly = summarize_data_all(dd_all, dd_asmr, type = "yearmonth"),
+        quarterly = summarize_data_all(dd_all, dd_asmr, type = "yearquarter"),
+        yearly = summarize_data_all(dd_all, dd_asmr, type = "year"),
+        by_fluseason <- summarize_data_all(dd_all, dd_asmr, type = "fluseason"),
+        by_midyear = summarize_data_all(dd_all, dd_asmr, type = "midyear")
       )
     } else {
       dd_ag_f <- dd_age |>
@@ -101,12 +102,12 @@ process_country <- function(df) {
         distinct(iso3c, date, age_group, .keep_all = TRUE)
       write_dataset(
         iso3c, ag,
-        weekly = summarize_data_by_time(dd_ag_f, "yearweek"),
-        monthly = summarize_data_by_time(dd_ag_f, "yearmonth"),
-        quarterly = summarize_data_by_time(dd_ag_f, "yearquarter"),
-        yearly = summarize_data_by_time(dd_ag_f, "year"),
-        by_fluseason = summarize_data_by_time(dd_ag_f, "fluseason"),
-        by_midyear = summarize_data_by_time(dd_ag_f, "midyear")
+        weekly = summarize_data_by_time(dd_ag_f, type = "yearweek"),
+        monthly = summarize_data_by_time(dd_ag_f, type = "yearmonth"),
+        quarterly = summarize_data_by_time(dd_ag_f, type = "yearquarter"),
+        yearly = summarize_data_by_time(dd_ag_f, type = "year"),
+        by_fluseason = summarize_data_by_time(dd_ag_f, type = "fluseason"),
+        by_midyear = summarize_data_by_time(dd_ag_f, type = "midyear")
       )
     }
   }
@@ -124,7 +125,8 @@ if (Sys.getenv("CI") != 1) {
       })
   })
 } else {
-  data |>
+  df <- data |>
+    filter(iso3c == "DEU") |>
     group_split(iso3c) |>
     walk(process_country)
 }

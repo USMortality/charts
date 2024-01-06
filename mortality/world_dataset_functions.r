@@ -75,9 +75,12 @@ aggregate_data <- function(data, type) {
         deaths = round(sum_if_not_empty(deaths)),
         population = round(mean(.data$population)),
         cmr = round(sum_if_not_empty(.data$cmr), digits = 1),
+        type = toString(unique(.data$type)),
+        source = toString(unique(.data$source)),
         .groups = "drop"
       )
   }
+
   if ("asmr_who" %in% names(data)) {
     result <- result |>
       summarise(
@@ -175,15 +178,15 @@ get_baseline_length <- function(iso, ct, cn) {
   }
 }
 
-calculate_baseline <- function(data, col_name, chart_type) {
-  iso <- data[1, ]$iso3c
+calculate_baseline <- function(ts, col_name, chart_type) {
+  iso <- ts[1, ]$iso3c
   multiplier <- get_period_multiplier(chart_type)
   bl_size <- round(get_baseline_length(iso, chart_type, col_name) * multiplier)
   col <- sym(col_name)
 
   # Not enough rows, return
-  if (sum(!is.na(data[col_name])) < bl_size) {
-    data <- data |> mutate(
+  if (sum(!is.na(ts[col_name])) < bl_size) {
+    ts <- ts |> mutate(
       "{col_name}_baseline" := NA,
       "{col_name}_baseline_lower" := NA,
       "{col_name}_baseline_upper" := NA,
@@ -193,15 +196,15 @@ calculate_baseline <- function(data, col_name, chart_type) {
       .after = all_of(col)
     )
 
-    return(data)
+    return(ts)
   }
 
   forecast_interval <- round(4 * multiplier)
 
   if (chart_type %in% c("yearly", "fluseason", "midyear")) {
-    df <- data |> filter(date < 2020)
+    df <- ts |> filter(date < 2020)
   } else {
-    df <- data |> filter(year(date) < 2020)
+    df <- ts |> filter(year(date) < 2020)
   }
 
   bl_data <- tail(df, bl_size)
@@ -221,7 +224,7 @@ calculate_baseline <- function(data, col_name, chart_type) {
     "{col_name}_baseline_upper" := c(rep(NA, nrow(bl)), fc_hl$`95%_upper`)
   )
 
-  data |>
+  ts |>
     left_join(result, by = "date") |>
     relocate(
       paste0(col_name, "_baseline"),
@@ -251,19 +254,22 @@ round_x <- function(data, col_name, digits = 0) {
     )
 }
 
-calculate_baseline_excess <- function(data, chart_type) {
-  if (nrow(data) == 0) {
-    return(data)
+calculate_baseline_excess <- function(df, chart_type) {
+  if (nrow(df) == 0) {
+    return(df)
   }
   if (chart_type %in% c("fluseason", "midyear")) {
-    ts <- data |>
+    ts <- df |>
       mutate(date = as.integer(right(date, 4))) |>
       as_tsibble(index = date)
   } else {
-    ts <- data |> as_tsibble(index = date)
+    ts <- df |> as_tsibble(index = date)
   }
 
+  # Exclude UN dataset, which is based on projections.
+  result_un <- ts |> filter(source %in% c("un"))
   result <- ts |>
+    filter(!source %in% c("un")) |>
     calculate_baseline(col_name = "deaths", chart_type) |>
     calculate_baseline(col_name = "cmr", chart_type)
   if ("asmr_who" %in% colnames(ts)) {
@@ -273,6 +279,7 @@ calculate_baseline_excess <- function(data, chart_type) {
       calculate_baseline(col_name = "asmr_usa", chart_type) |>
       calculate_baseline(col_name = "asmr_country", chart_type)
   }
+  result <- bind_rows(result_un, result) |> arrange(date)
 
   if (chart_type %in% c("fluseason", "midyear")) {
     # Restore Flu Season Notation
@@ -370,7 +377,7 @@ write_dataset <- function(
 
   write_csv(
     df = weekly |>
-      calculate_baseline_excess("weekly") |>
+      calculate_baseline_excess(chart_type = "weekly") |>
       select(-all_of("age_group")),
     name = paste0("mortality/", iso3c, "/weekly", postfix)
   )
