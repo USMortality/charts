@@ -126,7 +126,6 @@ if (Sys.getenv("CI") != 1) {
   })
 } else {
   df <- data |>
-    filter(iso3c == "DEU") |>
     group_split(iso3c) |>
     walk(process_country)
 }
