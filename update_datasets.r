@@ -20,15 +20,15 @@ urls <- list(
   ),
   c(
     paste0(
-      "https://ec.europa.eu/eurostat/estat-navtree-portlet-prod/",
-      "BulkDownloadListing?file=data/demo_r_mwk_10.tsv.gz"
+      "https://ec.europa.eu/eurostat/api/dissemination/sdmx/2.1/data/",
+      "demo_r_mwk_10/?format=TSV&compressed=true&i"
     ),
     "eurostat_weekly.tsv.gz"
   ),
   c(
     paste0(
-      "https://ec.europa.eu/eurostat/estat-navtree-portlet-prod/",
-      "BulkDownloadListing?file=data/demo_pjan.tsv.gz"
+      "https://ec.europa.eu/eurostat/api/dissemination/sdmx/2.1/data/",
+      "demo_pjan/?format=TSV&compressed=true&i"
     ),
     "eurostat_population.tsv.gz"
   ),
