@@ -19,6 +19,23 @@ source("mortality/_collection/world_mortality.r")
 source("mortality/_collection/eurostat.r")
 source("mortality/usa/mortality_states.r")
 source("mortality/deu/mortality_states.r")
+# Manually added from Sonderauswertung
+deu_prelim <-
+  data.frame(
+    iso3c = rep("DEU", 3),
+    date = c(
+      date(make_yearmonth(year = 2023, month = 10)),
+      date(make_yearmonth(year = 2023, month = 11)),
+      date(make_yearmonth(year = 2023, month = 12))
+    ),
+    age_group = rep("all", 3),
+    deaths = c(84064L, 87226L, 98554L),
+    population = c(84958009L, 84985995L, 85013980L),
+    type = rep(2L, 3),
+    n_age_groups = rep(1L, 3),
+    source = rep("destatis_2023", 3)
+  ) |>
+  as_tibble()
 
 # Load Data
 baseline_size <- read_remote("mortality/world_baseline.csv")
@@ -30,7 +47,8 @@ data <- rbind(
   eurostat |> filter(iso3c != "SWE"),
   world_mortality,
   mortality_org,
-  un
+  un,
+  deu_prelim
 ) |>
   arrange(iso3c, desc(type), source)
 
@@ -57,7 +75,6 @@ save_info(
   upload = FALSE
 )
 rm(iso3c_jurisdiction)
-
 process_country <- function(df) {
   iso3c <- df[1, ]$iso3c
   print(paste0("ISO: ", iso3c))
