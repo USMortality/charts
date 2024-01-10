@@ -3,6 +3,10 @@ options(timeout = 600)
 
 urls <- list(
   c(
+    "https://raw.githubusercontent.com/robert-koch-institut/COVID-19-Impfungen_in_Deutschland/main/Archiv/2022-09-05_Deutschland_Landkreise_COVID-19-Impfungen.csv",
+    "covid19_deu_vaccinations.csv"
+  ),
+  c(
     paste0(
       "https://www2.census.gov/programs-surveys/popest/datasets/2000-2010/",
       "intercensal/state/st-est00int-agesex.csv"
