@@ -272,7 +272,7 @@ get_usa_mortality <- function(age_group) {
   deaths_usa |> select(3, 4, 9, 8)
 }
 
-get_daily_from_n <- function(wd, column_names, fun) { # nolint
+get_daily_from_n <- function(wd, columns, ex_columns, fun) { # nolint
   if (nrow(wd) == 0) {
     return(wd)
   }
@@ -281,28 +281,33 @@ get_daily_from_n <- function(wd, column_names, fun) { # nolint
     mutate(date = date(.data$date)) |>
     mutate(date = .data$date + days(.data$day - 1))
 
-  for (column_name in column_names) {
-    col <- sym(column_name)
-    df <- df |> mutate("{column_name}" := !!col / fun(date)) # nolint
+  for (col in columns) {
+    col <- sym(col)
+    df <- df |> mutate("{col}" := !!col / fun(date)) # nolint
+  }
+
+  # Set all exclude columns, except first row to NA, for population interpol.
+  for (col in ex_columns) {
+    df[[col]] <- ifelse(df$day == 1, df[[col]], NA)
   }
 
   df |> select(-ncol(df))
 }
 
-get_daily_from_weekly <- function(wd, column_names) {
-  get_daily_from_n(wd, column_names, function(date) {
+get_daily_from_weekly <- function(wd, columns, ex_columns = c()) {
+  get_daily_from_n(wd, columns, ex_columns, fun = function(date) {
     7
   })
 }
 
-get_daily_from_monthly <- function(wd, column_names) {
-  get_daily_from_n(wd, column_names, function(date) {
+get_daily_from_monthly <- function(wd, columns, ex_columns = c()) {
+  get_daily_from_n(wd, columns, ex_columns, fun = function(date) {
     days_in_month(date)
   })
 }
 
-get_daily_from_yearly <- function(wd, column_names) {
-  get_daily_from_n(wd, column_names, function(date) {
+get_daily_from_yearly <- function(wd, columns, ex_columns = c()) {
+  get_daily_from_n(wd, columns, ex_columns, fun = function(date) {
     y <- year(date)
     x <- lubridate::interval(paste0(y, "-01-01"), paste0(y, "-12-31"))
     x %/% days(1) + 1
@@ -332,7 +337,7 @@ forecast_population <- function(data) {
     as_tsibble(index = year) |>
     tail(n = 5)
   y <- suppress_warnings(
-    df |> model(fable::NAIVE(population ~ drift())) |> forecast(h = fc_n),
+    df |> model(fable::TSLM(population ~ trend())) |> forecast(h = fc_n),
     "perfect fit"
   )
 

@@ -95,8 +95,7 @@ rm(df)
 source("population/deu/deu.r")
 
 population <- de_population |>
-  filter(year >= min(year(df_age_states$date))) |>
-  mutate(date = date(sprintf("%d-01-01", year)), .after = iso3c) |>
+  mutate(date = date(sprintf("%d-12-31", year)), .after = iso3c) |>
   group_by(iso3c) |>
   nest() |>
   mutate(

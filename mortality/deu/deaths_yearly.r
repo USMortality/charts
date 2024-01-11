@@ -350,7 +350,7 @@ h_step_fc <- 2
 calc_excess <- function(df) {
   fc <- head(df, bl_len) |>
     as_tsibble(index = year) |>
-    model(fable::RW(asmr_esp ~ drift())) |>
+    model(fable::TSLM(asmr_esp ~ trend())) |>
     forecast(h = h_step_fc)
 
   result <- tail(df, h_step_fc)

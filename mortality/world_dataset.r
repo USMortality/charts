@@ -50,7 +50,7 @@ data <- rbind(
   un,
   deu_prelim
 ) |>
-  arrange(iso3c, desc(type), source)
+  arrange(iso3c, date, desc(type), source)
 
 rm(
   deu_mortality_states,

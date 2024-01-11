@@ -351,17 +351,22 @@ save_info <- function(df, upload) {
 
 expand_daily <- function(df) {
   cols <- c("deaths", "cmr")
+  ex_cols <- c("population")
   yearly <- df |>
     filter(.data$type == 1) |>
-    get_daily_from_yearly(cols)
+    get_daily_from_yearly(cols, ex_cols)
   monthly <- df |>
     filter(.data$type == 2) |>
-    get_daily_from_monthly(cols)
+    get_daily_from_monthly(cols, ex_cols)
   weekly <- df |>
     filter(.data$type == 3) |>
-    get_daily_from_weekly(cols)
+    get_daily_from_weekly(cols, ex_cols)
 
-  rbind(yearly, monthly, weekly)
+  rbind(yearly, monthly, weekly) |>
+    arrange(date) |>
+    group_by(age_group, type, source) |>
+    mutate(across(population, ~ na.approx(., rule = 2, na.rm = FALSE))) |>
+    ungroup()
 }
 
 write_dataset <- function(
