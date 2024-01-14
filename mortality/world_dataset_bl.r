@@ -49,12 +49,12 @@ calculate_baseline <- function(table, mortality_col, forecast_interval = 1) {
     filter(!is.na(!!mortality_col)) |>
     model(fable::TSLM(!!mortality_col ~ trend())) |>
     forecast(h = forecast_interval)
-  hl <- fabletools::hilo(r, 99.99) |> fabletools::unpack_hilo(cols = `99.99%`) # nolint
+  hl <- fabletools::hilo(r, 95) |> fabletools::unpack_hilo(cols = `95%`) # nolint
   data.frame(
     date = r$date,
     mean = round(r$.mean, digits = 1),
-    lower = round(hl$`99.99%_lower`, digits = 1),
-    upper = round(hl$`99.99%_upper`, digits = 1)
+    lower = round(hl$`95%_lower`, digits = 1),
+    upper = round(hl$`95%_upper`, digits = 1)
   ) |> as_tibble()
 }
 
@@ -155,7 +155,7 @@ for (mortality_type in types) {
       labs(
         title = paste0("Weekly ", mortality_title, " [", country, "]"),
         subtitle = paste0(
-          "99.99% PI; <2020: 1y forecast;",
+          "95% PI; <2020: 1y forecast;",
           " >=2020: 3y forecast; Source: www.mortality.watch"
         ),
         y = "Deaths/100k",

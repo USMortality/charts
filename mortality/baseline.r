@@ -1,4 +1,5 @@
 source("lib/common.r")
+source("lib/parallel.r")
 
 # Define default functions
 select <- dplyr::select
@@ -37,16 +38,16 @@ distinct <- dplyr::distinct
 complete <- tidyr::complete
 case_when <- dplyr::case_when
 
-forecast_len <- 3
+forecast_len <- 4
 get_optimal_size <- function(df, type) {
   min <- Inf
-  optimal_size <- min(15, nrow(df))
+  optimal_size <- min(10, nrow(df))
   type <- sym(type)
   if (nrow(na.omit(df[type])) < 5 + forecast_len) {
     return(NA)
   }
 
-  for (size in 5:min(optimal_size - forecast_len, 15)) {
+  for (size in 5:min(optimal_size - forecast_len, 10)) {
     acc <- df |>
       head(-forecast_len) |>
       tsibble::slide_tsibble(.size = size) |>
@@ -64,7 +65,7 @@ get_optimal_size <- function(df, type) {
 }
 
 filter_complete_latest <- function(df) {
-  gaps <- df |> scan_gaps()
+  gaps <- df |> tsibble::scan_gaps()
   if (nrow(gaps) == 0) {
     return(df |> select(-iso3c))
   }
@@ -73,7 +74,7 @@ filter_complete_latest <- function(df) {
     select(-iso3c)
 }
 
-get_baseline_size <- function(data) {
+get_baseline_size <- function(data, iso) {
   result <- setNames(
     data.frame(matrix(ncol = 3, nrow = 0)),
     c("iso3c", "type", "window")
@@ -81,43 +82,59 @@ get_baseline_size <- function(data) {
   asmr_types <- c("asmr_who", "asmr_esp", "asmr_usa", "asmr_country")
   types <- c("deaths", "cmr", asmr_types)
   for (type in types) {
-    for (iso in unique(data$iso3c)) {
-      print(paste(iso, type))
-      df <- data |>
-        filter(.data$iso3c == iso, date < 2020, !is.na(!!sym(type))) |>
-        as_tsibble(index = date) |>
-        filter_complete_latest()
+    if (!type %in% colnames(data)) next
 
-      optimal_size <- ifelse(nrow(na.omit(df[type])) > 5,
-        get_optimal_size(df, type),
-        NA
-      )
+    print(paste(type))
+    df <- data |>
+      filter(date < 2020, !is.na(!!sym(type))) |>
+      as_tsibble(index = date) |>
+      filter_complete_latest()
 
-      iso <- head(data |> filter(.data$iso3c == iso), 1)$iso3c
-      result[nrow(result) + 1, ] <- c(
-        iso, type, optimal_size
-      )
-      print(paste0("Optimal window size: ", optimal_size))
-    }
+    optimal_size <- ifelse(nrow(na.omit(df[type])) > 5,
+      get_optimal_size(df, type),
+      NA
+    )
+
+    result[nrow(result) + 1, ] <- c(iso, type, optimal_size)
+    print(paste0("Optimal window size: ", optimal_size))
   }
   result
 }
 
-data <- read_remote("mortality/world_yearly.csv")
-yearly <- data |>
-  get_baseline_size() |>
-  mutate(chart_type = "yearly", .after = "iso3c")
+process_country <- function(iso3c) {
+  result <- tibble()
+  data <- read_remote(paste0("mortality/", iso3c, "/yearly.csv"))
+  yearly <- data |>
+    get_baseline_size(iso3c) |>
+    mutate(chart_type = "yearly", .after = "iso3c")
 
-data <- read_remote("mortality/world_fluseason.csv")
-fluseason <- data |>
-  mutate(date = as.integer(left(date, 4))) |>
-  get_baseline_size() |>
-  mutate(chart_type = "fluseason", .after = "iso3c")
+  data <- read_remote(paste0("mortality/", iso3c, "/fluseason.csv"))
+  fluseason <- data |>
+    mutate(date = as.integer(left(date, 4))) |>
+    get_baseline_size(iso3c) |>
+    mutate(chart_type = "fluseason", .after = "iso3c")
 
-data <- read_remote("mortality/world_midyear.csv")
-midyear <- data |>
-  mutate(date = as.integer(left(date, 4))) |>
-  get_baseline_size() |>
-  mutate(chart_type = "midyear", .after = "iso3c")
+  data <- read_remote(paste0("mortality/", iso3c, "/midyear.csv"))
+  midyear <- data |>
+    mutate(date = as.integer(left(date, 4))) |>
+    get_baseline_size(iso3c) |>
+    mutate(chart_type = "midyear", .after = "iso3c")
 
-save_csv(rbind(yearly, fluseason, midyear), "mortality/world_baseline")
+  rbind(result, rbind(yearly, fluseason, midyear))
+}
+
+meta <- read_remote("mortality/world_meta.csv")
+codes <- unique(meta$iso3c)
+with_progress({
+  p <- progressor(steps = length(codes))
+  result <- codes |>
+    future_map(~ {
+      p()
+      process_country(.x)
+    }) |>
+    bind_rows()
+})
+
+save_csv(result, "mortality/world_baseline")
+
+# source("mortality/baseline.r")

@@ -1,15 +1,6 @@
 source("lib/common.r")
 source("lib/asmr.r")
-
-options(progressr.enable = TRUE)
-
-# Multithreading
-n_cores <- detectCores()
-if (n_cores > 2) {
-  plan(multisession, workers = max(1, n_cores - 1))
-} else {
-  plan(sequential)
-}
+source("lib/parallel.r")
 
 source("mortality/world_dataset_functions.r")
 
