@@ -1,53 +1,20 @@
 source("lib/common.r")
 source("lib/parallel.r")
 
-# Define default functions
-select <- dplyr::select
-filter <- dplyr::filter
-mutate <- dplyr::mutate
-group_by <- dplyr::group_by
-ungroup <- dplyr::ungroup
-summarise <- dplyr::summarise
-inner_join <- dplyr::inner_join
-relocate <- dplyr::relocate
-year <- lubridate::year
-month <- lubridate::month
-week <- lubridate::week
-days <- lubridate::days
-days_in_month <- lubridate::days_in_month
-as_tibble <- tibble::as_tibble
-tibble <- tibble::tibble
-as_tsibble <- tsibble::as_tsibble
-str_replace <- stringr::str_replace
-uncount <- tidyr::uncount
-sym <- rlang::sym
-model <- fabletools::model
-date <- lubridate::date
-forecast <- fabletools::forecast
-select <- dplyr::select
-all_of <- dplyr::all_of
-nest <- tidyr::nest
-unnest <- tidyr::unnest
-.data <- dplyr::.data
-yearmonth <- tsibble::yearmonth
-yearweek <- tsibble::yearweek
-ggplot <- ggplot2::ggplot
-make_yearmonth <- tsibble::make_yearmonth
-arrange <- dplyr::arrange
-distinct <- dplyr::distinct
-complete <- tidyr::complete
-case_when <- dplyr::case_when
-
+min_bl_len <- 3
+max_bl_len <- 10
 forecast_len <- 4
+min_data_len <- min_bl_len + forecast_len
+
 get_optimal_size <- function(df, type) {
   min <- Inf
-  optimal_size <- min(10, nrow(df))
+  optimal_size <- min(max_bl_len, nrow(df))
   type <- sym(type)
-  if (nrow(na.omit(df[type])) < 5 + forecast_len) {
+  if (nrow(na.omit(df[type])) < min_bl_len + forecast_len) {
     return(NA)
   }
 
-  for (size in 5:min(optimal_size - forecast_len, 10)) {
+  for (size in min_bl_len:min(nrow(df) - forecast_len, max_bl_len)) {
     acc <- df |>
       head(-forecast_len) |>
       tsibble::slide_tsibble(.size = size) |>
@@ -90,7 +57,7 @@ get_baseline_size <- function(data, iso) {
       as_tsibble(index = date) |>
       filter_complete_latest()
 
-    optimal_size <- ifelse(nrow(na.omit(df[type])) > 5,
+    optimal_size <- ifelse(nrow(na.omit(df[type])) >= min_data_len,
       get_optimal_size(df, type),
       NA
     )
@@ -104,6 +71,7 @@ get_baseline_size <- function(data, iso) {
 process_country <- function(iso3c) {
   result <- tibble()
   data <- read_remote(paste0("mortality/", iso3c, "/yearly.csv"))
+  print(iso3c)
   yearly <- data |>
     get_baseline_size(iso3c) |>
     mutate(chart_type = "yearly", .after = "iso3c")
