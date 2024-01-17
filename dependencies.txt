@@ -21,3 +21,6 @@ libxfixes3
 libxrandr2
 libgbm1
 libasound2
+pkgconfig
+gdal
+udunits
