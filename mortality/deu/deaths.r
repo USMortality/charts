@@ -54,6 +54,5 @@ len <- nrow(df |> filter(
   week == w
 ))
 
-if (len < 1) stop(paste("latest data for week", w, "missing"))
-save_csv(df, paste0("deaths/deu/Tote_", y, "_", w))
-save_csv(df, paste0("deaths/deu/deaths"))
+save_csv(df, paste0("deaths/deu/Tote_", y, "_", w), upload = TRUE)
+save_csv(df, paste0("deaths/deu/deaths"), upload = TRUE)

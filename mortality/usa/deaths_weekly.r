@@ -240,7 +240,7 @@ result <- rbind(
   complete(iso3c, date, age_group) |>
   filter(!is.na(year), !is.na(week), !is.na(age_group))
 
-save_csv(result, "deaths/usa/deaths_weekly")
+save_csv(result, "deaths/usa/deaths_weekly", upload = TRUE)
 
 # Data for USMortality.com
 result_2 <- result |>
@@ -252,8 +252,9 @@ result_2$deaths_covid <- NA
 date <- now() %m-% weeks(2)
 y <- year(date)
 w <- week(date)
-len <- nrow(result_2 |> filter(state == "United States", year == y, week == w))
-if (len < 1) stop(paste("latest data for week", w, "missing"))
-save_csv(result_2, paste0("deaths/usa/deaths_weekly_", y, "_", w))
+save_csv(
+  result_2, paste0("deaths/usa/deaths_weekly_", y, "_", w),
+  upload = TRUE
+)
 
 # source("mortality/usa/deaths_weekly.r")
