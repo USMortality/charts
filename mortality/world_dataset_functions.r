@@ -185,7 +185,7 @@ calculate_baseline <- function(ts, col_name, chart_type) {
   col <- sym(col_name)
 
   # Not enough rows, return
-  if (sum(!is.na(ts[col_name])) < bl_size) {
+  if (sum(!is.na(ts[col_name])) <= bl_size) {
     ts <- ts |> mutate(
       "{col_name}_baseline" := NA,
       "{col_name}_baseline_lower" := NA,
@@ -389,7 +389,7 @@ write_dataset <- function(
 
   weekly104wsma <- weekly |>
     calc_sma(104) |>
-    calculate_baseline_excess("weekly_104w_sma") |>
+    calculate_baseline_excess(chart_type = "weekly_104w_sma") |>
     select(-all_of("age_group")) |>
     filter(!is.na(.data$deaths))
   write_csv(
@@ -399,7 +399,7 @@ write_dataset <- function(
 
   weekly52wsma <- weekly |>
     calc_sma(52) |>
-    calculate_baseline_excess("weekly_52w_sma") |>
+    calculate_baseline_excess(chart_type = "weekly_52w_sma") |>
     select(-all_of("age_group")) |>
     filter(!is.na(.data$deaths))
   write_csv(
@@ -409,7 +409,7 @@ write_dataset <- function(
 
   weekly26wsma <- weekly |>
     calc_sma(26) |>
-    calculate_baseline_excess("weekly_26w_sma") |>
+    calculate_baseline_excess(chart_type = "weekly_26w_sma") |>
     select(-all_of("age_group")) |>
     filter(!is.na(.data$deaths))
   write_csv(
@@ -419,7 +419,7 @@ write_dataset <- function(
 
   weekly13wsma <- weekly |>
     calc_sma(14) |>
-    calculate_baseline_excess("weekly_14w_sma") |>
+    calculate_baseline_excess(chart_type = "weekly_14w_sma") |>
     select(-all_of("age_group")) |>
     filter(!is.na(.data$deaths))
   write_csv(
@@ -428,7 +428,7 @@ write_dataset <- function(
   )
 
   monthly <- monthly |>
-    calculate_baseline_excess("monthly") |>
+    calculate_baseline_excess(chart_type = "monthly") |>
     select(-all_of("age_group"))
   write_csv(
     df = monthly,
@@ -436,7 +436,7 @@ write_dataset <- function(
   )
 
   quarterly <- quarterly |>
-    calculate_baseline_excess("quarterly") |>
+    calculate_baseline_excess(chart_type = "quarterly") |>
     select(-all_of("age_group"))
   write_csv(
     df = quarterly,
@@ -444,7 +444,7 @@ write_dataset <- function(
   )
 
   yearly <- yearly |>
-    calculate_baseline_excess("yearly") |>
+    calculate_baseline_excess(chart_type = "yearly") |>
     select(-all_of("age_group"))
   write_csv(
     df = yearly,
@@ -452,7 +452,7 @@ write_dataset <- function(
   )
 
   by_fluseason <- by_fluseason |>
-    calculate_baseline_excess("fluseason") |>
+    calculate_baseline_excess(chart_type = "fluseason") |>
     select(-all_of("age_group"))
   write_csv(
     df = by_fluseason,
@@ -460,7 +460,7 @@ write_dataset <- function(
   )
 
   by_midyear <- by_midyear |>
-    calculate_baseline_excess("midyear") |>
+    calculate_baseline_excess(chart_type = "midyear") |>
     select(-all_of("age_group"))
   write_csv(
     df = by_midyear,
