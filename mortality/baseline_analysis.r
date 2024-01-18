@@ -1,16 +1,13 @@
 source("lib/common.r")
+sf <- 4
+options(vsc.dev.args = list(width = 600 * sf, height = 335 * sf, res = 72 * 2))
 
 df <- read_remote("mortality/world_baseline.csv")
-
-df |>
-  group_by(chart_type, type) |>
-  summarize(window = mean)
 
 data <- df |>
   as_tibble() |>
   mutate(window = as.integer(window)) |>
-  filter(type == "cmr", !is.na(window)) |>
-  select(window)
+  filter(!is.na(window))
 
 ggplot(data, aes(x = window)) +
   geom_histogram() +
@@ -20,8 +17,7 @@ ggplot(data, aes(x = window)) +
     ),
     subtitle = paste(
       "Data-Source: mortality.watch",
-      "Crude Mortality Rate (CMR)",
-      "Baseline with lowest RMSE for length of 3-15y",
+      "Baseline lowest RMSE, length of 3-10y",
       sep = " · "
     ),
     x = "Baseline Length (Years)",
@@ -33,4 +29,5 @@ ggplot(data, aes(x = window)) +
   theme(legend.position = "top", legend.title = element_blank()) +
   scale_x_continuous(
     breaks = min(unique(data$window)):max(unique(data$window))
-  )
+  ) +
+  facet_wrap(vars(chart_type, type), scales = "free")
